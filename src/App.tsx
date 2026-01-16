@@ -15,6 +15,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Overview from "./pages/admin/Overview";
 import Users from "./pages/admin/Users";
 import Tenants from "./pages/admin/Tenants";
+import CreateTenant from "./pages/admin/CreateTenant";
 import Sessions from "./pages/admin/Sessions";
 import Settings from "./pages/admin/Settings";
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route index element={<Overview />} />
             <Route path="users" element={<Users />} />
             <Route path="tenants" element={<Tenants />} />
+            <Route path="tenants/create" element={<CreateTenant />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="settings" element={<Settings />} />
           </Route>
