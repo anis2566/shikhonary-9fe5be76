@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, ExternalLink } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DataTable, { Column, StatusBadge, TenantTypeBadge } from '@/components/dashboard/DataTable';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CreateTenantDialog } from '@/components/admin/CreateTenantDialog';
 import { Tenant } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -253,10 +254,7 @@ const Tenants: React.FC = () => {
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">Filter</span>
             </Button>
-            <Button size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Tenant</span>
-            </Button>
+            <CreateTenantDialog />
           </div>
         </div>
 
