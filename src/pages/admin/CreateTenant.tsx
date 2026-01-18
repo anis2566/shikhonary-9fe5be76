@@ -32,11 +32,15 @@ import {
   ArrowRight, 
   Check,
   Globe,
-  Calendar
+  Calendar,
+  Loader2,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { cn } from "@/lib/utils";
+import { validateStep1, validateStep3, type Step1ValidationResult, type Step3ValidationResult } from "@/lib/mock-api";
 
 const tenantFormSchema = z.object({
   // Basic Info
@@ -119,6 +123,9 @@ const steps = [
 const CreateTenant = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isValidating, setIsValidating] = useState(false);
+  const [step1Validation, setStep1Validation] = useState<Step1ValidationResult | null>(null);
+  const [step3Validation, setStep3Validation] = useState<Step3ValidationResult | null>(null);
 
   const form = useForm<TenantFormValues>({
     resolver: zodResolver(tenantFormSchema),
@@ -187,7 +194,65 @@ const CreateTenant = () => {
     }
 
     const result = await form.trigger(fieldsToValidate);
-    return result;
+    if (!result) return false;
+
+    // Backend validation for Step 1
+    if (step === 1) {
+      setIsValidating(true);
+      try {
+        const name = form.getValues("name");
+        const slug = form.getValues("slug");
+        const backendResult = await validateStep1(name, slug);
+        setStep1Validation(backendResult);
+
+        if (!backendResult.name.isValid) {
+          form.setError("name", { type: "manual", message: backendResult.name.message });
+        }
+        if (!backendResult.slug.isValid) {
+          form.setError("slug", { type: "manual", message: backendResult.slug.message });
+        }
+
+        if (!backendResult.name.isValid || !backendResult.slug.isValid) {
+          setIsValidating(false);
+          return false;
+        }
+      } catch (error) {
+        toast.error("Failed to validate. Please try again.");
+        setIsValidating(false);
+        return false;
+      }
+      setIsValidating(false);
+    }
+
+    // Backend validation for Step 3
+    if (step === 3) {
+      setIsValidating(true);
+      try {
+        const subdomain = form.getValues("subdomain");
+        const customDomain = form.getValues("customDomain");
+        const backendResult = await validateStep3(subdomain, customDomain);
+        setStep3Validation(backendResult);
+
+        if (!backendResult.subdomain.isValid) {
+          form.setError("subdomain", { type: "manual", message: backendResult.subdomain.message });
+        }
+        if (!backendResult.customDomain.isValid) {
+          form.setError("customDomain", { type: "manual", message: backendResult.customDomain.message });
+        }
+
+        if (!backendResult.subdomain.isValid || !backendResult.customDomain.isValid) {
+          setIsValidating(false);
+          return false;
+        }
+      } catch (error) {
+        toast.error("Failed to validate domain. Please try again.");
+        setIsValidating(false);
+        return false;
+      }
+      setIsValidating(false);
+    }
+
+    return true;
   };
 
   const handleNext = async () => {
@@ -318,12 +383,29 @@ const CreateTenant = () => {
                         <FormItem>
                           <FormLabel>Tenant Name *</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="ABC High School" 
-                              {...field}
-                              onChange={(e) => handleNameChange(e.target.value)}
-                            />
+                            <div className="relative">
+                              <Input 
+                                placeholder="ABC High School" 
+                                {...field}
+                                onChange={(e) => {
+                                  handleNameChange(e.target.value);
+                                  setStep1Validation(null); // Clear validation on change
+                                }}
+                              />
+                              {step1Validation?.name && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  {step1Validation.name.isValid ? (
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-destructive" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
+                          {step1Validation?.name?.isValid && (
+                            <p className="text-xs text-green-600">Name is available</p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -337,11 +419,32 @@ const CreateTenant = () => {
                           <FormItem>
                             <FormLabel>Slug *</FormLabel>
                             <FormControl>
-                              <Input placeholder="abc-high-school" {...field} />
+                              <div className="relative">
+                                <Input 
+                                  placeholder="abc-high-school" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    setStep1Validation(null); // Clear validation on change
+                                  }}
+                                />
+                                {step1Validation?.slug && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {step1Validation.slug.isValid ? (
+                                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-destructive" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </FormControl>
                             <FormDescription className="text-xs">
                               URL-friendly identifier (auto-generated)
                             </FormDescription>
+                            {step1Validation?.slug?.isValid && (
+                              <p className="text-xs text-green-600">Slug is available</p>
+                            )}
                             <FormMessage />
                           </FormItem>
                         )}
@@ -555,7 +658,26 @@ const CreateTenant = () => {
                           <FormLabel>Subdomain *</FormLabel>
                           <FormControl>
                             <div className="flex items-center">
-                              <Input placeholder="abc-school" {...field} className="rounded-r-none" />
+                              <div className="relative flex-1">
+                                <Input 
+                                  placeholder="abc-school" 
+                                  {...field} 
+                                  className="rounded-r-none"
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    setStep3Validation(null); // Clear validation on change
+                                  }}
+                                />
+                                {step3Validation?.subdomain && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {step3Validation.subdomain.isValid ? (
+                                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-destructive" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                               <span className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-sm text-muted-foreground whitespace-nowrap">
                                 .shikhonary.com
                               </span>
@@ -564,6 +686,9 @@ const CreateTenant = () => {
                           <FormDescription className="text-xs">
                             This will be the tenant's primary access URL
                           </FormDescription>
+                          {step3Validation?.subdomain?.isValid && (
+                            <p className="text-xs text-green-600">Subdomain is available</p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -576,11 +701,32 @@ const CreateTenant = () => {
                         <FormItem>
                           <FormLabel>Custom Domain</FormLabel>
                           <FormControl>
-                            <Input placeholder="school.example.com" {...field} />
+                            <div className="relative">
+                              <Input 
+                                placeholder="school.example.com" 
+                                {...field} 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setStep3Validation(null); // Clear validation on change
+                                }}
+                              />
+                              {step3Validation?.customDomain && field.value && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  {step3Validation.customDomain.isValid ? (
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-destructive" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
                           <FormDescription className="text-xs">
                             Optional custom domain (verification required)
                           </FormDescription>
+                          {step3Validation?.customDomain?.isValid && field.value && (
+                            <p className="text-xs text-green-600">Domain format is valid</p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -852,9 +998,23 @@ const CreateTenant = () => {
                   </Button>
 
                   {currentStep < steps.length ? (
-                    <Button type="button" onClick={handleNext} className="gap-2">
-                      Next
-                      <ArrowRight className="h-4 w-4" />
+                    <Button 
+                      type="button" 
+                      onClick={handleNext} 
+                      className="gap-2"
+                      disabled={isValidating}
+                    >
+                      {isValidating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Validating...
+                        </>
+                      ) : (
+                        <>
+                          Next
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <Button type="submit" className="gap-2">
