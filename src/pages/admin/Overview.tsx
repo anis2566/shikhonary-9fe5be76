@@ -4,6 +4,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import StatCard from '@/components/dashboard/StatCard';
 import DataTable, { Column, StatusBadge, TenantTypeBadge } from '@/components/dashboard/DataTable';
 import { Tenant } from '@/types';
+import { mockTenants } from '@/lib/mock-data';
 
 // Mock data
 const stats = [
@@ -41,89 +42,8 @@ const stats = [
   },
 ];
 
-const recentTenants: Tenant[] = [
-  {
-    id: '1',
-    name: 'ABC High School',
-    slug: 'abc-high-school',
-    type: 'SCHOOL',
-    subdomain: 'abc-high',
-    tenantDatabaseName: 'db_abc',
-    tenantDatabaseStatus: 'ACTIVE',
-    subscriptionTier: 'PRO',
-    subscriptionStatus: 'ACTIVE',
-    country: 'BD',
-    studentCount: 1250,
-    teacherCount: 45,
-    examCount: 120,
-    storageUsedMB: 450,
-    studentLimit: 2000,
-    teacherLimit: 100,
-    examLimit: 500,
-    storageLimit: 1000,
-    monthlyPriceBDT: 5000,
-    yearlyPriceBDT: 50000,
-    customDomainVerified: false,
-    isActive: true,
-    isSuspended: false,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-  },
-  {
-    id: '2',
-    name: 'XYZ Coaching Center',
-    slug: 'xyz-coaching',
-    type: 'COACHING_CENTER',
-    subdomain: 'xyz-coaching',
-    tenantDatabaseName: 'db_xyz',
-    tenantDatabaseStatus: 'ACTIVE',
-    subscriptionTier: 'BASIC',
-    subscriptionStatus: 'TRIAL',
-    country: 'BD',
-    studentCount: 320,
-    teacherCount: 12,
-    examCount: 45,
-    storageUsedMB: 120,
-    studentLimit: 500,
-    teacherLimit: 20,
-    examLimit: 100,
-    storageLimit: 500,
-    monthlyPriceBDT: 2000,
-    yearlyPriceBDT: 20000,
-    customDomainVerified: false,
-    isActive: true,
-    isSuspended: false,
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-02-05'),
-  },
-  {
-    id: '3',
-    name: "John's Math Academy",
-    slug: 'johns-math',
-    type: 'INDIVIDUAL',
-    subdomain: 'johns-math',
-    tenantDatabaseName: 'db_johns',
-    tenantDatabaseStatus: 'PROVISIONING',
-    subscriptionTier: 'FREE',
-    subscriptionStatus: 'TRIAL',
-    country: 'BD',
-    studentCount: 45,
-    teacherCount: 1,
-    examCount: 10,
-    storageUsedMB: 25,
-    studentLimit: 50,
-    teacherLimit: 2,
-    examLimit: 20,
-    storageLimit: 100,
-    monthlyPriceBDT: 0,
-    yearlyPriceBDT: 0,
-    customDomainVerified: false,
-    isActive: true,
-    isSuspended: false,
-    createdAt: new Date('2024-02-10'),
-    updatedAt: new Date('2024-02-10'),
-  },
-];
+// Use first 3 tenants from mock data for recent tenants display
+const recentTenants = mockTenants.slice(0, 3);
 
 const tenantColumns: Column<Tenant>[] = [
   {

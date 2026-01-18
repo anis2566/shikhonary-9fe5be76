@@ -5,9 +5,9 @@ export type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'TEACHER' | 'STUDENT' | 
 export type TenantType = 'SCHOOL' | 'COACHING_CENTER' | 'INDIVIDUAL' | 'TRAINING_CENTER' | 'UNIVERSITY' | 'OTHER';
 
 // Subscription
-export type SubscriptionTier = 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
-export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'SUSPENDED';
-export type TenantDatabaseStatus = 'PROVISIONING' | 'ACTIVE' | 'SUSPENDED' | 'DELETED';
+export type SubscriptionTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
+export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'EXPIRED';
+export type TenantDatabaseStatus = 'PROVISIONING' | 'ACTIVE' | 'MIGRATING' | 'DELETING' | 'DELETED' | 'FAILED';
 
 // User
 export interface User {
@@ -44,6 +44,7 @@ export interface Tenant {
   customDomain?: string;
   customDomainVerified: boolean;
   tenantDatabaseName: string;
+  tenantDatabaseConnectionString?: string;
   tenantDatabaseStatus: TenantDatabaseStatus;
   subscriptionTier: SubscriptionTier;
   subscriptionStatus: SubscriptionStatus;
@@ -63,6 +64,9 @@ export interface Tenant {
   isSuspended: boolean;
   suspendReason?: string;
   currentAcademicYear?: string;
+  features?: Record<string, boolean>;
+  metadata?: Record<string, string>;
+  createdById?: string;
 }
 
 // Session
