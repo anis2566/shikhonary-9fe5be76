@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, FileText, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, FileText, Filter, Download, Upload, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AcademicDataTable, { Column, StatusBadge } from '@/components/academic/AcademicDataTable';
+import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
@@ -10,6 +10,8 @@ import BulkActions from '@/components/academic/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { AcademicChapter } from '@/types';
 import { mockChapters, mockSubjects, getSubjectById, mockTopics } from '@/lib/academic-mock-data';
@@ -25,6 +27,7 @@ const ChapterList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [reorderMode, setReorderMode] = useState(false);
 
   const filteredChapters = useMemo(() => {
     return chapters.filter((chapter) => {
@@ -41,9 +44,10 @@ const ChapterList: React.FC = () => {
   }, [chapters, search, filterSubject, filterStatus]);
 
   const paginatedChapters = useMemo(() => {
+    if (reorderMode) return filteredChapters;
     const start = (currentPage - 1) * itemsPerPage;
     return filteredChapters.slice(start, start + itemsPerPage);
-  }, [filteredChapters, currentPage, itemsPerPage]);
+  }, [filteredChapters, currentPage, itemsPerPage, reorderMode]);
 
   const totalPages = Math.ceil(filteredChapters.length / itemsPerPage);
 
@@ -65,6 +69,11 @@ const ChapterList: React.FC = () => {
   const handleToggleStatus = (chapter: AcademicChapter) => {
     setChapters(chapters.map((c) => (c.id === chapter.id ? { ...c, isActive: !c.isActive, updatedAt: new Date() } : c)));
     toast.success(`Chapter ${chapter.isActive ? 'deactivated' : 'activated'} successfully`);
+  };
+
+  const handleReorder = (newData: AcademicChapter[]) => {
+    setChapters(newData);
+    toast.success('Order updated successfully');
   };
 
   const columns: Column<AcademicChapter>[] = [
@@ -141,12 +150,23 @@ const ChapterList: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="reorder-mode" className="text-sm cursor-pointer">Reorder</Label>
+                <Switch id="reorder-mode" checked={reorderMode} onCheckedChange={setReorderMode} />
+              </div>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Download className="h-4 w-4" /></Button>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Upload className="h-4 w-4" /></Button>
               <Button onClick={() => navigate('/admin/chapters/create')}><Plus className="h-4 w-4 mr-2" />Add Chapter</Button>
             </div>
           </div>
+          {reorderMode && (
+            <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <GripVertical className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Drag and drop rows to reorder. Changes are saved automatically.</span>
+            </div>
+          )}
           <BulkActions
             selectedCount={selectedIds.length}
             onClear={() => setSelectedIds([])}
@@ -156,21 +176,23 @@ const ChapterList: React.FC = () => {
           />
         </div>
 
-        <AcademicDataTable
+        <DraggableDataTable
           columns={columns}
           data={paginatedChapters}
+          onReorder={handleReorder}
           onView={(chapter) => navigate(`/admin/chapters/${chapter.id}`)}
           onEdit={(chapter) => navigate(`/admin/chapters/${chapter.id}/edit`)}
           onDelete={(chapter) => { setDeletingChapter(chapter); setDeleteDialogOpen(true); }}
           onToggleStatus={handleToggleStatus}
           emptyMessage="No chapters found"
-          selectable
+          selectable={!reorderMode}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           getItemStatus={(chapter) => chapter.isActive}
+          reorderDisabled={!reorderMode}
         />
 
-        {filteredChapters.length > 0 && (
+        {filteredChapters.length > 0 && !reorderMode && (
           <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredChapters.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />
         )}
       </div>
