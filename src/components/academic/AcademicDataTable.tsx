@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import ActionDropdown from './ActionDropdown';
 
 export interface Column<T> {
   key: keyof T | string;
@@ -17,7 +17,15 @@ interface AcademicDataTableProps<T> {
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   onView?: (item: T) => void;
+  onDuplicate?: (item: T) => void;
+  onToggleStatus?: (item: T) => void;
+  onMoveUp?: (item: T, index: number) => void;
+  onMoveDown?: (item: T, index: number) => void;
   emptyMessage?: string;
+  selectable?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  getItemStatus?: (item: T) => boolean;
 }
 
 export function StatusBadge({ active }: { active: boolean }) {
@@ -53,8 +61,35 @@ function AcademicDataTable<T extends { id: string }>({
   onEdit,
   onDelete,
   onView,
+  onDuplicate,
+  onToggleStatus,
+  onMoveUp,
+  onMoveDown,
   emptyMessage = 'No data found',
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
+  getItemStatus,
 }: AcademicDataTableProps<T>) {
+  const allSelected = data.length > 0 && selectedIds.length === data.length;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < data.length;
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      onSelectionChange?.([]);
+    } else {
+      onSelectionChange?.(data.map((item) => item.id));
+    }
+  };
+
+  const handleSelectItem = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onSelectionChange?.(selectedIds.filter((i) => i !== id));
+    } else {
+      onSelectionChange?.([...selectedIds, id]);
+    }
+  };
+
   if (data.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -63,12 +98,24 @@ function AcademicDataTable<T extends { id: string }>({
     );
   }
 
+  const hasActions = onEdit || onDelete || onView || onDuplicate || onToggleStatus || onMoveUp || onMoveDown;
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
+              {selectable && (
+                <th className="w-12 px-4 py-3">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                    className={cn(someSelected && 'data-[state=checked]:bg-primary/50')}
+                  />
+                </th>
+              )}
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
@@ -80,16 +127,31 @@ function AcademicDataTable<T extends { id: string }>({
                   {column.header}
                 </th>
               ))}
-              {(onEdit || onDelete || onView) && (
-                <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+              {hasActions && (
+                <th className="w-12 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Actions
                 </th>
               )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {data.map((item) => (
-              <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+            {data.map((item, index) => (
+              <tr
+                key={item.id}
+                className={cn(
+                  'hover:bg-muted/30 transition-colors',
+                  selectedIds.includes(item.id) && 'bg-primary/5'
+                )}
+              >
+                {selectable && (
+                  <td className="px-4 py-3">
+                    <Checkbox
+                      checked={selectedIds.includes(item.id)}
+                      onCheckedChange={() => handleSelectItem(item.id)}
+                      aria-label={`Select item ${item.id}`}
+                    />
+                  </td>
+                )}
                 {columns.map((column) => (
                   <td
                     key={String(column.key)}
@@ -103,25 +165,20 @@ function AcademicDataTable<T extends { id: string }>({
                       : String(item[column.key as keyof T] ?? '')}
                   </td>
                 ))}
-                {(onEdit || onDelete || onView) && (
+                {hasActions && (
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {onView && (
-                        <Button variant="ghost" size="icon" onClick={() => onView(item)} className="h-8 w-8">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onEdit && (
-                        <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="h-8 w-8">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button variant="ghost" size="icon" onClick={() => onDelete(item)} className="h-8 w-8 text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <ActionDropdown
+                      onView={onView ? () => onView(item) : undefined}
+                      onEdit={onEdit ? () => onEdit(item) : undefined}
+                      onDelete={onDelete ? () => onDelete(item) : undefined}
+                      onDuplicate={onDuplicate ? () => onDuplicate(item) : undefined}
+                      onToggleStatus={onToggleStatus ? () => onToggleStatus(item) : undefined}
+                      onMoveUp={onMoveUp ? () => onMoveUp(item, index) : undefined}
+                      onMoveDown={onMoveDown ? () => onMoveDown(item, index) : undefined}
+                      isActive={getItemStatus?.(item) ?? true}
+                      canMoveUp={index > 0}
+                      canMoveDown={index < data.length - 1}
+                    />
                   </td>
                 )}
               </tr>
