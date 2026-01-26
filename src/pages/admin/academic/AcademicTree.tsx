@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, BookOpen, GraduationCap, BookText, FileText, Hash, Layers, Circle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, ChevronDown, BookOpen, GraduationCap, BookText, FileText, Hash, Layers, Circle, ExternalLink } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ interface TreeNodeProps {
   count?: number;
   defaultOpen?: boolean;
   searchMatch?: boolean;
+  href?: string;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -42,8 +44,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   count,
   defaultOpen = false,
   searchMatch = false,
+  href,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const navigate = useNavigate();
   const hasChildren = React.Children.count(children) > 0;
 
   const levelColors = [
@@ -55,16 +59,29 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     'border-l-purple-500',
   ];
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (hasChildren) {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (href) {
+      navigate(href);
+    }
+  };
+
   return (
     <div className="select-none">
       <div
         className={cn(
-          'flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors',
+          'flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors group',
           'hover:bg-muted/50',
           searchMatch && 'bg-primary/10 ring-1 ring-primary/20',
           !isActive && 'opacity-60'
         )}
-        onClick={() => hasChildren && setIsOpen(!isOpen)}
+        onClick={handleClick}
         style={{ paddingLeft: `${level * 16 + 12}px` }}
       >
         {hasChildren ? (
@@ -93,6 +110,16 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         >
           {isActive ? 'Active' : 'Inactive'}
         </Badge>
+        {href && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleNavigate}
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+        )}
       </div>
       {hasChildren && isOpen && <div className="relative">{children}</div>}
     </div>
@@ -200,6 +227,10 @@ const AcademicTree: React.FC = () => {
             </div>
             <span>Sub-Topic</span>
           </div>
+          <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+            <ExternalLink className="h-3 w-3" />
+            <span>Click icon to view details</span>
+          </div>
         </div>
 
         {/* Tree */}
@@ -215,6 +246,7 @@ const AcademicTree: React.FC = () => {
               count={getChildCount('board', board.id)}
               defaultOpen={expandAll || matchesSearch(board.displayName)}
               searchMatch={matchesSearch(board.displayName)}
+              href={`/admin/boards/${board.id}`}
             >
               {getClassesByBoard(board.id).map((cls) => (
                 <TreeNode
@@ -227,6 +259,7 @@ const AcademicTree: React.FC = () => {
                   count={getChildCount('class', cls.id)}
                   defaultOpen={expandAll || matchesSearch(cls.displayName)}
                   searchMatch={matchesSearch(cls.displayName)}
+                  href={`/admin/classes/${cls.id}`}
                 >
                   {getSubjectsByClass(cls.id).map((subject) => (
                     <TreeNode
@@ -239,6 +272,7 @@ const AcademicTree: React.FC = () => {
                       count={getChildCount('subject', subject.id)}
                       defaultOpen={expandAll || matchesSearch(subject.displayName)}
                       searchMatch={matchesSearch(subject.displayName)}
+                      href={`/admin/subjects/${subject.id}`}
                     >
                       {getChaptersBySubject(subject.id).map((chapter) => (
                         <TreeNode
@@ -251,6 +285,7 @@ const AcademicTree: React.FC = () => {
                           count={getChildCount('chapter', chapter.id)}
                           defaultOpen={expandAll || matchesSearch(chapter.displayName)}
                           searchMatch={matchesSearch(chapter.displayName)}
+                          href={`/admin/chapters/${chapter.id}`}
                         >
                           {getTopicsByChapter(chapter.id).map((topic) => (
                             <TreeNode
@@ -263,6 +298,7 @@ const AcademicTree: React.FC = () => {
                               count={getChildCount('topic', topic.id)}
                               defaultOpen={expandAll || matchesSearch(topic.displayName)}
                               searchMatch={matchesSearch(topic.displayName)}
+                              href={`/admin/topics/${topic.id}`}
                             >
                               {getSubTopicsByTopic(topic.id).map((subTopic) => (
                                 <TreeNode
@@ -273,6 +309,7 @@ const AcademicTree: React.FC = () => {
                                   level={5}
                                   isActive={subTopic.isActive}
                                   searchMatch={matchesSearch(subTopic.displayName)}
+                                  href={`/admin/subtopics/${subTopic.id}`}
                                 />
                               ))}
                             </TreeNode>
