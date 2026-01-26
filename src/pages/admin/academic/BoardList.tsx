@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, BookOpen, Filter, Download, Upload, GripVertical } from 'lucide-react';
+import { Plus, Search, BookOpen, Filter, Download, Upload, GripVertical, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
@@ -12,17 +12,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { AcademicBoard } from '@/types';
-import { mockBoards, mockClasses } from '@/lib/academic-mock-data';
+import { useBoards, useBoardMutations, useClasses, Board } from '@/hooks/useAcademicData';
 
 const BoardList: React.FC = () => {
   const navigate = useNavigate();
-  const [boards, setBoards] = useState<AcademicBoard[]>(mockBoards);
+  const { data: boards = [], isLoading } = useBoards();
+  const { data: classes = [] } = useClasses();
+  const { remove, update, reorder } = useBoardMutations();
+  
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingBoard, setDeletingBoard] = useState<AcademicBoard | null>(null);
+  const [deletingBoard, setDeletingBoard] = useState<Board | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -32,18 +33,17 @@ const BoardList: React.FC = () => {
     return boards.filter((board) => {
       const matchesSearch =
         board.name.toLowerCase().includes(search.toLowerCase()) ||
-        board.displayName.toLowerCase().includes(search.toLowerCase()) ||
-        board.code.toLowerCase().includes(search.toLowerCase());
+        board.display_name.toLowerCase().includes(search.toLowerCase());
       const matchesStatus =
         filterStatus === 'all' ||
-        (filterStatus === 'active' && board.isActive) ||
-        (filterStatus === 'inactive' && !board.isActive);
+        (filterStatus === 'active' && board.is_active) ||
+        (filterStatus === 'inactive' && !board.is_active);
       return matchesSearch && matchesStatus;
     });
   }, [boards, search, filterStatus]);
 
   const paginatedBoards = useMemo(() => {
-    if (reorderMode) return filteredBoards; // Show all in reorder mode
+    if (reorderMode) return filteredBoards;
     const start = (currentPage - 1) * itemsPerPage;
     return filteredBoards.slice(start, start + itemsPerPage);
   }, [filteredBoards, currentPage, itemsPerPage, reorderMode]);
@@ -51,56 +51,53 @@ const BoardList: React.FC = () => {
   const totalPages = Math.ceil(filteredBoards.length / itemsPerPage);
 
   const stats = useMemo(() => {
-    const activeCount = boards.filter((b) => b.isActive).length;
-    const classCount = mockClasses.length;
-    return { total: boards.length, active: activeCount, inactive: boards.length - activeCount, classes: classCount };
-  }, [boards]);
+    const activeCount = boards.filter((b) => b.is_active).length;
+    return { total: boards.length, active: activeCount, inactive: boards.length - activeCount, classes: classes.length };
+  }, [boards, classes]);
 
   const handleDelete = () => {
     if (deletingBoard) {
-      setBoards(boards.filter((b) => b.id !== deletingBoard.id));
-      toast.success('Board deleted successfully');
-      setDeleteDialogOpen(false);
-      setDeletingBoard(null);
+      remove.mutate(deletingBoard.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setDeletingBoard(null);
+        },
+      });
     }
   };
 
-  const handleToggleStatus = (board: AcademicBoard) => {
-    setBoards(boards.map((b) => (b.id === board.id ? { ...b, isActive: !b.isActive, updatedAt: new Date() } : b)));
-    toast.success(`Board ${board.isActive ? 'deactivated' : 'activated'} successfully`);
+  const handleToggleStatus = (board: Board) => {
+    update.mutate({ id: board.id, data: { is_active: !board.is_active } });
   };
 
-  const handleReorder = (newData: AcademicBoard[]) => {
-    setBoards(newData);
-    toast.success('Order updated successfully');
+  const handleReorder = (newData: Board[]) => {
+    const updates = newData.map((item, index) => ({ id: item.id, position: index }));
+    reorder.mutate(updates);
   };
 
   const handleBulkDelete = () => {
-    setBoards(boards.filter((b) => !selectedIds.includes(b.id)));
+    selectedIds.forEach((id) => remove.mutate(id));
     setSelectedIds([]);
-    toast.success(`${selectedIds.length} boards deleted`);
   };
 
   const handleBulkActivate = () => {
-    setBoards(boards.map((b) => (selectedIds.includes(b.id) ? { ...b, isActive: true } : b)));
+    selectedIds.forEach((id) => update.mutate({ id, data: { is_active: true } }));
     setSelectedIds([]);
-    toast.success('Selected boards activated');
   };
 
   const handleBulkDeactivate = () => {
-    setBoards(boards.map((b) => (selectedIds.includes(b.id) ? { ...b, isActive: false } : b)));
+    selectedIds.forEach((id) => update.mutate({ id, data: { is_active: false } }));
     setSelectedIds([]);
-    toast.success('Selected boards deactivated');
   };
 
-  const columns: Column<AcademicBoard>[] = [
+  const columns: Column<Board>[] = [
     {
-      key: 'displayName',
+      key: 'display_name',
       header: 'Board',
       render: (board) => (
         <div>
-          <p className="font-medium text-foreground">{board.displayName}</p>
-          <p className="text-xs text-muted-foreground">{board.code}</p>
+          <p className="font-medium text-foreground">{board.display_name}</p>
+          <p className="text-xs text-muted-foreground">{board.name}</p>
         </div>
       ),
     },
@@ -116,28 +113,35 @@ const BoardList: React.FC = () => {
       hideOnMobile: true,
     },
     {
-      key: 'updatedAt',
+      key: 'updated_at',
       header: 'Last Updated',
       hideOnMobile: true,
       render: (board) => (
         <span className="text-sm text-muted-foreground">
-          {board.updatedAt.toLocaleDateString()}
+          {new Date(board.updated_at).toLocaleDateString()}
         </span>
       ),
     },
     {
-      key: 'isActive',
+      key: 'is_active',
       header: 'Status',
-      render: (board) => <StatusBadge active={board.isActive} />,
+      render: (board) => <StatusBadge active={board.is_active} />,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <DashboardHeader title="Academic Boards" subtitle="Manage curriculum boards and their hierarchy" />
 
       <div className="p-4 lg:p-6 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard title="Total Boards" value={stats.total} icon={<BookOpen className="h-5 w-5" />} />
           <StatsCard title="Active" value={stats.active} icon={<BookOpen className="h-5 w-5" />} />
@@ -145,7 +149,6 @@ const BoardList: React.FC = () => {
           <StatsCard title="Total Classes" value={stats.classes} icon={<BookOpen className="h-5 w-5" />} />
         </div>
 
-        {/* Actions Bar */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-between">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
@@ -154,10 +157,7 @@ const BoardList: React.FC = () => {
                 <Input
                   placeholder="Search boards..."
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   className="pl-9"
                 />
               </div>
@@ -177,26 +177,16 @@ const BoardList: React.FC = () => {
               <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <Label htmlFor="reorder-mode" className="text-sm cursor-pointer">Reorder</Label>
-                <Switch
-                  id="reorder-mode"
-                  checked={reorderMode}
-                  onCheckedChange={setReorderMode}
-                />
+                <Switch id="reorder-mode" checked={reorderMode} onCheckedChange={setReorderMode} />
               </div>
-              <Button variant="outline" size="icon" className="hidden sm:flex">
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="hidden sm:flex">
-                <Upload className="h-4 w-4" />
-              </Button>
+              <Button variant="outline" size="icon" className="hidden sm:flex"><Download className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="hidden sm:flex"><Upload className="h-4 w-4" /></Button>
               <Button onClick={() => navigate('/admin/boards/create')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Board
+                <Plus className="h-4 w-4 mr-2" />Add Board
               </Button>
             </div>
           </div>
 
-          {/* Bulk Actions */}
           <BulkActions
             selectedCount={selectedIds.length}
             onClear={() => setSelectedIds([])}
@@ -208,34 +198,27 @@ const BoardList: React.FC = () => {
           {reorderMode && (
             <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
               <GripVertical className="h-4 w-4 text-primary" />
-              <span className="text-sm text-primary font-medium">
-                Drag and drop rows to reorder. Changes are saved automatically.
-              </span>
+              <span className="text-sm text-primary font-medium">Drag and drop rows to reorder. Changes are saved automatically.</span>
             </div>
           )}
         </div>
 
-        {/* Table */}
         <DraggableDataTable
           columns={columns}
           data={paginatedBoards}
           onReorder={handleReorder}
           onView={(board) => navigate(`/admin/boards/${board.id}`)}
           onEdit={(board) => navigate(`/admin/boards/${board.id}/edit`)}
-          onDelete={(board) => {
-            setDeletingBoard(board);
-            setDeleteDialogOpen(true);
-          }}
+          onDelete={(board) => { setDeletingBoard(board); setDeleteDialogOpen(true); }}
           onToggleStatus={handleToggleStatus}
           emptyMessage="No boards found"
           selectable={!reorderMode}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          getItemStatus={(board) => board.isActive}
+          getItemStatus={(board) => board.is_active}
           reorderDisabled={!reorderMode}
         />
 
-        {/* Pagination */}
         {filteredBoards.length > 0 && !reorderMode && (
           <Pagination
             currentPage={currentPage}
@@ -243,20 +226,16 @@ const BoardList: React.FC = () => {
             totalItems={filteredBoards.length}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
-            onItemsPerPageChange={(size) => {
-              setItemsPerPage(size);
-              setCurrentPage(1);
-            }}
+            onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
           />
         )}
       </div>
 
-      {/* Delete Confirmation */}
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Delete Board"
-        description={`Are you sure you want to delete "${deletingBoard?.displayName}"? This will also remove all associated classes, subjects, and content. This action cannot be undone.`}
+        description={`Are you sure you want to delete "${deletingBoard?.display_name}"? This will also remove all associated classes, subjects, and content. This action cannot be undone.`}
         onConfirm={handleDelete}
       />
     </div>

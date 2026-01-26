@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Hash, Filter, Download, Upload, GripVertical } from 'lucide-react';
+import { Plus, Search, Hash, Filter, Download, Upload, GripVertical, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
@@ -12,18 +12,20 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { AcademicTopic } from '@/types';
-import { mockTopics, mockChapters, getChapterById, mockSubTopics } from '@/lib/academic-mock-data';
+import { useTopics, useTopicMutations, useChapters, useSubTopics, Topic } from '@/hooks/useAcademicData';
 
 const TopicList: React.FC = () => {
   const navigate = useNavigate();
-  const [topics, setTopics] = useState<AcademicTopic[]>(mockTopics);
+  const { data: topics = [], isLoading } = useTopics();
+  const { data: chapters = [] } = useChapters();
+  const { data: subTopics = [] } = useSubTopics();
+  const { remove, update, reorder } = useTopicMutations();
+
   const [search, setSearch] = useState('');
   const [filterChapter, setFilterChapter] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingTopic, setDeletingTopic] = useState<AcademicTopic | null>(null);
+  const [deletingTopic, setDeletingTopic] = useState<Topic | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -31,9 +33,9 @@ const TopicList: React.FC = () => {
 
   const filteredTopics = useMemo(() => {
     return topics.filter((topic) => {
-      const matchesSearch = topic.name.toLowerCase().includes(search.toLowerCase()) || topic.displayName.toLowerCase().includes(search.toLowerCase());
-      const matchesChapter = filterChapter === 'all' || topic.chapterId === filterChapter;
-      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' && topic.isActive) || (filterStatus === 'inactive' && !topic.isActive);
+      const matchesSearch = topic.name.toLowerCase().includes(search.toLowerCase()) || topic.display_name.toLowerCase().includes(search.toLowerCase());
+      const matchesChapter = filterChapter === 'all' || topic.chapter_id === filterChapter;
+      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' && topic.is_active) || (filterStatus === 'inactive' && !topic.is_active);
       return matchesSearch && matchesChapter && matchesStatus;
     });
   }, [topics, search, filterChapter, filterStatus]);
@@ -47,30 +49,37 @@ const TopicList: React.FC = () => {
   const totalPages = Math.ceil(filteredTopics.length / itemsPerPage);
 
   const stats = useMemo(() => {
-    const activeCount = topics.filter((t) => t.isActive).length;
-    return { total: topics.length, active: activeCount, inactive: topics.length - activeCount, subtopics: mockSubTopics.length };
-  }, [topics]);
+    const activeCount = topics.filter((t) => t.is_active).length;
+    return { total: topics.length, active: activeCount, inactive: topics.length - activeCount, subtopics: subTopics.length };
+  }, [topics, subTopics]);
+
+  const getChapterName = (chapterId: string) => chapters.find((c) => c.id === chapterId)?.display_name || 'N/A';
 
   const handleDelete = () => {
-    if (deletingTopic) { setTopics(topics.filter((t) => t.id !== deletingTopic.id)); toast.success('Topic deleted successfully'); setDeleteDialogOpen(false); setDeletingTopic(null); }
+    if (deletingTopic) {
+      remove.mutate(deletingTopic.id, { onSuccess: () => { setDeleteDialogOpen(false); setDeletingTopic(null); } });
+    }
   };
 
-  const handleToggleStatus = (topic: AcademicTopic) => {
-    setTopics(topics.map((t) => (t.id === topic.id ? { ...t, isActive: !t.isActive, updatedAt: new Date() } : t)));
-    toast.success(`Topic ${topic.isActive ? 'deactivated' : 'activated'} successfully`);
+  const handleToggleStatus = (topic: Topic) => {
+    update.mutate({ id: topic.id, data: { is_active: !topic.is_active } });
   };
 
-  const handleReorder = (newData: AcademicTopic[]) => {
-    setTopics(newData);
-    toast.success('Order updated successfully');
+  const handleReorder = (newData: Topic[]) => {
+    const updates = newData.map((item, index) => ({ id: item.id, position: index }));
+    reorder.mutate(updates);
   };
 
-  const columns: Column<AcademicTopic>[] = [
-    { key: 'displayName', header: 'Topic', render: (topic) => (<div><p className="font-medium text-foreground">{topic.displayName}</p><p className="text-xs text-muted-foreground">{topic.name}</p></div>) },
-    { key: 'chapterId', header: 'Chapter', hideOnMobile: true, render: (topic) => { const chapter = getChapterById(topic.chapterId); return <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-sm">{chapter?.displayName || 'N/A'}</span>; } },
+  const columns: Column<Topic>[] = [
+    { key: 'display_name', header: 'Topic', render: (topic) => (<div><p className="font-medium text-foreground">{topic.display_name}</p><p className="text-xs text-muted-foreground">{topic.name}</p></div>) },
+    { key: 'chapter_id', header: 'Chapter', hideOnMobile: true, render: (topic) => <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-sm">{getChapterName(topic.chapter_id)}</span> },
     { key: 'position', header: 'Position', hideOnMobile: true },
-    { key: 'isActive', header: 'Status', render: (topic) => <StatusBadge active={topic.isActive} /> },
+    { key: 'is_active', header: 'Status', render: (topic) => <StatusBadge active={topic.is_active} /> },
   ];
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -89,7 +98,7 @@ const TopicList: React.FC = () => {
               <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search topics..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-9" /></div>
               <Select value={filterChapter} onValueChange={(v) => { setFilterChapter(v); setCurrentPage(1); }}>
                 <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All Chapters" /></SelectTrigger>
-                <SelectContent><SelectItem value="all">All Chapters</SelectItem>{mockChapters.map((chapter) => (<SelectItem key={chapter.id} value={chapter.id}>{chapter.displayName}</SelectItem>))}</SelectContent>
+                <SelectContent><SelectItem value="all">All Chapters</SelectItem>{chapters.map((chapter) => <SelectItem key={chapter.id} value={chapter.id}>{chapter.display_name}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
                 <SelectTrigger className="w-full sm:w-32"><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Status" /></SelectTrigger>
@@ -107,7 +116,7 @@ const TopicList: React.FC = () => {
               <Button onClick={() => navigate('/admin/topics/create')}><Plus className="h-4 w-4 mr-2" />Add Topic</Button>
             </div>
           </div>
-          <BulkActions selectedCount={selectedIds.length} onClear={() => setSelectedIds([])} onDelete={() => { setTopics(topics.filter((t) => !selectedIds.includes(t.id))); setSelectedIds([]); toast.success(`${selectedIds.length} topics deleted`); }} onActivate={() => { setTopics(topics.map((t) => (selectedIds.includes(t.id) ? { ...t, isActive: true } : t))); setSelectedIds([]); toast.success('Selected topics activated'); }} onDeactivate={() => { setTopics(topics.map((t) => (selectedIds.includes(t.id) ? { ...t, isActive: false } : t))); setSelectedIds([]); toast.success('Selected topics deactivated'); }} />
+          <BulkActions selectedCount={selectedIds.length} onClear={() => setSelectedIds([])} onDelete={() => { selectedIds.forEach((id) => remove.mutate(id)); setSelectedIds([]); }} onActivate={() => { selectedIds.forEach((id) => update.mutate({ id, data: { is_active: true } })); setSelectedIds([]); }} onDeactivate={() => { selectedIds.forEach((id) => update.mutate({ id, data: { is_active: false } })); setSelectedIds([]); }} />
           {reorderMode && (
             <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
               <GripVertical className="h-4 w-4 text-primary" />
@@ -116,10 +125,10 @@ const TopicList: React.FC = () => {
           )}
         </div>
 
-        <DraggableDataTable columns={columns} data={paginatedTopics} onReorder={handleReorder} onView={(topic) => navigate(`/admin/topics/${topic.id}`)} onEdit={(topic) => navigate(`/admin/topics/${topic.id}/edit`)} onDelete={(topic) => { setDeletingTopic(topic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No topics found" selectable={!reorderMode} selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(topic) => topic.isActive} reorderDisabled={!reorderMode} />
+        <DraggableDataTable columns={columns} data={paginatedTopics} onReorder={handleReorder} onView={(topic) => navigate(`/admin/topics/${topic.id}`)} onEdit={(topic) => navigate(`/admin/topics/${topic.id}/edit`)} onDelete={(topic) => { setDeletingTopic(topic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No topics found" selectable={!reorderMode} selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(topic) => topic.is_active} reorderDisabled={!reorderMode} />
         {filteredTopics.length > 0 && !reorderMode && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredTopics.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />}
       </div>
-      <DeleteConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Delete Topic" description={`Are you sure you want to delete "${deletingTopic?.displayName}"? This will also remove all associated sub-topics.`} onConfirm={handleDelete} />
+      <DeleteConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Delete Topic" description={`Are you sure you want to delete "${deletingTopic?.display_name}"? This will also remove all associated sub-topics.`} onConfirm={handleDelete} />
     </div>
   );
 };

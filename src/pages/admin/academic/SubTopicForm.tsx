@@ -7,19 +7,19 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { AcademicSubTopic } from '@/types';
-import { mockSubTopics, mockTopics, getTopicById } from '@/lib/academic-mock-data';
+import { useSubTopic, useSubTopicMutations, useSubTopics, useTopics } from '@/hooks/useAcademicData';
 
 const subTopicSchema = z.object({
   name: z.string().min(1, 'Name is required').regex(/^[a-z0-9-]+$/, 'Name must be lowercase with hyphens only'),
-  displayName: z.string().min(1, 'Display name is required'),
+  display_name: z.string().min(1, 'Display name is required'),
+  description: z.string().optional(),
   position: z.number().min(0, 'Position must be 0 or greater'),
-  topicId: z.string().min(1, 'Topic is required'),
-  isActive: z.boolean(),
+  topic_id: z.string().min(1, 'Topic is required'),
+  is_active: z.boolean(),
 });
 
 type SubTopicFormData = z.infer<typeof subTopicSchema>;
@@ -30,29 +30,59 @@ const SubTopicForm: React.FC = () => {
   const isEditing = Boolean(id) && id !== 'create';
   const isViewing = Boolean(id) && !window.location.pathname.includes('edit') && id !== 'create';
 
-  const existingSubTopic = isEditing || isViewing ? mockSubTopics.find((s) => s.id === id) : null;
+  const { data: existingSubTopic, isLoading: loadingSubTopic } = useSubTopic(id || '');
+  const { data: subTopics = [] } = useSubTopics();
+  const { data: topics = [] } = useTopics();
+  const { create, update } = useSubTopicMutations();
 
   const form = useForm<SubTopicFormData>({
     resolver: zodResolver(subTopicSchema),
-    defaultValues: { name: '', displayName: '', position: mockSubTopics.length, topicId: '', isActive: true },
+    defaultValues: { name: '', display_name: '', description: '', position: 0, topic_id: '', is_active: true },
   });
 
   useEffect(() => {
+    if (!isEditing && !isViewing) form.setValue('position', subTopics.length);
+  }, [subTopics.length, isEditing, isViewing, form]);
+
+  useEffect(() => {
     if (existingSubTopic) {
-      form.reset({ name: existingSubTopic.name, displayName: existingSubTopic.displayName, position: existingSubTopic.position, topicId: existingSubTopic.topicId, isActive: existingSubTopic.isActive });
+      form.reset({
+        name: existingSubTopic.name,
+        display_name: existingSubTopic.display_name,
+        description: existingSubTopic.description || '',
+        position: existingSubTopic.position,
+        topic_id: existingSubTopic.topic_id,
+        is_active: existingSubTopic.is_active,
+      });
     }
   }, [existingSubTopic, form]);
 
   const onSubmit = (data: SubTopicFormData) => {
-    if (isEditing) toast.success('Sub-topic updated successfully');
-    else toast.success('Sub-topic created successfully');
-    navigate('/admin/subtopics');
+    const payload = {
+      name: data.name,
+      display_name: data.display_name,
+      description: data.description || null,
+      position: data.position,
+      topic_id: data.topic_id,
+      is_active: data.is_active,
+    };
+    if (isEditing && id) {
+      update.mutate({ id, data: payload }, { onSuccess: () => navigate('/admin/subtopics') });
+    } else {
+      create.mutate(payload, { onSuccess: () => navigate('/admin/subtopics') });
+    }
   };
 
   const handleGenerateSlug = () => {
-    const displayName = form.watch('displayName');
+    const displayName = form.watch('display_name');
     if (displayName) form.setValue('name', displayName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').trim());
   };
+
+  const getTopicName = (topicId: string) => topics.find((t) => t.id === topicId)?.display_name || 'N/A';
+
+  if (loadingSubTopic && (isEditing || isViewing)) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +96,7 @@ const SubTopicForm: React.FC = () => {
                 <p className="text-sm text-muted-foreground mt-0.5">{isViewing ? 'View sub-topic details' : isEditing ? 'Update sub-topic information' : 'Add a new sub-topic'}</p>
               </div>
             </div>
-            {!isViewing && <Button onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}{isEditing ? 'Update' : 'Create'}</Button>}
+            {!isViewing && <Button onClick={form.handleSubmit(onSubmit)} disabled={create.isPending || update.isPending}>{(create.isPending || update.isPending) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}{isEditing ? 'Update' : 'Create'}</Button>}
             {isViewing && <Button onClick={() => navigate(`/admin/subtopics/${id}/edit`)}>Edit Sub-Topic</Button>}
           </div>
         </div>
@@ -78,12 +108,12 @@ const SubTopicForm: React.FC = () => {
             <CardHeader><CardTitle>Parent Topic</CardTitle><CardDescription>Select the topic this sub-topic belongs to</CardDescription></CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="topicId">Topic *</Label>
-                <Select value={form.watch('topicId')} onValueChange={(value) => form.setValue('topicId', value)} disabled={isViewing}>
+                <Label htmlFor="topic_id">Topic *</Label>
+                <Select value={form.watch('topic_id')} onValueChange={(value) => form.setValue('topic_id', value)} disabled={isViewing}>
                   <SelectTrigger><SelectValue placeholder="Select a topic" /></SelectTrigger>
-                  <SelectContent>{mockTopics.map((topic) => (<SelectItem key={topic.id} value={topic.id}>{topic.displayName}</SelectItem>))}</SelectContent>
+                  <SelectContent>{topics.map((topic) => <SelectItem key={topic.id} value={topic.id}>{topic.display_name}</SelectItem>)}</SelectContent>
                 </Select>
-                {form.formState.errors.topicId && <p className="text-xs text-destructive">{form.formState.errors.topicId.message}</p>}
+                {form.formState.errors.topic_id && <p className="text-xs text-destructive">{form.formState.errors.topic_id.message}</p>}
               </div>
             </CardContent>
           </Card>
@@ -92,9 +122,9 @@ const SubTopicForm: React.FC = () => {
             <CardHeader><CardTitle>Basic Information</CardTitle><CardDescription>Enter the basic details for this sub-topic</CardDescription></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name *</Label>
-                <Input id="displayName" {...form.register('displayName')} placeholder="Scalar Quantities" disabled={isViewing} />
-                {form.formState.errors.displayName && <p className="text-xs text-destructive">{form.formState.errors.displayName.message}</p>}
+                <Label htmlFor="display_name">Display Name *</Label>
+                <Input id="display_name" {...form.register('display_name')} placeholder="Scalar Quantities" disabled={isViewing} />
+                {form.formState.errors.display_name && <p className="text-xs text-destructive">{form.formState.errors.display_name.message}</p>}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -110,6 +140,10 @@ const SubTopicForm: React.FC = () => {
                   <Input id="position" type="number" {...form.register('position', { valueAsNumber: true })} disabled={isViewing} />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" {...form.register('description')} placeholder="Optional description..." disabled={isViewing} />
+              </div>
             </CardContent>
           </Card>
 
@@ -117,8 +151,8 @@ const SubTopicForm: React.FC = () => {
             <CardHeader><CardTitle>Status & Visibility</CardTitle><CardDescription>Control the visibility of this sub-topic</CardDescription></CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div><Label htmlFor="isActive" className="text-base">Active Status</Label><p className="text-sm text-muted-foreground">Inactive sub-topics won't be visible to users</p></div>
-                <Switch id="isActive" checked={form.watch('isActive')} onCheckedChange={(checked) => form.setValue('isActive', checked)} disabled={isViewing} />
+                <div><Label htmlFor="is_active" className="text-base">Active Status</Label><p className="text-sm text-muted-foreground">Inactive sub-topics won't be visible to users</p></div>
+                <Switch id="is_active" checked={form.watch('is_active')} onCheckedChange={(checked) => form.setValue('is_active', checked)} disabled={isViewing} />
               </div>
             </CardContent>
           </Card>
@@ -128,9 +162,9 @@ const SubTopicForm: React.FC = () => {
               <CardHeader><CardTitle>Metadata</CardTitle><CardDescription>System information about this sub-topic</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><p className="text-muted-foreground">Topic</p><p className="font-medium">{getTopicById(existingSubTopic.topicId)?.displayName || 'N/A'}</p></div>
-                  <div><p className="text-muted-foreground">Created At</p><p className="font-medium">{existingSubTopic.createdAt.toLocaleDateString()}</p></div>
-                  <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium">{existingSubTopic.updatedAt.toLocaleDateString()}</p></div>
+                  <div><p className="text-muted-foreground">Topic</p><p className="font-medium">{getTopicName(existingSubTopic.topic_id)}</p></div>
+                  <div><p className="text-muted-foreground">Created At</p><p className="font-medium">{new Date(existingSubTopic.created_at).toLocaleDateString()}</p></div>
+                  <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium">{new Date(existingSubTopic.updated_at).toLocaleDateString()}</p></div>
                   <div><p className="text-muted-foreground">Sub-Topic ID</p><p className="font-mono text-xs">{existingSubTopic.id}</p></div>
                 </div>
               </CardContent>
@@ -140,7 +174,7 @@ const SubTopicForm: React.FC = () => {
           {!isViewing && (
             <div className="flex gap-3 justify-end">
               <Button type="button" variant="outline" onClick={() => navigate('/admin/subtopics')}>Cancel</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}{isEditing ? 'Update Sub-Topic' : 'Create Sub-Topic'}</Button>
+              <Button type="submit" disabled={create.isPending || update.isPending}>{(create.isPending || update.isPending) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}{isEditing ? 'Update Sub-Topic' : 'Create Sub-Topic'}</Button>
             </div>
           )}
         </form>
