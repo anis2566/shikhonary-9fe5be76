@@ -29,6 +29,14 @@ import TopicList from "./pages/admin/academic/TopicList";
 import SubTopicList from "./pages/admin/academic/SubTopicList";
 import AcademicTree from "./pages/admin/academic/AcademicTree";
 
+// Academic Management - Details
+import BoardDetails from "./pages/admin/academic/BoardDetails";
+import ClassDetails from "./pages/admin/academic/ClassDetails";
+import SubjectDetails from "./pages/admin/academic/SubjectDetails";
+import ChapterDetails from "./pages/admin/academic/ChapterDetails";
+import TopicDetails from "./pages/admin/academic/TopicDetails";
+import SubTopicDetails from "./pages/admin/academic/SubTopicDetails";
+
 // Academic Management - Forms
 import BoardForm from "./pages/admin/academic/BoardForm";
 import ClassForm from "./pages/admin/academic/ClassForm";
@@ -40,8 +48,10 @@ import SubTopicForm from "./pages/admin/academic/SubTopicForm";
 // Question Bank
 import McqList from "./pages/admin/academic/McqList";
 import McqForm from "./pages/admin/academic/McqForm";
+import McqDetails from "./pages/admin/academic/McqDetails";
 import CqList from "./pages/admin/academic/CqList";
 import CqForm from "./pages/admin/academic/CqForm";
+import CqDetails from "./pages/admin/academic/CqDetails";
 
 const queryClient = new QueryClient();
 
@@ -76,49 +86,49 @@ const App = () => (
             {/* Academic Management - Boards */}
             <Route path="boards" element={<BoardList />} />
             <Route path="boards/create" element={<BoardForm />} />
-            <Route path="boards/:id" element={<BoardForm />} />
+            <Route path="boards/:id" element={<BoardDetails />} />
             <Route path="boards/:id/edit" element={<BoardForm />} />
             
             {/* Academic Management - Classes */}
             <Route path="classes" element={<ClassList />} />
             <Route path="classes/create" element={<ClassForm />} />
-            <Route path="classes/:id" element={<ClassForm />} />
+            <Route path="classes/:id" element={<ClassDetails />} />
             <Route path="classes/:id/edit" element={<ClassForm />} />
             
             {/* Academic Management - Subjects */}
             <Route path="subjects" element={<SubjectList />} />
             <Route path="subjects/create" element={<SubjectForm />} />
-            <Route path="subjects/:id" element={<SubjectForm />} />
+            <Route path="subjects/:id" element={<SubjectDetails />} />
             <Route path="subjects/:id/edit" element={<SubjectForm />} />
             
             {/* Academic Management - Chapters */}
             <Route path="chapters" element={<ChapterList />} />
             <Route path="chapters/create" element={<ChapterForm />} />
-            <Route path="chapters/:id" element={<ChapterForm />} />
+            <Route path="chapters/:id" element={<ChapterDetails />} />
             <Route path="chapters/:id/edit" element={<ChapterForm />} />
             
             {/* Academic Management - Topics */}
             <Route path="topics" element={<TopicList />} />
             <Route path="topics/create" element={<TopicForm />} />
-            <Route path="topics/:id" element={<TopicForm />} />
+            <Route path="topics/:id" element={<TopicDetails />} />
             <Route path="topics/:id/edit" element={<TopicForm />} />
             
             {/* Academic Management - SubTopics */}
             <Route path="subtopics" element={<SubTopicList />} />
             <Route path="subtopics/create" element={<SubTopicForm />} />
-            <Route path="subtopics/:id" element={<SubTopicForm />} />
+            <Route path="subtopics/:id" element={<SubTopicDetails />} />
             <Route path="subtopics/:id/edit" element={<SubTopicForm />} />
             
             {/* Question Bank - MCQs */}
             <Route path="mcqs" element={<McqList />} />
             <Route path="mcqs/create" element={<McqForm />} />
-            <Route path="mcqs/:id" element={<McqForm />} />
+            <Route path="mcqs/:id" element={<McqDetails />} />
             <Route path="mcqs/:id/edit" element={<McqForm />} />
             
             {/* Question Bank - CQs */}
             <Route path="cqs" element={<CqList />} />
             <Route path="cqs/create" element={<CqForm />} />
-            <Route path="cqs/:id" element={<CqForm />} />
+            <Route path="cqs/:id" element={<CqDetails />} />
             <Route path="cqs/:id/edit" element={<CqForm />} />
           </Route>
 
