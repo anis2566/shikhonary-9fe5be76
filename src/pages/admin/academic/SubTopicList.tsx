@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Layers, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, Layers, Filter, Download, Upload, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AcademicDataTable, { Column, StatusBadge } from '@/components/academic/AcademicDataTable';
+import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
@@ -10,6 +10,8 @@ import BulkActions from '@/components/academic/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { AcademicSubTopic } from '@/types';
 import { mockSubTopics, mockTopics, getTopicById } from '@/lib/academic-mock-data';
@@ -25,6 +27,7 @@ const SubTopicList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [reorderMode, setReorderMode] = useState(false);
 
   const filteredSubTopics = useMemo(() => {
     return subTopics.filter((subTopic) => {
@@ -36,9 +39,10 @@ const SubTopicList: React.FC = () => {
   }, [subTopics, search, filterTopic, filterStatus]);
 
   const paginatedSubTopics = useMemo(() => {
+    if (reorderMode) return filteredSubTopics;
     const start = (currentPage - 1) * itemsPerPage;
     return filteredSubTopics.slice(start, start + itemsPerPage);
-  }, [filteredSubTopics, currentPage, itemsPerPage]);
+  }, [filteredSubTopics, currentPage, itemsPerPage, reorderMode]);
 
   const totalPages = Math.ceil(filteredSubTopics.length / itemsPerPage);
 
@@ -54,6 +58,11 @@ const SubTopicList: React.FC = () => {
   const handleToggleStatus = (subTopic: AcademicSubTopic) => {
     setSubTopics(subTopics.map((s) => (s.id === subTopic.id ? { ...s, isActive: !s.isActive, updatedAt: new Date() } : s)));
     toast.success(`Sub-topic ${subTopic.isActive ? 'deactivated' : 'activated'} successfully`);
+  };
+
+  const handleReorder = (newData: AcademicSubTopic[]) => {
+    setSubTopics(newData);
+    toast.success('Order updated successfully');
   };
 
   const columns: Column<AcademicSubTopic>[] = [
@@ -86,17 +95,28 @@ const SubTopicList: React.FC = () => {
                 <SelectContent><SelectItem value="all">All Status</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="reorder-mode" className="text-sm cursor-pointer">Reorder</Label>
+                <Switch id="reorder-mode" checked={reorderMode} onCheckedChange={setReorderMode} />
+              </div>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Download className="h-4 w-4" /></Button>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Upload className="h-4 w-4" /></Button>
               <Button onClick={() => navigate('/admin/subtopics/create')}><Plus className="h-4 w-4 mr-2" />Add Sub-Topic</Button>
             </div>
           </div>
           <BulkActions selectedCount={selectedIds.length} onClear={() => setSelectedIds([])} onDelete={() => { setSubTopics(subTopics.filter((s) => !selectedIds.includes(s.id))); setSelectedIds([]); toast.success(`${selectedIds.length} sub-topics deleted`); }} onActivate={() => { setSubTopics(subTopics.map((s) => (selectedIds.includes(s.id) ? { ...s, isActive: true } : s))); setSelectedIds([]); toast.success('Selected sub-topics activated'); }} onDeactivate={() => { setSubTopics(subTopics.map((s) => (selectedIds.includes(s.id) ? { ...s, isActive: false } : s))); setSelectedIds([]); toast.success('Selected sub-topics deactivated'); }} />
+          {reorderMode && (
+            <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <GripVertical className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Drag and drop rows to reorder. Changes are saved automatically.</span>
+            </div>
+          )}
         </div>
 
-        <AcademicDataTable columns={columns} data={paginatedSubTopics} onView={(subTopic) => navigate(`/admin/subtopics/${subTopic.id}`)} onEdit={(subTopic) => navigate(`/admin/subtopics/${subTopic.id}/edit`)} onDelete={(subTopic) => { setDeletingSubTopic(subTopic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No sub-topics found" selectable selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(subTopic) => subTopic.isActive} />
-        {filteredSubTopics.length > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredSubTopics.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />}
+        <DraggableDataTable columns={columns} data={paginatedSubTopics} onReorder={handleReorder} onView={(subTopic) => navigate(`/admin/subtopics/${subTopic.id}`)} onEdit={(subTopic) => navigate(`/admin/subtopics/${subTopic.id}/edit`)} onDelete={(subTopic) => { setDeletingSubTopic(subTopic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No sub-topics found" selectable={!reorderMode} selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(subTopic) => subTopic.isActive} reorderDisabled={!reorderMode} />
+        {filteredSubTopics.length > 0 && !reorderMode && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredSubTopics.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />}
       </div>
       <DeleteConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Delete Sub-Topic" description={`Are you sure you want to delete "${deletingSubTopic?.displayName}"?`} onConfirm={handleDelete} />
     </div>

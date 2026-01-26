@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Hash, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, Hash, Filter, Download, Upload, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AcademicDataTable, { Column, StatusBadge } from '@/components/academic/AcademicDataTable';
+import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
@@ -10,6 +10,8 @@ import BulkActions from '@/components/academic/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { AcademicTopic } from '@/types';
 import { mockTopics, mockChapters, getChapterById, mockSubTopics } from '@/lib/academic-mock-data';
@@ -25,6 +27,7 @@ const TopicList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [reorderMode, setReorderMode] = useState(false);
 
   const filteredTopics = useMemo(() => {
     return topics.filter((topic) => {
@@ -36,9 +39,10 @@ const TopicList: React.FC = () => {
   }, [topics, search, filterChapter, filterStatus]);
 
   const paginatedTopics = useMemo(() => {
+    if (reorderMode) return filteredTopics;
     const start = (currentPage - 1) * itemsPerPage;
     return filteredTopics.slice(start, start + itemsPerPage);
-  }, [filteredTopics, currentPage, itemsPerPage]);
+  }, [filteredTopics, currentPage, itemsPerPage, reorderMode]);
 
   const totalPages = Math.ceil(filteredTopics.length / itemsPerPage);
 
@@ -54,6 +58,11 @@ const TopicList: React.FC = () => {
   const handleToggleStatus = (topic: AcademicTopic) => {
     setTopics(topics.map((t) => (t.id === topic.id ? { ...t, isActive: !t.isActive, updatedAt: new Date() } : t)));
     toast.success(`Topic ${topic.isActive ? 'deactivated' : 'activated'} successfully`);
+  };
+
+  const handleReorder = (newData: AcademicTopic[]) => {
+    setTopics(newData);
+    toast.success('Order updated successfully');
   };
 
   const columns: Column<AcademicTopic>[] = [
@@ -87,17 +96,28 @@ const TopicList: React.FC = () => {
                 <SelectContent><SelectItem value="all">All Status</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="reorder-mode" className="text-sm cursor-pointer">Reorder</Label>
+                <Switch id="reorder-mode" checked={reorderMode} onCheckedChange={setReorderMode} />
+              </div>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Download className="h-4 w-4" /></Button>
               <Button variant="outline" size="icon" className="hidden sm:flex"><Upload className="h-4 w-4" /></Button>
               <Button onClick={() => navigate('/admin/topics/create')}><Plus className="h-4 w-4 mr-2" />Add Topic</Button>
             </div>
           </div>
           <BulkActions selectedCount={selectedIds.length} onClear={() => setSelectedIds([])} onDelete={() => { setTopics(topics.filter((t) => !selectedIds.includes(t.id))); setSelectedIds([]); toast.success(`${selectedIds.length} topics deleted`); }} onActivate={() => { setTopics(topics.map((t) => (selectedIds.includes(t.id) ? { ...t, isActive: true } : t))); setSelectedIds([]); toast.success('Selected topics activated'); }} onDeactivate={() => { setTopics(topics.map((t) => (selectedIds.includes(t.id) ? { ...t, isActive: false } : t))); setSelectedIds([]); toast.success('Selected topics deactivated'); }} />
+          {reorderMode && (
+            <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <GripVertical className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Drag and drop rows to reorder. Changes are saved automatically.</span>
+            </div>
+          )}
         </div>
 
-        <AcademicDataTable columns={columns} data={paginatedTopics} onView={(topic) => navigate(`/admin/topics/${topic.id}`)} onEdit={(topic) => navigate(`/admin/topics/${topic.id}/edit`)} onDelete={(topic) => { setDeletingTopic(topic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No topics found" selectable selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(topic) => topic.isActive} />
-        {filteredTopics.length > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredTopics.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />}
+        <DraggableDataTable columns={columns} data={paginatedTopics} onReorder={handleReorder} onView={(topic) => navigate(`/admin/topics/${topic.id}`)} onEdit={(topic) => navigate(`/admin/topics/${topic.id}/edit`)} onDelete={(topic) => { setDeletingTopic(topic); setDeleteDialogOpen(true); }} onToggleStatus={handleToggleStatus} emptyMessage="No topics found" selectable={!reorderMode} selectedIds={selectedIds} onSelectionChange={setSelectedIds} getItemStatus={(topic) => topic.isActive} reorderDisabled={!reorderMode} />
+        {filteredTopics.length > 0 && !reorderMode && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredTopics.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />}
       </div>
       <DeleteConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Delete Topic" description={`Are you sure you want to delete "${deletingTopic?.displayName}"? This will also remove all associated sub-topics.`} onConfirm={handleDelete} />
     </div>
