@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
-
+import { useAuth } from '@/hooks/useAuth';
 interface NavItem {
   title: string;
   url: string;
@@ -76,8 +76,15 @@ interface SidebarContentProps {
 
 const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [academicOpen, setAcademicOpen] = useState(true);
   const [questionBankOpen, setQuestionBankOpen] = useState(true);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const isActive = (url: string) => location.pathname === url;
   const isGroupActive = (group: NavGroup) => group.items.some((item) => isActive(item.url));
@@ -162,8 +169,14 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-2">
+        {user && !collapsed && (
+          <div className="px-3 py-2 text-xs text-muted-foreground truncate">
+            {user.email}
+          </div>
+        )}
         <button
+          onClick={handleLogout}
           className={cn(
             'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors',
             collapsed && 'justify-center'
