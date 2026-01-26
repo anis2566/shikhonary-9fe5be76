@@ -20,6 +20,18 @@ import CreateTenant from "./pages/admin/CreateTenant";
 import Sessions from "./pages/admin/Sessions";
 import Settings from "./pages/admin/Settings";
 
+// Academic Management
+import Boards from "./pages/admin/academic/Boards";
+import Classes from "./pages/admin/academic/Classes";
+import Subjects from "./pages/admin/academic/Subjects";
+import Chapters from "./pages/admin/academic/Chapters";
+import Topics from "./pages/admin/academic/Topics";
+import SubTopics from "./pages/admin/academic/SubTopics";
+import McqList from "./pages/admin/academic/McqList";
+import McqForm from "./pages/admin/academic/McqForm";
+import CqList from "./pages/admin/academic/CqList";
+import CqForm from "./pages/admin/academic/CqForm";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -46,6 +58,22 @@ const App = () => (
             <Route path="tenants/create" element={<CreateTenant />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="settings" element={<Settings />} />
+            
+            {/* Academic Management */}
+            <Route path="boards" element={<Boards />} />
+            <Route path="classes" element={<Classes />} />
+            <Route path="subjects" element={<Subjects />} />
+            <Route path="chapters" element={<Chapters />} />
+            <Route path="topics" element={<Topics />} />
+            <Route path="subtopics" element={<SubTopics />} />
+            <Route path="mcqs" element={<McqList />} />
+            <Route path="mcqs/create" element={<McqForm />} />
+            <Route path="mcqs/:id" element={<McqForm />} />
+            <Route path="mcqs/:id/edit" element={<McqForm />} />
+            <Route path="cqs" element={<CqList />} />
+            <Route path="cqs/create" element={<CqForm />} />
+            <Route path="cqs/:id" element={<CqForm />} />
+            <Route path="cqs/:id/edit" element={<CqForm />} />
           </Route>
 
           {/* 404 */}
