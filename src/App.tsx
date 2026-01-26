@@ -27,6 +27,7 @@ import SubjectList from "./pages/admin/academic/SubjectList";
 import ChapterList from "./pages/admin/academic/ChapterList";
 import TopicList from "./pages/admin/academic/TopicList";
 import SubTopicList from "./pages/admin/academic/SubTopicList";
+import AcademicTree from "./pages/admin/academic/AcademicTree";
 
 // Academic Management - Forms
 import BoardForm from "./pages/admin/academic/BoardForm";
@@ -68,6 +69,9 @@ const App = () => (
             <Route path="tenants/create" element={<CreateTenant />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="settings" element={<Settings />} />
+            
+            {/* Academic Management - Tree View */}
+            <Route path="academic-tree" element={<AcademicTree />} />
             
             {/* Academic Management - Boards */}
             <Route path="boards" element={<BoardList />} />
