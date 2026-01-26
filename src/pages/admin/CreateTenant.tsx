@@ -35,12 +35,15 @@ import {
   Calendar,
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  UserCog
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { cn } from "@/lib/utils";
 import { validateStep1, validateStep3, type Step1ValidationResult, type Step3ValidationResult } from "@/lib/mock-api";
+import UserSearchSelect, { NewUserData } from "@/components/admin/UserSearchSelect";
+import { User } from "@/types";
 
 const tenantFormSchema = z.object({
   // Basic Info
@@ -118,6 +121,7 @@ const steps = [
   { id: 3, title: "Domain", icon: Globe, description: "Domain configuration" },
   { id: 4, title: "Subscription", icon: CreditCard, description: "Plan & billing" },
   { id: 5, title: "Limits", icon: Settings2, description: "Usage limits" },
+  { id: 6, title: "Admin User", icon: UserCog, description: "Assign or create admin" },
 ];
 
 const CreateTenant = () => {
@@ -126,6 +130,11 @@ const CreateTenant = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [step1Validation, setStep1Validation] = useState<Step1ValidationResult | null>(null);
   const [step3Validation, setStep3Validation] = useState<Step3ValidationResult | null>(null);
+  
+  // Admin user state
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newUserData, setNewUserData] = useState<NewUserData | null>(null);
+  const [userMode, setUserMode] = useState<"existing" | "new">("existing");
 
   const form = useForm<TenantFormValues>({
     resolver: zodResolver(tenantFormSchema),
@@ -160,7 +169,22 @@ const CreateTenant = () => {
   });
 
   const onSubmit = (data: TenantFormValues) => {
+    // Validate admin user selection
+    if (userMode === "existing" && !selectedUser) {
+      toast.error("Please select an admin user for this tenant");
+      return;
+    }
+    if (userMode === "new" && (!newUserData?.name || !newUserData?.email)) {
+      toast.error("Please fill in all required fields for the new user");
+      return;
+    }
+
+    const adminData = userMode === "existing" 
+      ? { existingUserId: selectedUser?.id }
+      : { newUser: newUserData };
+
     console.log("Tenant data:", data);
+    console.log("Admin user data:", adminData);
     toast.success("Tenant created successfully!");
     navigate("/admin/tenants");
   };
@@ -191,6 +215,29 @@ const CreateTenant = () => {
       case 5:
         fieldsToValidate = ["studentLimit", "teacherLimit", "examLimit", "storageLimit"];
         break;
+      case 6:
+        // Validate admin user step
+        if (userMode === "existing" && !selectedUser) {
+          toast.error("Please select an existing user");
+          return false;
+        }
+        if (userMode === "new") {
+          if (!newUserData?.name || newUserData.name.trim() === "") {
+            toast.error("Please enter the user's name");
+            return false;
+          }
+          if (!newUserData?.email || newUserData.email.trim() === "") {
+            toast.error("Please enter the user's email");
+            return false;
+          }
+          // Basic email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(newUserData.email)) {
+            toast.error("Please enter a valid email address");
+            return false;
+          }
+        }
+        return true;
     }
 
     const result = await form.trigger(fieldsToValidate);
@@ -967,9 +1014,24 @@ const CreateTenant = () => {
                       )}
                     />
 
+                  </div>
+                )}
+
+                {/* Step 6: Admin User */}
+                {currentStep === 6 && (
+                  <div className="space-y-4">
+                    <UserSearchSelect
+                      selectedUser={selectedUser}
+                      onUserSelect={setSelectedUser}
+                      newUserData={newUserData}
+                      onNewUserDataChange={setNewUserData}
+                      mode={userMode}
+                      onModeChange={setUserMode}
+                    />
+
                     {/* Summary */}
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <p className="font-medium mb-3">Summary</p>
+                    <div className="bg-muted/50 rounded-lg p-4 mt-6">
+                      <p className="font-medium mb-3">Tenant Summary</p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">Name:</span>
                         <span className="font-medium">{form.watch("name") || "-"}</span>
@@ -979,6 +1041,13 @@ const CreateTenant = () => {
                         <span className="font-medium">{form.watch("subdomain") || "-"}.shikhonary.com</span>
                         <span className="text-muted-foreground">Tier:</span>
                         <span className="font-medium">{form.watch("subscriptionTier")}</span>
+                        <span className="text-muted-foreground">Admin:</span>
+                        <span className="font-medium">
+                          {userMode === "existing" 
+                            ? selectedUser?.name || "Not selected"
+                            : newUserData?.name || "Not configured"
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
