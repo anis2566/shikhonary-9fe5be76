@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, GraduationCap, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, GraduationCap, Filter, Download, Upload, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AcademicDataTable, { Column, StatusBadge } from '@/components/academic/AcademicDataTable';
+import DraggableDataTable, { Column, StatusBadge } from '@/components/academic/DraggableDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
@@ -10,6 +10,8 @@ import BulkActions from '@/components/academic/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { AcademicClass } from '@/types';
 import { mockClasses, mockBoards, getBoardById, mockSubjects } from '@/lib/academic-mock-data';
@@ -25,6 +27,7 @@ const ClassList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [reorderMode, setReorderMode] = useState(false);
 
   const filteredClasses = useMemo(() => {
     return classes.filter((cls) => {
@@ -42,9 +45,10 @@ const ClassList: React.FC = () => {
   }, [classes, search, filterBoard, filterStatus]);
 
   const paginatedClasses = useMemo(() => {
+    if (reorderMode) return filteredClasses;
     const start = (currentPage - 1) * itemsPerPage;
     return filteredClasses.slice(start, start + itemsPerPage);
-  }, [filteredClasses, currentPage, itemsPerPage]);
+  }, [filteredClasses, currentPage, itemsPerPage, reorderMode]);
 
   const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
 
@@ -66,6 +70,11 @@ const ClassList: React.FC = () => {
   const handleToggleStatus = (cls: AcademicClass) => {
     setClasses(classes.map((c) => (c.id === cls.id ? { ...c, isActive: !c.isActive, updatedAt: new Date() } : c)));
     toast.success(`Class ${cls.isActive ? 'deactivated' : 'activated'} successfully`);
+  };
+
+  const handleReorder = (newData: AcademicClass[]) => {
+    setClasses(newData);
+    toast.success('Order updated successfully');
   };
 
   const handleBulkDelete = () => {
@@ -121,7 +130,6 @@ const ClassList: React.FC = () => {
       <DashboardHeader title="Classes" subtitle="Manage academic classes for each board" />
 
       <div className="p-4 lg:p-6 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard title="Total Classes" value={stats.total} icon={<GraduationCap className="h-5 w-5" />} />
           <StatsCard title="Active" value={stats.active} icon={<GraduationCap className="h-5 w-5" />} />
@@ -129,7 +137,6 @@ const ClassList: React.FC = () => {
           <StatsCard title="Total Subjects" value={stats.subjects} icon={<GraduationCap className="h-5 w-5" />} />
         </div>
 
-        {/* Actions Bar */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-between">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
@@ -165,17 +172,15 @@ const ClassList: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="hidden sm:flex">
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="hidden sm:flex">
-                <Upload className="h-4 w-4" />
-              </Button>
-              <Button onClick={() => navigate('/admin/classes/create')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Class
-              </Button>
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="reorder-mode" className="text-sm cursor-pointer">Reorder</Label>
+                <Switch id="reorder-mode" checked={reorderMode} onCheckedChange={setReorderMode} />
+              </div>
+              <Button variant="outline" size="icon" className="hidden sm:flex"><Download className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="hidden sm:flex"><Upload className="h-4 w-4" /></Button>
+              <Button onClick={() => navigate('/admin/classes/create')}><Plus className="h-4 w-4 mr-2" />Add Class</Button>
             </div>
           </div>
 
@@ -183,53 +188,40 @@ const ClassList: React.FC = () => {
             selectedCount={selectedIds.length}
             onClear={() => setSelectedIds([])}
             onDelete={handleBulkDelete}
-            onActivate={() => {
-              setClasses(classes.map((c) => (selectedIds.includes(c.id) ? { ...c, isActive: true } : c)));
-              setSelectedIds([]);
-              toast.success('Selected classes activated');
-            }}
-            onDeactivate={() => {
-              setClasses(classes.map((c) => (selectedIds.includes(c.id) ? { ...c, isActive: false } : c)));
-              setSelectedIds([]);
-              toast.success('Selected classes deactivated');
-            }}
+            onActivate={() => { setClasses(classes.map((c) => (selectedIds.includes(c.id) ? { ...c, isActive: true } : c))); setSelectedIds([]); toast.success('Selected classes activated'); }}
+            onDeactivate={() => { setClasses(classes.map((c) => (selectedIds.includes(c.id) ? { ...c, isActive: false } : c))); setSelectedIds([]); toast.success('Selected classes deactivated'); }}
           />
+
+          {reorderMode && (
+            <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <GripVertical className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary font-medium">Drag and drop rows to reorder. Changes are saved automatically.</span>
+            </div>
+          )}
         </div>
 
-        {/* Table */}
-        <AcademicDataTable
+        <DraggableDataTable
           columns={columns}
           data={paginatedClasses}
+          onReorder={handleReorder}
           onView={(cls) => navigate(`/admin/classes/${cls.id}`)}
           onEdit={(cls) => navigate(`/admin/classes/${cls.id}/edit`)}
           onDelete={(cls) => { setDeletingClass(cls); setDeleteDialogOpen(true); }}
           onToggleStatus={handleToggleStatus}
           emptyMessage="No classes found"
-          selectable
+          selectable={!reorderMode}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           getItemStatus={(cls) => cls.isActive}
+          reorderDisabled={!reorderMode}
         />
 
-        {filteredClasses.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filteredClasses.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
-          />
+        {filteredClasses.length > 0 && !reorderMode && (
+          <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredClasses.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }} />
         )}
       </div>
 
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title="Delete Class"
-        description={`Are you sure you want to delete "${deletingClass?.displayName}"? This will also remove all associated subjects and content.`}
-        onConfirm={handleDelete}
-      />
+      <DeleteConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Delete Class" description={`Are you sure you want to delete "${deletingClass?.displayName}"? This will also remove all associated subjects and content.`} onConfirm={handleDelete} />
     </div>
   );
 };
