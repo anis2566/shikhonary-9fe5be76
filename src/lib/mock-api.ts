@@ -1,3 +1,6 @@
+import { User } from "@/types";
+import { mockUsers } from "./mock-data";
+
 // Mock API for tenant validation
 // These would be replaced with actual API calls to the backend
 
@@ -22,6 +25,11 @@ export interface Step1ValidationResult {
 export interface Step3ValidationResult {
   subdomain: ValidationResult;
   customDomain: ValidationResult;
+}
+
+export interface EmailValidationResult {
+  isValid: boolean;
+  message: string;
 }
 
 /**
@@ -150,4 +158,36 @@ export async function checkSubdomainAvailability(subdomain: string): Promise<Val
   }
   
   return { isValid: true, message: "Subdomain is available" };
+}
+
+/**
+ * Search users by name or email
+ */
+export async function searchUsers(query: string): Promise<User[]> {
+  await delay(400);
+
+  if (!query || query.length < 2) {
+    return [];
+  }
+
+  const lowerQuery = query.toLowerCase();
+  return mockUsers.filter(
+    (user) =>
+      user.name.toLowerCase().includes(lowerQuery) ||
+      user.email.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * Validate user email (check if already exists)
+ */
+export async function validateUserEmail(email: string): Promise<EmailValidationResult> {
+  await delay(500);
+
+  const emailExists = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
+
+  return {
+    isValid: !emailExists,
+    message: emailExists ? "This email is already registered" : "Email is available",
+  };
 }
