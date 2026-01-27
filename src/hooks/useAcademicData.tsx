@@ -3,20 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Types matching database schema
-export interface Board {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string | null;
-  position: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Class {
   id: string;
-  board_id: string;
   name: string;
   display_name: string;
   description: string | null;
@@ -109,103 +97,12 @@ export interface Cq {
   updated_at: string;
 }
 
-// Boards
-export function useBoards() {
-  return useQuery({
-    queryKey: ['boards'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('boards')
-        .select('*')
-        .order('position', { ascending: true });
-      if (error) throw error;
-      return data as Board[];
-    },
-  });
-}
-
-export function useBoard(id: string) {
-  return useQuery({
-    queryKey: ['boards', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('boards')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      return data as Board;
-    },
-    enabled: !!id,
-  });
-}
-
-export function useBoardMutations() {
-  const queryClient = useQueryClient();
-
-  const create = useMutation({
-    mutationFn: async (data: Omit<Board, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data: result, error } = await supabase.from('boards').insert(data).select().single();
-      if (error) throw error;
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
-      toast.success('Board created successfully');
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const update = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Board> }) => {
-      const { data: result, error } = await supabase.from('boards').update(data).eq('id', id).select().single();
-      if (error) throw error;
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
-      toast.success('Board updated successfully');
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('boards').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
-      toast.success('Board deleted successfully');
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const reorder = useMutation({
-    mutationFn: async (items: { id: string; position: number }[]) => {
-      const updates = items.map(item => 
-        supabase.from('boards').update({ position: item.position }).eq('id', item.id)
-      );
-      await Promise.all(updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
-      toast.success('Order updated');
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  return { create, update, remove, reorder };
-}
-
 // Classes
-export function useClasses(boardId?: string) {
+export function useClasses() {
   return useQuery({
-    queryKey: ['classes', boardId],
+    queryKey: ['classes'],
     queryFn: async () => {
-      let query = supabase.from('classes').select('*').order('position');
-      if (boardId) query = query.eq('board_id', boardId);
-      const { data, error } = await query;
+      const { data, error } = await supabase.from('classes').select('*').order('position');
       if (error) throw error;
       return data as Class[];
     },
@@ -685,7 +582,21 @@ export function useMcqMutations() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  return { create, update, remove };
+  const reorder = useMutation({
+    mutationFn: async (items: { id: string; position: number }[]) => {
+      const updates = items.map(item => 
+        supabase.from('mcqs').update({ position: item.position }).eq('id', item.id)
+      );
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mcqs'] });
+      toast.success('Order updated');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return { create, update, remove, reorder };
 }
 
 // CQs
@@ -755,5 +666,19 @@ export function useCqMutations() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  return { create, update, remove };
+  const reorder = useMutation({
+    mutationFn: async (items: { id: string; position: number }[]) => {
+      const updates = items.map(item => 
+        supabase.from('cqs').update({ position: item.position }).eq('id', item.id)
+      );
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cqs'] });
+      toast.success('Order updated');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return { create, update, remove, reorder };
 }

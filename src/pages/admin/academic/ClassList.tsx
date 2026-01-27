@@ -12,17 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useClasses, useClassMutations, useBoards, useSubjects, Class } from '@/hooks/useAcademicData';
+import { useClasses, useClassMutations, useSubjects, Class } from '@/hooks/useAcademicData';
 
 const ClassList: React.FC = () => {
   const navigate = useNavigate();
   const { data: classes = [], isLoading } = useClasses();
-  const { data: boards = [] } = useBoards();
   const { data: subjects = [] } = useSubjects();
   const { remove, update, reorder } = useClassMutations();
 
   const [search, setSearch] = useState('');
-  const [filterBoard, setFilterBoard] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingClass, setDeletingClass] = useState<Class | null>(null);
@@ -34,11 +32,10 @@ const ClassList: React.FC = () => {
   const filteredClasses = useMemo(() => {
     return classes.filter((cls) => {
       const matchesSearch = cls.name.toLowerCase().includes(search.toLowerCase()) || cls.display_name.toLowerCase().includes(search.toLowerCase());
-      const matchesBoard = filterBoard === 'all' || cls.board_id === filterBoard;
       const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' && cls.is_active) || (filterStatus === 'inactive' && !cls.is_active);
-      return matchesSearch && matchesBoard && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [classes, search, filterBoard, filterStatus]);
+  }, [classes, search, filterStatus]);
 
   const paginatedClasses = useMemo(() => {
     if (reorderMode) return filteredClasses;
@@ -52,8 +49,6 @@ const ClassList: React.FC = () => {
     const activeCount = classes.filter((c) => c.is_active).length;
     return { total: classes.length, active: activeCount, inactive: classes.length - activeCount, subjects: subjects.length };
   }, [classes, subjects]);
-
-  const getBoardName = (boardId: string) => boards.find((b) => b.id === boardId)?.name || 'N/A';
 
   const handleDelete = () => {
     if (deletingClass) {
@@ -81,12 +76,6 @@ const ClassList: React.FC = () => {
         </div>
       ),
     },
-    {
-      key: 'board_id',
-      header: 'Board',
-      hideOnMobile: true,
-      render: (cls) => <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-sm">{getBoardName(cls.board_id)}</span>,
-    },
     { key: 'position', header: 'Position', hideOnMobile: true },
     { key: 'is_active', header: 'Status', render: (cls) => <StatusBadge active={cls.is_active} /> },
   ];
@@ -97,7 +86,7 @@ const ClassList: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <DashboardHeader title="Classes" subtitle="Manage academic classes for each board" />
+      <DashboardHeader title="Classes" subtitle="Manage academic classes" />
 
       <div className="p-4 lg:p-6 space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -114,13 +103,6 @@ const ClassList: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search classes..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-9" />
               </div>
-              <Select value={filterBoard} onValueChange={(v) => { setFilterBoard(v); setCurrentPage(1); }}>
-                <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All Boards" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Boards</SelectItem>
-                  {boards.map((board) => <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
               <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
                 <SelectTrigger className="w-full sm:w-32"><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>

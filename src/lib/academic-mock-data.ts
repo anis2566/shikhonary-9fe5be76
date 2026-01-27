@@ -1,27 +1,4 @@
-import { AcademicBoard, AcademicClass, AcademicSubject, AcademicChapter, AcademicTopic, AcademicSubTopic, Mcq, Cq } from '@/types';
-
-export const mockBoards: AcademicBoard[] = [
-  {
-    id: 'board-1',
-    name: 'nctb',
-    code: 'NCTB',
-    displayName: 'National Curriculum and Textbook Board',
-    position: 1,
-    isActive: true,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-  },
-  {
-    id: 'board-2',
-    name: 'cambridge',
-    code: 'CAM',
-    displayName: 'Cambridge International',
-    position: 2,
-    isActive: true,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-  },
-];
+import { AcademicClass, AcademicSubject, AcademicChapter, AcademicTopic, AcademicSubTopic, Mcq, Cq } from '@/types';
 
 export const mockClasses: AcademicClass[] = [
   {
@@ -31,7 +8,6 @@ export const mockClasses: AcademicClass[] = [
     displayName: 'Class 9',
     position: 1,
     isActive: true,
-    boardId: 'board-1',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   },
@@ -42,7 +18,6 @@ export const mockClasses: AcademicClass[] = [
     displayName: 'Class 10',
     position: 2,
     isActive: true,
-    boardId: 'board-1',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   },
@@ -53,7 +28,6 @@ export const mockClasses: AcademicClass[] = [
     displayName: 'Class 11',
     position: 3,
     isActive: true,
-    boardId: 'board-1',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   },
@@ -62,9 +36,8 @@ export const mockClasses: AcademicClass[] = [
     name: 'o-level',
     level: 'O-Level',
     displayName: 'O Level',
-    position: 1,
+    position: 4,
     isActive: true,
-    boardId: 'board-2',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   },
@@ -332,14 +305,12 @@ export const mockCqs: Cq[] = [
 ];
 
 // Helper functions
-export const getBoardById = (id: string) => mockBoards.find(b => b.id === id);
 export const getClassById = (id: string) => mockClasses.find(c => c.id === id);
 export const getSubjectById = (id: string) => mockSubjects.find(s => s.id === id);
 export const getChapterById = (id: string) => mockChapters.find(c => c.id === id);
 export const getTopicById = (id: string) => mockTopics.find(t => t.id === id);
 export const getSubTopicById = (id: string) => mockSubTopics.find(s => s.id === id);
 
-export const getClassesByBoard = (boardId: string) => mockClasses.filter(c => c.boardId === boardId);
 export const getSubjectsByClass = (classId: string) => mockSubjects.filter(s => s.classId === classId);
 export const getChaptersBySubject = (subjectId: string) => mockChapters.filter(c => c.subjectId === subjectId);
 export const getTopicsByChapter = (chapterId: string) => mockTopics.filter(t => t.chapterId === chapterId);

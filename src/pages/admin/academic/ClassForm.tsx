@@ -9,16 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClass, useClassMutations, useClasses, useBoards } from '@/hooks/useAcademicData';
+import { useClass, useClassMutations, useClasses } from '@/hooks/useAcademicData';
 
 const classSchema = z.object({
   name: z.string().min(1, 'Name is required').regex(/^[a-z0-9-]+$/, 'Name must be lowercase with hyphens only'),
   display_name: z.string().min(1, 'Display name is required'),
   description: z.string().optional(),
   position: z.number().min(0, 'Position must be 0 or greater'),
-  board_id: z.string().min(1, 'Board is required'),
   is_active: z.boolean(),
 });
 
@@ -32,12 +30,11 @@ const ClassForm: React.FC = () => {
 
   const { data: existingClass, isLoading: loadingClass } = useClass(id || '');
   const { data: classes = [] } = useClasses();
-  const { data: boards = [] } = useBoards();
   const { create, update } = useClassMutations();
 
   const form = useForm<ClassFormData>({
     resolver: zodResolver(classSchema),
-    defaultValues: { name: '', display_name: '', description: '', position: 0, board_id: '', is_active: true },
+    defaultValues: { name: '', display_name: '', description: '', position: 0, is_active: true },
   });
 
   useEffect(() => {
@@ -51,7 +48,6 @@ const ClassForm: React.FC = () => {
         display_name: existingClass.display_name,
         description: existingClass.description || '',
         position: existingClass.position,
-        board_id: existingClass.board_id,
         is_active: existingClass.is_active,
       });
     }
@@ -63,7 +59,6 @@ const ClassForm: React.FC = () => {
       display_name: data.display_name,
       description: data.description || null,
       position: data.position,
-      board_id: data.board_id,
       is_active: data.is_active,
     };
     if (isEditing && id) {
@@ -77,8 +72,6 @@ const ClassForm: React.FC = () => {
     const displayName = form.watch('display_name');
     if (displayName) form.setValue('name', displayName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').trim());
   };
-
-  const getBoardName = (boardId: string) => boards.find((b) => b.id === boardId)?.display_name || 'N/A';
 
   if (loadingClass && (isEditing || isViewing)) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -109,20 +102,6 @@ const ClassForm: React.FC = () => {
 
       <div className="p-4 lg:p-6 max-w-3xl mx-auto">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle>Parent Board</CardTitle><CardDescription>Select the academic board this class belongs to</CardDescription></CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="board_id">Board *</Label>
-                <Select value={form.watch('board_id')} onValueChange={(value) => form.setValue('board_id', value)} disabled={isViewing}>
-                  <SelectTrigger><SelectValue placeholder="Select a board" /></SelectTrigger>
-                  <SelectContent>{boards.map((board) => <SelectItem key={board.id} value={board.id}>{board.display_name}</SelectItem>)}</SelectContent>
-                </Select>
-                {form.formState.errors.board_id && <p className="text-xs text-destructive">{form.formState.errors.board_id.message}</p>}
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader><CardTitle>Basic Information</CardTitle><CardDescription>Enter the basic details for this class</CardDescription></CardHeader>
             <CardContent className="space-y-4">
@@ -169,7 +148,6 @@ const ClassForm: React.FC = () => {
               <CardHeader><CardTitle>Metadata</CardTitle><CardDescription>System information about this class</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><p className="text-muted-foreground">Board</p><p className="font-medium">{getBoardName(existingClass.board_id)}</p></div>
                   <div><p className="text-muted-foreground">Created At</p><p className="font-medium">{new Date(existingClass.created_at).toLocaleDateString()}</p></div>
                   <div><p className="text-muted-foreground">Last Updated</p><p className="font-medium">{new Date(existingClass.updated_at).toLocaleDateString()}</p></div>
                   <div><p className="text-muted-foreground">Class ID</p><p className="font-mono text-xs">{existingClass.id}</p></div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, BookText, FileText, Hash, Clock, Calendar, ExternalLink, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, BookText, FileText, Hash, Clock, Calendar, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockClasses, getSubjectsByClass, getBoardById, mockChapters } from '@/lib/academic-mock-data';
+import { mockClasses, getSubjectsByClass, mockChapters } from '@/lib/academic-mock-data';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 
@@ -15,7 +15,6 @@ const ClassDetails: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
   const cls = mockClasses.find((c) => c.id === id);
-  const board = cls ? getBoardById(cls.boardId) : null;
   const subjects = cls ? getSubjectsByClass(cls.id) : [];
   const chapterCount = subjects.reduce((acc, subj) => acc + mockChapters.filter(ch => ch.subjectId === subj.id).length, 0);
 
@@ -45,11 +44,6 @@ const ClassDetails: React.FC = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Link to={`/admin/boards/${board?.id}`} className="hover:text-foreground">{board?.displayName}</Link>
-                  <ChevronRight className="h-3 w-3" />
-                  <span className="text-foreground">{cls.displayName}</span>
-                </div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl lg:text-2xl font-bold text-foreground">{cls.displayName}</h1>
                   <Badge variant="outline">{cls.level}</Badge>
@@ -83,7 +77,6 @@ const ClassDetails: React.FC = () => {
                   <div className="space-y-1"><p className="text-sm text-muted-foreground">Display Name</p><p className="font-medium">{cls.displayName}</p></div>
                   <div className="space-y-1"><p className="text-sm text-muted-foreground">Level</p><Badge variant="outline">{cls.level}</Badge></div>
                   <div className="space-y-1"><p className="text-sm text-muted-foreground">Slug</p><code className="text-sm bg-muted px-2 py-1 rounded">{cls.name}</code></div>
-                  <div className="space-y-1"><p className="text-sm text-muted-foreground">Board</p><Link to={`/admin/boards/${board?.id}`} className="text-primary hover:underline">{board?.displayName}</Link></div>
                 </div>
               </CardContent>
             </Card>

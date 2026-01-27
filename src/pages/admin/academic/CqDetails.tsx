@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockCqs, getSubjectById, getChapterById, getTopicById, getSubTopicById, getClassById, getBoardById } from '@/lib/academic-mock-data';
+import { mockCqs, getSubjectById, getChapterById, getTopicById, getSubTopicById, getClassById } from '@/lib/academic-mock-data';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 
@@ -20,7 +20,6 @@ const CqDetails: React.FC = () => {
   const topic = cq?.topicId ? getTopicById(cq.topicId) : null;
   const subTopic = cq?.subTopicId ? getSubTopicById(cq.subTopicId) : null;
   const cls = subject ? getClassById(subject.classId) : null;
-  const board = cls ? getBoardById(cls.boardId) : null;
 
   if (!cq) {
     return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">CQ Not Found</h1><Button onClick={() => navigate('/admin/cqs')}>Back</Button></div></div>;
@@ -57,7 +56,6 @@ const CqDetails: React.FC = () => {
       <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-          <Link to={`/admin/boards/${board?.id}`} className="hover:text-foreground">{board?.code}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/classes/${cls?.id}`} className="hover:text-foreground">{cls?.displayName}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/subjects/${subject?.id}`} className="hover:text-foreground">{subject?.displayName}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/chapters/${chapter?.id}`} className="hover:text-foreground">{chapter?.displayName}</Link>

@@ -84,18 +84,6 @@ export interface Session {
   userId: string;
 }
 
-// Academic Board
-export interface AcademicBoard {
-  id: string;
-  name: string;
-  code: string;
-  displayName: string;
-  position: number;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 // Academic Class
 export interface AcademicClass {
   id: string;
@@ -104,8 +92,6 @@ export interface AcademicClass {
   displayName: string;
   position: number;
   isActive: boolean;
-  boardId: string;
-  board?: AcademicBoard;
   createdAt: Date;
   updatedAt: Date;
 }

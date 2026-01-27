@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronDown, BookOpen, GraduationCap, BookText, FileText, Hash, Layers, Circle, ExternalLink } from 'lucide-react';
+import { ChevronRight, ChevronDown, GraduationCap, BookText, FileText, Hash, Layers, Circle, ExternalLink } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Search, Expand, Shrink } from 'lucide-react';
 import {
-  mockBoards,
   mockClasses,
   mockSubjects,
   mockChapters,
   mockTopics,
   mockSubTopics,
-  getClassesByBoard,
   getSubjectsByClass,
   getChaptersBySubject,
   getTopicsByChapter,
@@ -146,8 +144,6 @@ const AcademicTree: React.FC = () => {
   // Count children for each level
   const getChildCount = (type: string, parentId: string) => {
     switch (type) {
-      case 'board':
-        return mockClasses.filter((c) => c.boardId === parentId).length;
       case 'class':
         return mockSubjects.filter((s) => s.classId === parentId).length;
       case 'subject':
@@ -193,36 +189,30 @@ const AcademicTree: React.FC = () => {
         <div className="flex flex-wrap gap-3 p-3 bg-muted/30 rounded-lg border border-border">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <div className="p-1 rounded bg-primary/10 border-l-2 border-l-primary">
-              <BookOpen className="h-3 w-3" />
-            </div>
-            <span>Board</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="p-1 rounded bg-blue-500/10 border-l-2 border-l-blue-500">
               <GraduationCap className="h-3 w-3" />
             </div>
             <span>Class</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="p-1 rounded bg-green-500/10 border-l-2 border-l-green-500">
+            <div className="p-1 rounded bg-blue-500/10 border-l-2 border-l-blue-500">
               <BookText className="h-3 w-3" />
             </div>
             <span>Subject</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="p-1 rounded bg-yellow-500/10 border-l-2 border-l-yellow-500">
+            <div className="p-1 rounded bg-green-500/10 border-l-2 border-l-green-500">
               <FileText className="h-3 w-3" />
             </div>
             <span>Chapter</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="p-1 rounded bg-orange-500/10 border-l-2 border-l-orange-500">
+            <div className="p-1 rounded bg-yellow-500/10 border-l-2 border-l-yellow-500">
               <Hash className="h-3 w-3" />
             </div>
             <span>Topic</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="p-1 rounded bg-purple-500/10 border-l-2 border-l-purple-500">
+            <div className="p-1 rounded bg-orange-500/10 border-l-2 border-l-orange-500">
               <Layers className="h-3 w-3" />
             </div>
             <span>Sub-Topic</span>
@@ -235,84 +225,69 @@ const AcademicTree: React.FC = () => {
 
         {/* Tree */}
         <div className="bg-card rounded-xl border border-border p-2 overflow-auto max-h-[calc(100vh-300px)]" key={expandAll ? 'expanded' : 'collapsed'}>
-          {mockBoards.map((board) => (
+          {mockClasses.map((cls) => (
             <TreeNode
-              key={board.id}
-              id={board.id}
-              label={board.displayName}
-              icon={<BookOpen className="h-4 w-4 text-primary" />}
+              key={cls.id}
+              id={cls.id}
+              label={`${cls.displayName} (${cls.level})`}
+              icon={<GraduationCap className="h-4 w-4 text-primary" />}
               level={0}
-              isActive={board.isActive}
-              count={getChildCount('board', board.id)}
-              defaultOpen={expandAll || matchesSearch(board.displayName)}
-              searchMatch={matchesSearch(board.displayName)}
-              href={`/admin/boards/${board.id}`}
+              isActive={cls.isActive}
+              count={getChildCount('class', cls.id)}
+              defaultOpen={expandAll || matchesSearch(cls.displayName)}
+              searchMatch={matchesSearch(cls.displayName)}
+              href={`/admin/classes/${cls.id}`}
             >
-              {getClassesByBoard(board.id).map((cls) => (
+              {getSubjectsByClass(cls.id).map((subject) => (
                 <TreeNode
-                  key={cls.id}
-                  id={cls.id}
-                  label={`${cls.displayName} (${cls.level})`}
-                  icon={<GraduationCap className="h-4 w-4 text-blue-500" />}
+                  key={subject.id}
+                  id={subject.id}
+                  label={subject.displayName}
+                  icon={<BookText className="h-4 w-4 text-blue-500" />}
                   level={1}
-                  isActive={cls.isActive}
-                  count={getChildCount('class', cls.id)}
-                  defaultOpen={expandAll || matchesSearch(cls.displayName)}
-                  searchMatch={matchesSearch(cls.displayName)}
-                  href={`/admin/classes/${cls.id}`}
+                  isActive={subject.isActive}
+                  count={getChildCount('subject', subject.id)}
+                  defaultOpen={expandAll || matchesSearch(subject.displayName)}
+                  searchMatch={matchesSearch(subject.displayName)}
+                  href={`/admin/subjects/${subject.id}`}
                 >
-                  {getSubjectsByClass(cls.id).map((subject) => (
+                  {getChaptersBySubject(subject.id).map((chapter) => (
                     <TreeNode
-                      key={subject.id}
-                      id={subject.id}
-                      label={subject.displayName}
-                      icon={<BookText className="h-4 w-4 text-green-500" />}
+                      key={chapter.id}
+                      id={chapter.id}
+                      label={chapter.displayName}
+                      icon={<FileText className="h-4 w-4 text-green-500" />}
                       level={2}
-                      isActive={subject.isActive}
-                      count={getChildCount('subject', subject.id)}
-                      defaultOpen={expandAll || matchesSearch(subject.displayName)}
-                      searchMatch={matchesSearch(subject.displayName)}
-                      href={`/admin/subjects/${subject.id}`}
+                      isActive={chapter.isActive}
+                      count={getChildCount('chapter', chapter.id)}
+                      defaultOpen={expandAll || matchesSearch(chapter.displayName)}
+                      searchMatch={matchesSearch(chapter.displayName)}
+                      href={`/admin/chapters/${chapter.id}`}
                     >
-                      {getChaptersBySubject(subject.id).map((chapter) => (
+                      {getTopicsByChapter(chapter.id).map((topic) => (
                         <TreeNode
-                          key={chapter.id}
-                          id={chapter.id}
-                          label={chapter.displayName}
-                          icon={<FileText className="h-4 w-4 text-yellow-600" />}
+                          key={topic.id}
+                          id={topic.id}
+                          label={topic.displayName}
+                          icon={<Hash className="h-4 w-4 text-yellow-600" />}
                           level={3}
-                          isActive={chapter.isActive}
-                          count={getChildCount('chapter', chapter.id)}
-                          defaultOpen={expandAll || matchesSearch(chapter.displayName)}
-                          searchMatch={matchesSearch(chapter.displayName)}
-                          href={`/admin/chapters/${chapter.id}`}
+                          isActive={topic.isActive}
+                          count={getChildCount('topic', topic.id)}
+                          defaultOpen={expandAll || matchesSearch(topic.displayName)}
+                          searchMatch={matchesSearch(topic.displayName)}
+                          href={`/admin/topics/${topic.id}`}
                         >
-                          {getTopicsByChapter(chapter.id).map((topic) => (
+                          {getSubTopicsByTopic(topic.id).map((subTopic) => (
                             <TreeNode
-                              key={topic.id}
-                              id={topic.id}
-                              label={topic.displayName}
-                              icon={<Hash className="h-4 w-4 text-orange-500" />}
+                              key={subTopic.id}
+                              id={subTopic.id}
+                              label={subTopic.displayName}
+                              icon={<Layers className="h-4 w-4 text-orange-500" />}
                               level={4}
-                              isActive={topic.isActive}
-                              count={getChildCount('topic', topic.id)}
-                              defaultOpen={expandAll || matchesSearch(topic.displayName)}
-                              searchMatch={matchesSearch(topic.displayName)}
-                              href={`/admin/topics/${topic.id}`}
-                            >
-                              {getSubTopicsByTopic(topic.id).map((subTopic) => (
-                                <TreeNode
-                                  key={subTopic.id}
-                                  id={subTopic.id}
-                                  label={subTopic.displayName}
-                                  icon={<Layers className="h-4 w-4 text-purple-500" />}
-                                  level={5}
-                                  isActive={subTopic.isActive}
-                                  searchMatch={matchesSearch(subTopic.displayName)}
-                                  href={`/admin/subtopics/${subTopic.id}`}
-                                />
-                              ))}
-                            </TreeNode>
+                              isActive={subTopic.isActive}
+                              searchMatch={matchesSearch(subTopic.displayName)}
+                              href={`/admin/subtopics/${subTopic.id}`}
+                            />
                           ))}
                         </TreeNode>
                       ))}
@@ -325,11 +300,7 @@ const AcademicTree: React.FC = () => {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-card border border-border rounded-lg p-3 text-center">
-            <p className="text-2xl font-bold text-foreground">{mockBoards.length}</p>
-            <p className="text-xs text-muted-foreground">Boards</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <div className="bg-card border border-border rounded-lg p-3 text-center">
             <p className="text-2xl font-bold text-foreground">{mockClasses.length}</p>
             <p className="text-xs text-muted-foreground">Classes</p>

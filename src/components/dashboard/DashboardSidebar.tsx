@@ -12,7 +12,6 @@ import {
   Menu,
   GraduationCap,
   BookOpen,
-  Layers,
   FileText,
   HelpCircle,
   ListTree,
@@ -47,7 +46,6 @@ const academicGroup: NavGroup = {
   icon: BookOpen,
   items: [
     { title: 'Hierarchy View', url: '/admin/academic-tree', icon: ListTree },
-    { title: 'Boards', url: '/admin/boards', icon: Layers },
     { title: 'Classes', url: '/admin/classes', icon: GraduationCap },
     { title: 'Subjects', url: '/admin/subjects', icon: BookOpen },
     { title: 'Chapters', url: '/admin/chapters', icon: FileText },

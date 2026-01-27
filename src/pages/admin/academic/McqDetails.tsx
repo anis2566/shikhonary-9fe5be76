@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Clock, Calendar, ChevronRight, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, ChevronRight, CheckCircle, XCircle, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockMcqs, getSubjectById, getChapterById, getTopicById, getSubTopicById, getClassById, getBoardById } from '@/lib/academic-mock-data';
+import { mockMcqs, getSubjectById, getChapterById, getTopicById, getSubTopicById, getClassById } from '@/lib/academic-mock-data';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,6 @@ const McqDetails: React.FC = () => {
   const topic = mcq?.topicId ? getTopicById(mcq.topicId) : null;
   const subTopic = mcq?.subTopicId ? getSubTopicById(mcq.subTopicId) : null;
   const cls = subject ? getClassById(subject.classId) : null;
-  const board = cls ? getBoardById(cls.boardId) : null;
 
   if (!mcq) {
     return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold mb-2">MCQ Not Found</h1><Button onClick={() => navigate('/admin/mcqs')}>Back</Button></div></div>;
@@ -60,7 +59,6 @@ const McqDetails: React.FC = () => {
       <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
-          <Link to={`/admin/boards/${board?.id}`} className="hover:text-foreground">{board?.code}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/classes/${cls?.id}`} className="hover:text-foreground">{cls?.displayName}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/subjects/${subject?.id}`} className="hover:text-foreground">{subject?.displayName}</Link><ChevronRight className="h-3 w-3" />
           <Link to={`/admin/chapters/${chapter?.id}`} className="hover:text-foreground">{chapter?.displayName}</Link>

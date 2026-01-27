@@ -9,14 +9,8 @@ const baseEntitySchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-// Board schema
-export const boardSchema = baseEntitySchema;
-export type BoardFormData = z.infer<typeof boardSchema>;
-
 // Class schema
-export const classSchema = baseEntitySchema.extend({
-  board_id: z.string().uuid('Invalid board'),
-});
+export const classSchema = baseEntitySchema;
 export type ClassFormData = z.infer<typeof classSchema>;
 
 // Subject schema
