@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockChapters, getTopicsByChapter, getSubjectById, getClassById, getBoardById, mockMcqs, mockCqs } from '@/lib/academic-mock-data';
+import { mockChapters, getTopicsByChapter, getSubjectById, getClassById, mockMcqs, mockCqs } from '@/lib/academic-mock-data';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 
@@ -17,7 +17,6 @@ const ChapterDetails: React.FC = () => {
   const chapter = mockChapters.find((c) => c.id === id);
   const subject = chapter ? getSubjectById(chapter.subjectId) : null;
   const cls = subject ? getClassById(subject.classId) : null;
-  const board = cls ? getBoardById(cls.boardId) : null;
   const topics = chapter ? getTopicsByChapter(chapter.id) : [];
   const mcqCount = mockMcqs.filter(m => m.chapterId === id).length;
   const cqCount = mockCqs.filter(c => c.chapterId === id).length;
@@ -37,8 +36,6 @@ const ChapterDetails: React.FC = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin/chapters')}><ArrowLeft className="h-5 w-5" /></Button>
               <div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1 flex-wrap">
-                  <Link to={`/admin/boards/${board?.id}`} className="hover:text-foreground">{board?.code}</Link>
-                  <ChevronRight className="h-3 w-3" />
                   <Link to={`/admin/classes/${cls?.id}`} className="hover:text-foreground">{cls?.displayName}</Link>
                   <ChevronRight className="h-3 w-3" />
                   <Link to={`/admin/subjects/${subject?.id}`} className="hover:text-foreground">{subject?.displayName}</Link>

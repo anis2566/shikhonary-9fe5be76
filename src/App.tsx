@@ -21,7 +21,6 @@ import Sessions from "./pages/admin/Sessions";
 import Settings from "./pages/admin/Settings";
 
 // Academic Management - Lists
-import BoardList from "./pages/admin/academic/BoardList";
 import ClassList from "./pages/admin/academic/ClassList";
 import SubjectList from "./pages/admin/academic/SubjectList";
 import ChapterList from "./pages/admin/academic/ChapterList";
@@ -30,7 +29,6 @@ import SubTopicList from "./pages/admin/academic/SubTopicList";
 import AcademicTree from "./pages/admin/academic/AcademicTree";
 
 // Academic Management - Details
-import BoardDetails from "./pages/admin/academic/BoardDetails";
 import ClassDetails from "./pages/admin/academic/ClassDetails";
 import SubjectDetails from "./pages/admin/academic/SubjectDetails";
 import ChapterDetails from "./pages/admin/academic/ChapterDetails";
@@ -38,7 +36,6 @@ import TopicDetails from "./pages/admin/academic/TopicDetails";
 import SubTopicDetails from "./pages/admin/academic/SubTopicDetails";
 
 // Academic Management - Forms
-import BoardForm from "./pages/admin/academic/BoardForm";
 import ClassForm from "./pages/admin/academic/ClassForm";
 import SubjectForm from "./pages/admin/academic/SubjectForm";
 import ChapterForm from "./pages/admin/academic/ChapterForm";
@@ -81,12 +78,6 @@ const App = () => (
               
               {/* Academic Management - Tree View */}
               <Route path="academic-tree" element={<AcademicTree />} />
-              
-              {/* Academic Management - Boards */}
-              <Route path="boards" element={<BoardList />} />
-              <Route path="boards/create" element={<BoardForm />} />
-              <Route path="boards/:id" element={<BoardDetails />} />
-              <Route path="boards/:id/edit" element={<BoardForm />} />
               
               {/* Academic Management - Classes */}
               <Route path="classes" element={<ClassList />} />

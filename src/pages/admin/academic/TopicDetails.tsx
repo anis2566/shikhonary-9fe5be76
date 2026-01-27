@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockTopics, getSubTopicsByTopic, getChapterById, getSubjectById, getClassById, getBoardById, mockMcqs, mockCqs } from '@/lib/academic-mock-data';
+import { mockTopics, getSubTopicsByTopic, getChapterById, getSubjectById, getClassById, mockMcqs, mockCqs } from '@/lib/academic-mock-data';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 
@@ -18,7 +18,6 @@ const TopicDetails: React.FC = () => {
   const chapter = topic ? getChapterById(topic.chapterId) : null;
   const subject = chapter ? getSubjectById(chapter.subjectId) : null;
   const cls = subject ? getClassById(subject.classId) : null;
-  const board = cls ? getBoardById(cls.boardId) : null;
   const subTopics = topic ? getSubTopicsByTopic(topic.id) : [];
   const mcqCount = mockMcqs.filter(m => m.topicId === id).length;
   const cqCount = mockCqs.filter(c => c.topicId === id).length;
@@ -38,7 +37,6 @@ const TopicDetails: React.FC = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin/topics')}><ArrowLeft className="h-5 w-5" /></Button>
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 flex-wrap">
-                  <Link to={`/admin/boards/${board?.id}`} className="hover:text-foreground">{board?.code}</Link><ChevronRight className="h-3 w-3" />
                   <Link to={`/admin/classes/${cls?.id}`} className="hover:text-foreground">{cls?.displayName}</Link><ChevronRight className="h-3 w-3" />
                   <Link to={`/admin/subjects/${subject?.id}`} className="hover:text-foreground">{subject?.displayName}</Link><ChevronRight className="h-3 w-3" />
                   <Link to={`/admin/chapters/${chapter?.id}`} className="hover:text-foreground">{chapter?.displayName}</Link><ChevronRight className="h-3 w-3" />

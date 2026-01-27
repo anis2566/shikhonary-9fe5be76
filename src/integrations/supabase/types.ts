@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      boards: {
-        Row: {
-          created_at: string
-          description: string | null
-          display_name: string
-          id: string
-          is_active: boolean
-          name: string
-          position: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          display_name: string
-          id?: string
-          is_active?: boolean
-          name: string
-          position?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          display_name?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          position?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       chapters: {
         Row: {
           created_at: string
@@ -93,7 +60,6 @@ export type Database = {
       }
       classes: {
         Row: {
-          board_id: string
           created_at: string
           description: string | null
           display_name: string
@@ -104,7 +70,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          board_id: string
           created_at?: string
           description?: string | null
           display_name: string
@@ -115,7 +80,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          board_id?: string
           created_at?: string
           description?: string | null
           display_name?: string
@@ -125,15 +89,7 @@ export type Database = {
           position?: number
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "classes_board_id_fkey"
-            columns: ["board_id"]
-            isOneToOne: false
-            referencedRelation: "boards"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       cqs: {
         Row: {
