@@ -19,6 +19,7 @@ import TenantDetails from "./pages/admin/TenantDetails";
 import CreateTenant from "./pages/admin/CreateTenant";
 import Sessions from "./pages/admin/Sessions";
 import Settings from "./pages/admin/Settings";
+import Setup from "./pages/admin/Setup";
 
 // Academic Management - Lists
 import ClassList from "./pages/admin/academic/ClassList";
@@ -65,6 +66,7 @@ const App = () => (
             
             {/* Auth Routes */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/setup" element={<Setup />} />
 
             {/* Admin Dashboard */}
             <Route path="/admin" element={<DashboardLayout />}>
