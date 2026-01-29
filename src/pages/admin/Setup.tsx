@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 const setupSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -26,7 +27,9 @@ type SetupFormData = z.infer<typeof setupSchema>;
 
 const Setup: React.FC = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [hasAdmin, setHasAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -67,6 +70,7 @@ const Setup: React.FC = () => {
       // Call edge function that uses service role to bypass RLS
       const response = await supabase.functions.invoke('setup-first-admin', {
         body: {
+          mode: 'create',
           email: data.email,
           password: data.password,
           fullName: data.fullName,
@@ -111,6 +115,33 @@ const Setup: React.FC = () => {
     }
   };
 
+  const promoteCurrentUser = async () => {
+    setIsPromoting(true);
+    setError(null);
+    try {
+      const response = await supabase.functions.invoke('setup-first-admin', {
+        body: { mode: 'promote_self' },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to promote user');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast.success('This account is now the first admin!');
+      // Hard reload so auth context re-checks role cleanly
+      window.location.assign('/admin');
+    } catch (err: any) {
+      console.error('Promote error:', err);
+      setError(err.message || 'Failed to promote user');
+    } finally {
+      setIsPromoting(false);
+    }
+  };
+
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -124,8 +155,8 @@ const Setup: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-primary" />
             </div>
             <CardTitle>Setup Complete</CardTitle>
             <CardDescription>
@@ -147,8 +178,8 @@ const Setup: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-primary" />
             </div>
             <CardTitle>Admin Account Created!</CardTitle>
             <CardDescription>
@@ -181,6 +212,31 @@ const Setup: React.FC = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          {user ? (
+            <div className="space-y-4">
+              <Alert className="mb-2">
+                <AlertDescription>
+                  You’re signed in as <span className="font-medium">{user.email}</span>. If no admins exist yet, you can make this account the first admin.
+                </AlertDescription>
+              </Alert>
+              <Button type="button" className="w-full" onClick={promoteCurrentUser} disabled={isPromoting}>
+                {isPromoting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
+                Make This Account Admin
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await signOut();
+                  window.location.reload();
+                }}
+              >
+                Sign out to create a different admin
+              </Button>
+            </div>
+          ) : (
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
@@ -263,6 +319,8 @@ const Setup: React.FC = () => {
               Create Admin Account
             </Button>
           </form>
+
+          )}
 
           <p className="text-xs text-muted-foreground text-center mt-4">
             This setup is only available when no admin accounts exist.

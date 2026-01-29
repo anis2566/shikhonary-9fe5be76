@@ -124,6 +124,15 @@ export function useClass(id: string) {
 export function useClassMutations() {
   const queryClient = useQueryClient();
 
+  const toastDbError = (error: Error) => {
+    const msg = error?.message || 'Request failed';
+    if (msg.toLowerCase().includes('row-level security')) {
+      toast.error('Permission denied. Please sign in as an admin.');
+      return;
+    }
+    toast.error(msg);
+  };
+
   const create = useMutation({
     mutationFn: async (data: Omit<Class, 'id' | 'created_at' | 'updated_at'>) => {
       const { data: result, error } = await supabase.from('classes').insert(data).select().single();
@@ -134,7 +143,7 @@ export function useClassMutations() {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       toast.success('Class created successfully');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: toastDbError,
   });
 
   const update = useMutation({
