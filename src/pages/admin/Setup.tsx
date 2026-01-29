@@ -64,25 +64,33 @@ const Setup: React.FC = () => {
     setError(null);
 
     try {
-      // 1. Create the user account
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: { full_name: data.fullName },
+      // Call edge function that uses service role to bypass RLS
+      const response = await supabase.functions.invoke('setup-first-admin', {
+        body: {
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
         },
       });
 
-      if (signUpError) throw signUpError;
-      if (!authData.user) throw new Error('Failed to create user');
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to create admin account');
+      }
 
-      // 2. Assign super_admin role (using service role would be better in production)
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: authData.user.id, role: 'super_admin' });
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
-      if (roleError) throw roleError;
+      // Sign in the newly created admin
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (signInError) {
+        console.error('Auto sign-in failed:', signInError);
+        // Non-fatal - user can sign in manually
+      }
 
       setSuccess(true);
       toast.success('Admin account created successfully!');
@@ -93,8 +101,8 @@ const Setup: React.FC = () => {
       }, 2000);
     } catch (err: any) {
       console.error('Setup error:', err);
-      if (err.message?.includes('already registered')) {
-        setError('This email is already registered. Please sign in instead.');
+      if (err.message?.includes('already registered') || err.message?.includes('already exists')) {
+        setError('An admin account already exists. Please sign in instead.');
       } else {
         setError(err.message || 'Failed to create admin account');
       }
