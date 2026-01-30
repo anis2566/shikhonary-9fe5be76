@@ -4,7 +4,7 @@ import {
   ArrowLeft, Edit, Trash2, BookText, FileText, Hash, Clock, Calendar, 
   ExternalLink, Plus, MoreHorizontal, CheckCircle2, XCircle, 
   TrendingUp, Layers, HelpCircle, BookOpen, ChevronRight, Copy,
-  Activity, BarChart3, Target, Sparkles
+  Activity, BarChart3, Target, Sparkles, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { mockClasses, getSubjectsByClass, mockChapters, mockTopics, mockSubTopics, mockMcqs, mockCqs } from '@/lib/academic-mock-data';
+import { useClass, useSubjects, useChapters, useTopics, useSubTopics, useMcqs, useCqs, useClassMutations } from '@/hooks/useAcademicData';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -38,24 +39,59 @@ const ClassDetails: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('overview');
 
-  const cls = mockClasses.find((c) => c.id === id);
-  const subjects = cls ? getSubjectsByClass(cls.id) : [];
-  
-  // Calculate comprehensive stats
+  // Fetch class data from Supabase
+  const { data: cls, isLoading: isLoadingClass, error: classError } = useClass(id || '');
+  const { data: subjects = [], isLoading: isLoadingSubjects } = useSubjects(id);
+  const { data: allChapters = [] } = useChapters();
+  const { data: allTopics = [] } = useTopics();
+  const { data: allSubTopics = [] } = useSubTopics();
+  const { data: allMcqs = [] } = useMcqs();
+  const { data: allCqs = [] } = useCqs();
+  const { remove } = useClassMutations();
+
+  // Calculate comprehensive stats based on subjects in this class
   const subjectIds = subjects.map(s => s.id);
-  const chapters = mockChapters.filter(ch => subjectIds.includes(ch.subjectId));
+  const chapters = allChapters.filter(ch => subjectIds.includes(ch.subject_id));
   const chapterIds = chapters.map(c => c.id);
-  const topics = mockTopics.filter(t => chapterIds.includes(t.chapterId));
+  const topics = allTopics.filter(t => chapterIds.includes(t.chapter_id));
   const topicIds = topics.map(t => t.id);
-  const subTopics = mockSubTopics.filter(st => topicIds.includes(st.topicId));
-  const mcqs = mockMcqs.filter(m => subjectIds.includes(m.subjectId));
-  const cqs = mockCqs.filter(c => subjectIds.includes(c.subjectId));
+  const subTopics = allSubTopics.filter(st => topicIds.includes(st.topic_id));
+  const subTopicIds = subTopics.map(st => st.id);
+  const mcqs = allMcqs.filter(m => subTopicIds.includes(m.sub_topic_id));
+  const cqs = allCqs.filter(c => subTopicIds.includes(c.sub_topic_id));
   
   const totalQuestions = mcqs.length + cqs.length;
-  const activeSubjects = subjects.filter(s => s.isActive).length;
+  const activeSubjects = subjects.filter(s => s.is_active).length;
   const completionRate = subjects.length > 0 ? Math.round((chapters.length / (subjects.length * 5)) * 100) : 0;
 
-  if (!cls) {
+  // Loading state
+  if (isLoadingClass) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="border-b border-border bg-card/80 p-4 lg:p-6">
+          <Skeleton className="h-4 w-48 mb-4" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-96 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!cls || classError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -63,7 +99,7 @@ const ClassDetails: React.FC = () => {
             <XCircle className="h-8 w-8 text-muted-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Class Not Found</h1>
-          <p className="text-muted-foreground">The class you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground">The class you're looking for doesn't exist or you don't have permission to view it.</p>
           <Button onClick={() => navigate('/admin/classes')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Classes
@@ -73,9 +109,13 @@ const ClassDetails: React.FC = () => {
     );
   }
 
-  const handleDelete = () => {
-    toast.success('Class deleted successfully');
-    navigate('/admin/classes');
+  const handleDelete = async () => {
+    try {
+      await remove.mutateAsync(cls.id);
+      navigate('/admin/classes');
+    } catch (error) {
+      // Error already handled by mutation
+    }
   };
 
   const handleCopyId = () => {
@@ -155,7 +195,7 @@ const ClassDetails: React.FC = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{cls.displayName}</BreadcrumbPage>
+                <BreadcrumbPage>{cls.display_name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -168,17 +208,16 @@ const ClassDetails: React.FC = () => {
               </Button>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl lg:text-2xl font-bold text-foreground">{cls.displayName}</h1>
-                  <Badge variant="outline" className="font-medium">{cls.level}</Badge>
+                  <h1 className="text-xl lg:text-2xl font-bold text-foreground">{cls.display_name}</h1>
                   <Badge 
-                    variant={cls.isActive ? 'default' : 'secondary'} 
+                    variant={cls.is_active ? 'default' : 'secondary'} 
                     className={cn(
                       "gap-1",
-                      cls.isActive && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
+                      cls.is_active && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
                     )}
                   >
-                    {cls.isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                    {cls.isActive ? 'Active' : 'Inactive'}
+                    {cls.is_active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                    {cls.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -303,11 +342,18 @@ const ClassDetails: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-1.5">
                         <p className="text-sm font-medium text-muted-foreground">Display Name</p>
-                        <p className="text-base font-semibold">{cls.displayName}</p>
+                        <p className="text-base font-semibold">{cls.display_name}</p>
                       </div>
                       <div className="space-y-1.5">
-                        <p className="text-sm font-medium text-muted-foreground">Level / Board</p>
-                        <Badge variant="outline" className="text-sm font-medium">{cls.level}</Badge>
+                        <p className="text-sm font-medium text-muted-foreground">Status</p>
+                        <Badge 
+                          variant={cls.is_active ? 'default' : 'secondary'}
+                          className={cn(
+                            cls.is_active && "bg-green-100 text-green-700 hover:bg-green-100"
+                          )}
+                        >
+                          {cls.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
                       </div>
                       <div className="space-y-1.5">
                         <p className="text-sm font-medium text-muted-foreground">System Name (Slug)</p>
@@ -321,6 +367,16 @@ const ClassDetails: React.FC = () => {
                         </div>
                       </div>
                     </div>
+
+                    {cls.description && (
+                      <>
+                        <Separator />
+                        <div className="space-y-1.5">
+                          <p className="text-sm font-medium text-muted-foreground">Description</p>
+                          <p className="text-sm">{cls.description}</p>
+                        </div>
+                      </>
+                    )}
 
                     <Separator />
 
@@ -341,7 +397,7 @@ const ClassDetails: React.FC = () => {
                           <p className="text-xs text-muted-foreground">Questions</p>
                         </div>
                         <div className="text-center p-3 rounded-lg bg-muted/50">
-                          <p className="text-2xl font-bold text-foreground">{completionRate}%</p>
+                          <p className="text-2xl font-bold text-foreground">{Math.min(completionRate, 100)}%</p>
                           <p className="text-xs text-muted-foreground">Completion</p>
                         </div>
                       </div>
@@ -362,7 +418,13 @@ const ClassDetails: React.FC = () => {
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    {subjects.length === 0 ? (
+                    {isLoadingSubjects ? (
+                      <div className="space-y-2">
+                        {[...Array(3)].map((_, i) => (
+                          <Skeleton key={i} className="h-16 rounded-lg" />
+                        ))}
+                      </div>
+                    ) : subjects.length === 0 ? (
                       <div className="text-center py-8">
                         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                           <BookText className="h-6 w-6 text-muted-foreground" />
@@ -376,7 +438,7 @@ const ClassDetails: React.FC = () => {
                     ) : (
                       <div className="space-y-2">
                         {subjects.slice(0, 4).map((subject) => {
-                          const subjectChapters = mockChapters.filter(ch => ch.subjectId === subject.id);
+                          const subjectChapters = allChapters.filter(ch => ch.subject_id === subject.id);
                           return (
                             <Link 
                               key={subject.id} 
@@ -389,24 +451,22 @@ const ClassDetails: React.FC = () => {
                                 </div>
                                 <div>
                                   <p className="font-medium text-foreground group-hover:text-primary transition-colors">
-                                    {subject.displayName}
+                                    {subject.display_name}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {subject.code && <span className="font-mono">{subject.code}</span>}
-                                    {subject.code && ' • '}
                                     {subjectChapters.length} chapters
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
                                 <Badge 
-                                  variant={subject.isActive ? 'default' : 'secondary'} 
+                                  variant={subject.is_active ? 'default' : 'secondary'} 
                                   className={cn(
                                     "text-xs",
-                                    subject.isActive && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
+                                    subject.is_active && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
                                   )}
                                 >
-                                  {subject.isActive ? 'Active' : 'Inactive'}
+                                  {subject.is_active ? 'Active' : 'Inactive'}
                                 </Badge>
                                 <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                               </div>
@@ -475,7 +535,7 @@ const ClassDetails: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Created</p>
-                        <p className="text-sm font-medium">{cls.createdAt.toLocaleDateString('en-US', { 
+                        <p className="text-sm font-medium">{new Date(cls.created_at).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'short', 
                           day: 'numeric' 
@@ -489,7 +549,7 @@ const ClassDetails: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Last Updated</p>
-                        <p className="text-sm font-medium">{cls.updatedAt.toLocaleDateString('en-US', { 
+                        <p className="text-sm font-medium">{new Date(cls.updated_at).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'short', 
                           day: 'numeric' 
@@ -519,9 +579,9 @@ const ClassDetails: React.FC = () => {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-muted-foreground">Chapters Coverage</span>
-                        <span className="font-medium">{completionRate}%</span>
+                        <span className="font-medium">{Math.min(completionRate, 100)}%</span>
                       </div>
-                      <Progress value={completionRate} className="h-2" />
+                      <Progress value={Math.min(completionRate, 100)} className="h-2" />
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {chapters.length} chapters across {subjects.length} subjects
@@ -538,7 +598,7 @@ const ClassDetails: React.FC = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>All Subjects ({subjects.length})</CardTitle>
-                  <CardDescription>Subjects belonging to {cls.displayName}</CardDescription>
+                  <CardDescription>Subjects belonging to {cls.display_name}</CardDescription>
                 </div>
                 <Button onClick={() => navigate(`/admin/subjects/create?classId=${cls.id}`)}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -546,7 +606,13 @@ const ClassDetails: React.FC = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                {subjects.length === 0 ? (
+                {isLoadingSubjects ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {[...Array(4)].map((_, i) => (
+                      <Skeleton key={i} className="h-28 rounded-xl" />
+                    ))}
+                  </div>
+                ) : subjects.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                       <BookText className="h-8 w-8 text-muted-foreground" />
@@ -563,9 +629,14 @@ const ClassDetails: React.FC = () => {
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {subjects.map((subject, index) => {
-                      const subjectChapters = mockChapters.filter(ch => ch.subjectId === subject.id);
-                      const subjectMcqs = mockMcqs.filter(m => m.subjectId === subject.id);
-                      const subjectCqs = mockCqs.filter(c => c.subjectId === subject.id);
+                      const subjectChapters = allChapters.filter(ch => ch.subject_id === subject.id);
+                      const subjectChapterIds = subjectChapters.map(c => c.id);
+                      const subjectTopics = allTopics.filter(t => subjectChapterIds.includes(t.chapter_id));
+                      const subjectTopicIds = subjectTopics.map(t => t.id);
+                      const subjectSubTopics = allSubTopics.filter(st => subjectTopicIds.includes(st.topic_id));
+                      const subjectSubTopicIds = subjectSubTopics.map(st => st.id);
+                      const subjectMcqs = allMcqs.filter(m => subjectSubTopicIds.includes(m.sub_topic_id));
+                      const subjectCqs = allCqs.filter(c => subjectSubTopicIds.includes(c.sub_topic_id));
                       
                       return (
                         <Link
@@ -580,21 +651,19 @@ const ClassDetails: React.FC = () => {
                               </div>
                               <div>
                                 <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                  {subject.displayName}
+                                  {subject.display_name}
                                 </h3>
-                                {subject.code && (
-                                  <p className="text-xs text-muted-foreground font-mono">{subject.code}</p>
-                                )}
+                                <p className="text-xs text-muted-foreground font-mono">{subject.name}</p>
                               </div>
                             </div>
                             <Badge 
-                              variant={subject.isActive ? 'default' : 'secondary'}
+                              variant={subject.is_active ? 'default' : 'secondary'}
                               className={cn(
                                 "text-xs",
-                                subject.isActive && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
+                                subject.is_active && "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
                               )}
                             >
-                              {subject.isActive ? 'Active' : 'Inactive'}
+                              {subject.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -608,7 +677,7 @@ const ClassDetails: React.FC = () => {
                             </span>
                             <span className="flex items-center gap-1">
                               <Hash className="h-3.5 w-3.5" />
-                              #{index + 1}
+                              #{subject.position}
                             </span>
                           </div>
                         </Link>
@@ -631,13 +700,13 @@ const ClassDetails: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {subjects.map((subject) => {
-                    const subjectChapters = mockChapters.filter(ch => ch.subjectId === subject.id);
+                    const subjectChapters = allChapters.filter(ch => ch.subject_id === subject.id);
                     const percentage = chapters.length > 0 ? Math.round((subjectChapters.length / chapters.length) * 100) : 0;
                     
                     return (
                       <div key={subject.id}>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium">{subject.displayName}</span>
+                          <span className="font-medium">{subject.display_name}</span>
                           <span className="text-muted-foreground">{subjectChapters.length} chapters</span>
                         </div>
                         <Progress value={percentage} className="h-2" />
@@ -736,7 +805,7 @@ const ClassDetails: React.FC = () => {
         open={deleteDialogOpen} 
         onOpenChange={setDeleteDialogOpen} 
         title="Delete Class" 
-        description={`Are you sure you want to delete "${cls.displayName}"? This will also remove all associated subjects, chapters, topics, and questions. This action cannot be undone.`} 
+        description={`Are you sure you want to delete "${cls.display_name}"? This will also remove all associated subjects, chapters, topics, and questions. This action cannot be undone.`} 
         onConfirm={handleDelete} 
       />
     </div>
