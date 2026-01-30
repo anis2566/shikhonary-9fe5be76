@@ -52,6 +52,19 @@ import CqList from "./pages/admin/academic/CqList";
 import CqForm from "./pages/admin/academic/CqForm";
 import CqDetails from "./pages/admin/academic/CqDetails";
 
+// Tenant Dashboard
+import TenantLayout from "./layouts/TenantLayout";
+import TenantOverview from "./pages/tenant/TenantOverview";
+import StudentList from "./pages/tenant/StudentList";
+import TeacherList from "./pages/tenant/TeacherList";
+import BatchList from "./pages/tenant/BatchList";
+import ExamList from "./pages/tenant/ExamList";
+import ResultsPage from "./pages/tenant/ResultsPage";
+import AnalyticsPage from "./pages/tenant/AnalyticsPage";
+import AttendancePage from "./pages/tenant/AttendancePage";
+import AnnouncementsPage from "./pages/tenant/AnnouncementsPage";
+import TenantSettings from "./pages/tenant/TenantSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -124,6 +137,20 @@ const App = () => (
               <Route path="cqs/create" element={<CqForm />} />
               <Route path="cqs/:id" element={<CqDetails />} />
               <Route path="cqs/:id/edit" element={<CqForm />} />
+            </Route>
+
+            {/* Tenant Dashboard */}
+            <Route path="/tenant" element={<TenantLayout />}>
+              <Route index element={<TenantOverview />} />
+              <Route path="students" element={<StudentList />} />
+              <Route path="teachers" element={<TeacherList />} />
+              <Route path="batches" element={<BatchList />} />
+              <Route path="exams" element={<ExamList />} />
+              <Route path="results" element={<ResultsPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
+              <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="settings" element={<TenantSettings />} />
             </Route>
 
             {/* 404 */}

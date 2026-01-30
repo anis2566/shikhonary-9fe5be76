@@ -1,0 +1,619 @@
+// Mock data for tenant dashboard based on Prisma schema
+
+export interface Student {
+  id: string;
+  userId?: string;
+  studentId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  academicClassId: string;
+  className: string;
+  batchId?: string;
+  batchName?: string;
+  roll?: string;
+  group?: string;
+  shift?: string;
+  section?: string;
+  fatherName?: string;
+  motherName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  bloodGroup?: string;
+  imageUrl?: string;
+  guardianPhone?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Batch {
+  id: string;
+  name: string;
+  academicClassId: string;
+  className: string;
+  academicYear: string;
+  capacity?: number;
+  currentSize: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Teacher {
+  id: string;
+  userId?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  imageUrl?: string;
+  subjectIds: string[];
+  subjectNames: string[];
+  designation?: string;
+  department?: string;
+  joinDate?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Exam {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'WEEKLY' | 'MONTHLY' | 'TERM' | 'MOCK' | 'PRACTICE';
+  total: number;
+  mcq?: number;
+  cq?: number;
+  duration: number;
+  totalMarks: number;
+  passingMarks: number;
+  hasNegativeMark: boolean;
+  negativeMark: number;
+  startDate: string;
+  endDate: string;
+  batchId?: string;
+  batchName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  status: 'Pending' | 'Published' | 'Ongoing' | 'Completed' | 'Archived';
+  isPublished: boolean;
+  isActive: boolean;
+  attemptCount: number;
+  avgScore: number;
+  createdAt: string;
+}
+
+export interface ExamAttempt {
+  id: string;
+  examId: string;
+  examTitle: string;
+  studentId: string;
+  studentName: string;
+  score: number;
+  percentage: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  skippedQuestions: number;
+  totalQuestions: number;
+  duration?: number;
+  status: 'Not Started' | 'In Progress' | 'Submitted' | 'Auto-Submitted';
+  startTime?: string;
+  endTime?: string;
+  rank?: number;
+  createdAt: string;
+}
+
+export interface StudentAnalytics {
+  id: string;
+  studentId: string;
+  studentName: string;
+  totalExamsAttempted: number;
+  averageScore: number;
+  averagePercentage: number;
+  strongSubjects: string[];
+  weakSubjects: string[];
+  attendancePercentage: number;
+  overallRank?: number;
+  classRank?: number;
+  currentStreak: number;
+  bestStreak: number;
+}
+
+export interface Attendance {
+  id: string;
+  studentId: string;
+  studentName: string;
+  batchId?: string;
+  date: string;
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  remarks?: string;
+  markedBy?: string;
+}
+
+export interface Notification {
+  id: string;
+  recipientId: string;
+  recipientType: 'STUDENT' | 'TEACHER';
+  title: string;
+  message: string;
+  type: 'EXAM_SCHEDULED' | 'RESULT_PUBLISHED' | 'ANNOUNCEMENT' | 'REMINDER';
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  targetType: 'ALL' | 'CLASS' | 'BATCH' | 'INDIVIDUAL';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  isPublished: boolean;
+  isPinned: boolean;
+  publishAt?: string;
+  expiresAt?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+// Dashboard stats
+export interface TenantDashboardStats {
+  totalStudents: number;
+  activeStudents: number;
+  totalTeachers: number;
+  totalBatches: number;
+  totalExams: number;
+  upcomingExams: number;
+  ongoingExams: number;
+  completedExams: number;
+  averageAttendance: number;
+  averageExamScore: number;
+  totalAttempts: number;
+  pendingResults: number;
+}
+
+// Mock data generators
+export const mockStudents: Student[] = [
+  {
+    id: 'std-1',
+    studentId: '2024001',
+    name: 'Rahim Ahmed',
+    email: 'rahim@example.com',
+    phone: '01712345678',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    batchId: 'batch-1',
+    batchName: 'Morning Batch A',
+    roll: '01',
+    group: 'Science',
+    shift: 'Morning',
+    section: 'A',
+    fatherName: 'Abdul Ahmed',
+    gender: 'Male',
+    bloodGroup: 'A+',
+    isActive: true,
+    createdAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'std-2',
+    studentId: '2024002',
+    name: 'Fatima Begum',
+    email: 'fatima@example.com',
+    phone: '01812345678',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    batchId: 'batch-1',
+    batchName: 'Morning Batch A',
+    roll: '02',
+    group: 'Science',
+    shift: 'Morning',
+    section: 'A',
+    fatherName: 'Karim Begum',
+    gender: 'Female',
+    bloodGroup: 'B+',
+    isActive: true,
+    createdAt: '2024-01-16T10:00:00Z',
+  },
+  {
+    id: 'std-3',
+    studentId: '2024003',
+    name: 'Karim Hassan',
+    email: 'karim@example.com',
+    phone: '01912345678',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    batchId: 'batch-2',
+    batchName: 'Evening Batch B',
+    roll: '01',
+    group: 'Commerce',
+    shift: 'Evening',
+    section: 'B',
+    fatherName: 'Hassan Ali',
+    gender: 'Male',
+    bloodGroup: 'O+',
+    isActive: true,
+    createdAt: '2024-01-17T10:00:00Z',
+  },
+  {
+    id: 'std-4',
+    studentId: '2024004',
+    name: 'Ayesha Khan',
+    email: 'ayesha@example.com',
+    phone: '01612345678',
+    academicClassId: 'cls-2',
+    className: 'Class 9',
+    batchId: 'batch-3',
+    batchName: 'Morning Batch A',
+    roll: '01',
+    group: 'Science',
+    shift: 'Morning',
+    section: 'A',
+    fatherName: 'Khan Mohammad',
+    gender: 'Female',
+    bloodGroup: 'AB+',
+    isActive: true,
+    createdAt: '2024-01-18T10:00:00Z',
+  },
+  {
+    id: 'std-5',
+    studentId: '2024005',
+    name: 'Mohammad Ali',
+    email: 'ali@example.com',
+    phone: '01512345678',
+    academicClassId: 'cls-2',
+    className: 'Class 9',
+    batchId: 'batch-3',
+    batchName: 'Morning Batch A',
+    roll: '02',
+    group: 'Science',
+    shift: 'Morning',
+    section: 'A',
+    fatherName: 'Ali Rahman',
+    gender: 'Male',
+    bloodGroup: 'A-',
+    isActive: false,
+    createdAt: '2024-01-19T10:00:00Z',
+  },
+];
+
+export const mockBatches: Batch[] = [
+  {
+    id: 'batch-1',
+    name: 'Morning Batch A',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    academicYear: '2024',
+    capacity: 30,
+    currentSize: 25,
+    isActive: true,
+    createdAt: '2024-01-01T10:00:00Z',
+  },
+  {
+    id: 'batch-2',
+    name: 'Evening Batch B',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    academicYear: '2024',
+    capacity: 25,
+    currentSize: 20,
+    isActive: true,
+    createdAt: '2024-01-01T10:00:00Z',
+  },
+  {
+    id: 'batch-3',
+    name: 'Morning Batch A',
+    academicClassId: 'cls-2',
+    className: 'Class 9',
+    academicYear: '2024',
+    capacity: 30,
+    currentSize: 28,
+    isActive: true,
+    createdAt: '2024-01-01T10:00:00Z',
+  },
+  {
+    id: 'batch-4',
+    name: 'Weekend Batch',
+    academicClassId: 'cls-1',
+    className: 'Class 10',
+    academicYear: '2024',
+    capacity: 20,
+    currentSize: 15,
+    isActive: true,
+    createdAt: '2024-01-05T10:00:00Z',
+  },
+];
+
+export const mockTeachers: Teacher[] = [
+  {
+    id: 'tch-1',
+    name: 'Dr. Salim Rahman',
+    email: 'salim@example.com',
+    phone: '01711111111',
+    subjectIds: ['sub-1', 'sub-2'],
+    subjectNames: ['Physics', 'Mathematics'],
+    designation: 'Senior Lecturer',
+    department: 'Science',
+    joinDate: '2020-01-15',
+    isActive: true,
+    createdAt: '2020-01-15T10:00:00Z',
+  },
+  {
+    id: 'tch-2',
+    name: 'Nasreen Akter',
+    email: 'nasreen@example.com',
+    phone: '01811111111',
+    subjectIds: ['sub-3'],
+    subjectNames: ['Chemistry'],
+    designation: 'Lecturer',
+    department: 'Science',
+    joinDate: '2021-06-01',
+    isActive: true,
+    createdAt: '2021-06-01T10:00:00Z',
+  },
+  {
+    id: 'tch-3',
+    name: 'Rafiq Uddin',
+    email: 'rafiq@example.com',
+    phone: '01911111111',
+    subjectIds: ['sub-4', 'sub-5'],
+    subjectNames: ['English', 'Bengali'],
+    designation: 'Assistant Professor',
+    department: 'Languages',
+    joinDate: '2019-03-10',
+    isActive: true,
+    createdAt: '2019-03-10T10:00:00Z',
+  },
+];
+
+export const mockExams: Exam[] = [
+  {
+    id: 'exam-1',
+    title: 'Weekly Test - Physics Chapter 1',
+    description: 'Motion and Force concepts',
+    type: 'WEEKLY',
+    total: 50,
+    mcq: 25,
+    cq: 2,
+    duration: 60,
+    totalMarks: 50,
+    passingMarks: 20,
+    hasNegativeMark: true,
+    negativeMark: 0.25,
+    startDate: '2024-02-01T10:00:00Z',
+    endDate: '2024-02-01T11:00:00Z',
+    batchId: 'batch-1',
+    batchName: 'Morning Batch A',
+    teacherId: 'tch-1',
+    teacherName: 'Dr. Salim Rahman',
+    status: 'Completed',
+    isPublished: true,
+    isActive: true,
+    attemptCount: 23,
+    avgScore: 35.5,
+    createdAt: '2024-01-28T10:00:00Z',
+  },
+  {
+    id: 'exam-2',
+    title: 'Monthly Assessment - Mathematics',
+    description: 'Algebra and Trigonometry',
+    type: 'MONTHLY',
+    total: 100,
+    mcq: 40,
+    cq: 4,
+    duration: 120,
+    totalMarks: 100,
+    passingMarks: 40,
+    hasNegativeMark: false,
+    negativeMark: 0,
+    startDate: '2024-02-10T09:00:00Z',
+    endDate: '2024-02-10T11:00:00Z',
+    batchId: 'batch-1',
+    batchName: 'Morning Batch A',
+    teacherId: 'tch-1',
+    teacherName: 'Dr. Salim Rahman',
+    status: 'Published',
+    isPublished: true,
+    isActive: true,
+    attemptCount: 0,
+    avgScore: 0,
+    createdAt: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'exam-3',
+    title: 'Mock Test - Full Syllabus',
+    description: 'Complete syllabus revision test',
+    type: 'MOCK',
+    total: 200,
+    mcq: 80,
+    cq: 8,
+    duration: 180,
+    totalMarks: 200,
+    passingMarks: 80,
+    hasNegativeMark: true,
+    negativeMark: 0.5,
+    startDate: '2024-02-15T10:00:00Z',
+    endDate: '2024-02-15T13:00:00Z',
+    status: 'Pending',
+    isPublished: false,
+    isActive: true,
+    attemptCount: 0,
+    avgScore: 0,
+    createdAt: '2024-02-05T10:00:00Z',
+  },
+  {
+    id: 'exam-4',
+    title: 'Practice Quiz - Chemistry',
+    description: 'Organic Chemistry basics',
+    type: 'PRACTICE',
+    total: 30,
+    mcq: 30,
+    duration: 30,
+    totalMarks: 30,
+    passingMarks: 12,
+    hasNegativeMark: false,
+    negativeMark: 0,
+    startDate: '2024-01-25T10:00:00Z',
+    endDate: '2024-01-25T10:30:00Z',
+    batchId: 'batch-2',
+    batchName: 'Evening Batch B',
+    teacherId: 'tch-2',
+    teacherName: 'Nasreen Akter',
+    status: 'Ongoing',
+    isPublished: true,
+    isActive: true,
+    attemptCount: 15,
+    avgScore: 22.3,
+    createdAt: '2024-01-20T10:00:00Z',
+  },
+];
+
+export const mockExamAttempts: ExamAttempt[] = [
+  {
+    id: 'att-1',
+    examId: 'exam-1',
+    examTitle: 'Weekly Test - Physics Chapter 1',
+    studentId: 'std-1',
+    studentName: 'Rahim Ahmed',
+    score: 42,
+    percentage: 84,
+    correctAnswers: 21,
+    wrongAnswers: 3,
+    skippedQuestions: 1,
+    totalQuestions: 25,
+    duration: 55,
+    status: 'Submitted',
+    startTime: '2024-02-01T10:00:00Z',
+    endTime: '2024-02-01T10:55:00Z',
+    rank: 1,
+    createdAt: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'att-2',
+    examId: 'exam-1',
+    examTitle: 'Weekly Test - Physics Chapter 1',
+    studentId: 'std-2',
+    studentName: 'Fatima Begum',
+    score: 38,
+    percentage: 76,
+    correctAnswers: 19,
+    wrongAnswers: 5,
+    skippedQuestions: 1,
+    totalQuestions: 25,
+    duration: 58,
+    status: 'Submitted',
+    startTime: '2024-02-01T10:00:00Z',
+    endTime: '2024-02-01T10:58:00Z',
+    rank: 2,
+    createdAt: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'att-3',
+    examId: 'exam-4',
+    examTitle: 'Practice Quiz - Chemistry',
+    studentId: 'std-3',
+    studentName: 'Karim Hassan',
+    score: 24,
+    percentage: 80,
+    correctAnswers: 24,
+    wrongAnswers: 6,
+    skippedQuestions: 0,
+    totalQuestions: 30,
+    duration: 28,
+    status: 'Submitted',
+    startTime: '2024-01-25T10:00:00Z',
+    endTime: '2024-01-25T10:28:00Z',
+    rank: 1,
+    createdAt: '2024-01-25T10:00:00Z',
+  },
+];
+
+export const mockAnnouncements: Announcement[] = [
+  {
+    id: 'ann-1',
+    title: 'Upcoming Term Exam Schedule',
+    content: 'The term examination will begin from February 20, 2024. Please check the detailed schedule in the notice board.',
+    targetType: 'ALL',
+    priority: 'HIGH',
+    isPublished: true,
+    isPinned: true,
+    createdBy: 'admin',
+    createdAt: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'ann-2',
+    title: 'Holiday Notice - Victory Day',
+    content: 'The institution will remain closed on December 16th on the occasion of Victory Day.',
+    targetType: 'ALL',
+    priority: 'NORMAL',
+    isPublished: true,
+    isPinned: false,
+    createdBy: 'admin',
+    createdAt: '2024-02-05T10:00:00Z',
+  },
+  {
+    id: 'ann-3',
+    title: 'Science Fair Registration Open',
+    content: 'Interested students can register for the annual science fair. Last date: February 28, 2024.',
+    targetType: 'CLASS',
+    priority: 'NORMAL',
+    isPublished: true,
+    isPinned: false,
+    createdBy: 'tch-1',
+    createdAt: '2024-02-08T10:00:00Z',
+  },
+];
+
+export const mockDashboardStats: TenantDashboardStats = {
+  totalStudents: 156,
+  activeStudents: 148,
+  totalTeachers: 12,
+  totalBatches: 8,
+  totalExams: 45,
+  upcomingExams: 5,
+  ongoingExams: 2,
+  completedExams: 38,
+  averageAttendance: 87.5,
+  averageExamScore: 68.2,
+  totalAttempts: 892,
+  pendingResults: 3,
+};
+
+// Chart data
+export const examPerformanceData = [
+  { month: 'Jan', avgScore: 65, passRate: 78 },
+  { month: 'Feb', avgScore: 68, passRate: 82 },
+  { month: 'Mar', avgScore: 72, passRate: 85 },
+  { month: 'Apr', avgScore: 70, passRate: 80 },
+  { month: 'May', avgScore: 75, passRate: 88 },
+  { month: 'Jun', avgScore: 73, passRate: 85 },
+];
+
+export const attendanceData = [
+  { day: 'Mon', present: 142, absent: 14 },
+  { day: 'Tue', present: 145, absent: 11 },
+  { day: 'Wed', present: 138, absent: 18 },
+  { day: 'Thu', present: 150, absent: 6 },
+  { day: 'Fri', present: 147, absent: 9 },
+  { day: 'Sat', present: 135, absent: 21 },
+];
+
+export const subjectPerformanceData = [
+  { subject: 'Physics', avgScore: 72, students: 45 },
+  { subject: 'Chemistry', avgScore: 68, students: 42 },
+  { subject: 'Mathematics', avgScore: 75, students: 48 },
+  { subject: 'Biology', avgScore: 70, students: 40 },
+  { subject: 'English', avgScore: 78, students: 50 },
+];
+
+export const examTypeDistribution = [
+  { name: 'Weekly', value: 20, color: 'hsl(var(--chart-1))' },
+  { name: 'Monthly', value: 10, color: 'hsl(var(--chart-2))' },
+  { name: 'Term', value: 4, color: 'hsl(var(--chart-3))' },
+  { name: 'Mock', value: 6, color: 'hsl(var(--chart-4))' },
+  { name: 'Practice', value: 5, color: 'hsl(var(--chart-5))' },
+];
+
+export const recentActivities = [
+  { id: '1', type: 'exam', message: 'Weekly Test - Physics completed', time: '2 hours ago' },
+  { id: '2', type: 'student', message: 'New student Ayesha Khan enrolled', time: '3 hours ago' },
+  { id: '3', type: 'result', message: 'Results published for Monthly Math Test', time: '5 hours ago' },
+  { id: '4', type: 'announcement', message: 'New announcement posted', time: '1 day ago' },
+  { id: '5', type: 'attendance', message: 'Attendance marked for Morning Batch A', time: '1 day ago' },
+];
