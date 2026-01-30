@@ -113,9 +113,9 @@ export function useClass(id: string) {
   return useQuery({
     queryKey: ['classes', 'detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('classes').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('classes').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data as Class;
+      return data as Class | null;
     },
     enabled: !!id,
   });
