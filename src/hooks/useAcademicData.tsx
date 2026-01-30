@@ -206,9 +206,9 @@ export function useSubject(id: string) {
   return useQuery({
     queryKey: ['subjects', 'detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('subjects').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('subjects').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data as Subject;
+      return data as Subject | null;
     },
     enabled: !!id,
   });
@@ -290,9 +290,9 @@ export function useChapter(id: string) {
   return useQuery({
     queryKey: ['chapters', 'detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('chapters').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('chapters').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data as Chapter;
+      return data as Chapter | null;
     },
     enabled: !!id,
   });
@@ -374,9 +374,9 @@ export function useTopic(id: string) {
   return useQuery({
     queryKey: ['topics', 'detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('topics').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('topics').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data as Topic;
+      return data as Topic | null;
     },
     enabled: !!id,
   });
@@ -458,9 +458,9 @@ export function useSubTopic(id: string) {
   return useQuery({
     queryKey: ['sub_topics', 'detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('sub_topics').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('sub_topics').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data as SubTopic;
+      return data as SubTopic | null;
     },
     enabled: !!id,
   });
