@@ -28,6 +28,7 @@ import ChapterList from "./pages/admin/academic/ChapterList";
 import TopicList from "./pages/admin/academic/TopicList";
 import SubTopicList from "./pages/admin/academic/SubTopicList";
 import AcademicTree from "./pages/admin/academic/AcademicTree";
+import ClassContentTree from "./pages/admin/academic/ClassContentTree";
 
 // Academic Management - Details
 import ClassDetails from "./pages/admin/academic/ClassDetails";
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="classes" element={<ClassList />} />
               <Route path="classes/create" element={<ClassForm />} />
               <Route path="classes/:id" element={<ClassDetails />} />
+              <Route path="classes/:id/tree" element={<ClassContentTree />} />
               <Route path="classes/:id/edit" element={<ClassForm />} />
               
               {/* Academic Management - Subjects */}
