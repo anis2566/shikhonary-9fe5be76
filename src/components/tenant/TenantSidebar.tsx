@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -13,7 +13,6 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  ChevronDown,
   Menu,
   ClipboardList,
   TrendingUp,
@@ -22,7 +21,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -33,57 +31,54 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-interface NavGroup {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
+interface NavSection {
+  label: string;
   items: NavItem[];
 }
 
-const mainNavItems: NavItem[] = [
-  { title: 'Dashboard', url: '/tenant', icon: LayoutDashboard },
-];
-
-const peopleGroup: NavGroup = {
-  title: 'People',
-  icon: Users,
-  items: [
-    { title: 'Students', url: '/tenant/students', icon: GraduationCap },
-    { title: 'Teachers', url: '/tenant/teachers', icon: UserCheck },
-    { title: 'Batches', url: '/tenant/batches', icon: Users },
-  ],
-};
-
-const examGroup: NavGroup = {
-  title: 'Examinations',
-  icon: FileText,
-  items: [
-    { title: 'All Exams', url: '/tenant/exams', icon: ClipboardList },
-    { title: 'Create Exam', url: '/tenant/exams/create', icon: FileText },
-    { title: 'Results', url: '/tenant/results', icon: TrendingUp },
-  ],
-};
-
-const analyticsGroup: NavGroup = {
-  title: 'Analytics',
-  icon: BarChart3,
-  items: [
-    { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
-    { title: 'Attendance', url: '/tenant/attendance', icon: CalendarDays },
-    { title: 'Performance', url: '/tenant/performance', icon: TrendingUp },
-  ],
-};
-
-const communicationGroup: NavGroup = {
-  title: 'Communication',
-  icon: Bell,
-  items: [
-    { title: 'Announcements', url: '/tenant/announcements', icon: Megaphone },
-    { title: 'Notifications', url: '/tenant/notifications', icon: Bell },
-  ],
-};
-
-const bottomItems: NavItem[] = [
-  { title: 'Settings', url: '/tenant/settings', icon: Settings },
+const navSections: NavSection[] = [
+  {
+    label: 'Main',
+    items: [
+      { title: 'Dashboard', url: '/tenant', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'People',
+    items: [
+      { title: 'Students', url: '/tenant/students', icon: GraduationCap },
+      { title: 'Teachers', url: '/tenant/teachers', icon: UserCheck },
+      { title: 'Batches', url: '/tenant/batches', icon: Users },
+    ],
+  },
+  {
+    label: 'Examinations',
+    items: [
+      { title: 'All Exams', url: '/tenant/exams', icon: ClipboardList },
+      { title: 'Create Exam', url: '/tenant/exams/create', icon: FileText },
+      { title: 'Results', url: '/tenant/results', icon: TrendingUp },
+    ],
+  },
+  {
+    label: 'Analytics',
+    items: [
+      { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
+      { title: 'Attendance', url: '/tenant/attendance', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Communication',
+    items: [
+      { title: 'Announcements', url: '/tenant/announcements', icon: Megaphone },
+      { title: 'Notifications', url: '/tenant/notifications', icon: Bell },
+    ],
+  },
+  {
+    label: 'Settings',
+    items: [
+      { title: 'Settings', url: '/tenant/settings', icon: Settings },
+    ],
+  },
 ];
 
 interface SidebarContentProps {
@@ -95,10 +90,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const [peopleOpen, setPeopleOpen] = useState(true);
-  const [examOpen, setExamOpen] = useState(true);
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [communicationOpen, setCommunicationOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -110,62 +101,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
       return location.pathname === url;
     }
     return location.pathname.startsWith(url);
-  };
-
-  const renderNavItem = (item: NavItem) => (
-    <Link
-      key={item.title}
-      to={item.url}
-      className={cn(
-        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-        isActive(item.url)
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-      )}
-    >
-      <item.icon className="w-4 h-4 flex-shrink-0" />
-      {!collapsed && <span>{item.title}</span>}
-    </Link>
-  );
-
-  const renderNavGroup = (
-    group: NavGroup,
-    open: boolean,
-    setOpen: (val: boolean) => void
-  ) => {
-    if (collapsed) {
-      return (
-        <div className="space-y-1">
-          {group.items.map(renderNavItem)}
-        </div>
-      );
-    }
-
-    const isGroupActive = group.items.some((item) => isActive(item.url));
-
-    return (
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger
-          className={cn(
-            'flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-            isGroupActive
-              ? 'text-foreground bg-muted/50'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <group.icon className="w-4 h-4 flex-shrink-0" />
-            <span>{group.title}</span>
-          </div>
-          <ChevronDown
-            className={cn('w-4 h-4 transition-transform', open && 'rotate-180')}
-          />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pl-4 mt-1 space-y-1">
-          {group.items.map(renderNavItem)}
-        </CollapsibleContent>
-      </Collapsible>
-    );
   };
 
   return (
@@ -200,26 +135,35 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {mainNavItems.map(renderNavItem)}
-
-        <div className="pt-2">
-          {renderNavGroup(peopleGroup, peopleOpen, setPeopleOpen)}
-        </div>
-
-        <div className="pt-1">
-          {renderNavGroup(examGroup, examOpen, setExamOpen)}
-        </div>
-
-        <div className="pt-1">
-          {renderNavGroup(analyticsGroup, analyticsOpen, setAnalyticsOpen)}
-        </div>
-
-        <div className="pt-1">
-          {renderNavGroup(communicationGroup, communicationOpen, setCommunicationOpen)}
-        </div>
-
-        <div className="pt-2">{bottomItems.map(renderNavItem)}</div>
+      <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            {!collapsed && (
+              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {section.label}
+              </p>
+            )}
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    isActive(item.url)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                    collapsed && 'justify-center'
+                  )}
+                  title={collapsed ? item.title : undefined}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {!collapsed && <span>{item.title}</span>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
