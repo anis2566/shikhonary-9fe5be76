@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
@@ -20,6 +20,7 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
+  Send,
 } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Button } from '@/components/ui/button';
@@ -37,13 +38,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTenantById } from '@/lib/mock-data';
+import { getInvitationsByTenantId, getPendingInvitationsCount } from '@/lib/invitation-mock-data';
 import { TenantDatabaseStatus, SubscriptionStatus, SubscriptionTier, TenantType } from '@/types';
+import { InviteTenantAdminDialog } from '@/components/admin/InviteTenantAdminDialog';
+import { InvitationsTable } from '@/components/admin/InvitationsTable';
 
 const TenantDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const tenant = getTenantById(id || '');
+  const invitations = getInvitationsByTenantId(id || '');
+  const pendingCount = getPendingInvitationsCount(id || '');
+
+  const handleRefreshInvitations = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   if (!tenant) {
     return (
@@ -94,6 +105,8 @@ const TenantDetails: React.FC = () => {
   const examPercent = Math.round((tenant.examCount / tenant.examLimit) * 100);
   const storagePercent = Math.round((tenant.storageUsedMB / tenant.storageLimit) * 100);
 
+  const canInviteAdmin = tenant.tenantDatabaseStatus === 'ACTIVE';
+
   return (
     <div className="min-h-screen">
       <DashboardHeader title="Tenant Details" subtitle={tenant.name} />
@@ -112,6 +125,18 @@ const TenantDetails: React.FC = () => {
           </Button>
 
           <div className="flex gap-2">
+            {canInviteAdmin && (
+              <InviteTenantAdminDialog
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+                onSuccess={handleRefreshInvitations}
+              >
+                <Button variant="default" size="sm" className="gap-2">
+                  <Mail className="w-4 h-4" />
+                  <span className="hidden sm:inline">Invite Admin</span>
+                </Button>
+              </InviteTenantAdminDialog>
+            )}
             <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/admin/tenants/${tenant.id}/edit`)}>
               <Edit className="w-4 h-4" />
               <span className="hidden sm:inline">Edit</span>
@@ -196,6 +221,14 @@ const TenantDetails: React.FC = () => {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="usage">Usage & Limits</TabsTrigger>
             <TabsTrigger value="subscription">Subscription</TabsTrigger>
+            <TabsTrigger value="invitations" className="gap-2">
+              Invitations
+              {pendingCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {pendingCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
           </TabsList>
 
@@ -454,6 +487,62 @@ const TenantDetails: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invitations" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Pending & Past Invitations</CardTitle>
+                  <CardDescription>
+                    Manage admin invitations for this tenant
+                  </CardDescription>
+                </div>
+                {canInviteAdmin && (
+                  <InviteTenantAdminDialog
+                    tenantId={tenant.id}
+                    tenantName={tenant.name}
+                    onSuccess={handleRefreshInvitations}
+                  >
+                    <Button size="sm" className="gap-2">
+                      <Send className="w-4 h-4" />
+                      Send Invitation
+                    </Button>
+                  </InviteTenantAdminDialog>
+                )}
+              </CardHeader>
+              <CardContent>
+                {invitations.length > 0 ? (
+                  <InvitationsTable
+                    key={refreshKey}
+                    invitations={invitations}
+                    onRefresh={handleRefreshInvitations}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <Mail className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">No invitations sent</h3>
+                    <p className="text-muted-foreground mb-4 max-w-sm">
+                      Invite a tenant admin to manage this organization
+                    </p>
+                    {canInviteAdmin && (
+                      <InviteTenantAdminDialog
+                        tenantId={tenant.id}
+                        tenantName={tenant.name}
+                        onSuccess={handleRefreshInvitations}
+                      >
+                        <Button className="gap-2">
+                          <Send className="w-4 h-4" />
+                          Send First Invitation
+                        </Button>
+                      </InviteTenantAdminDialog>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
