@@ -65,6 +65,9 @@ import AttendancePage from "./pages/tenant/AttendancePage";
 import AnnouncementsPage from "./pages/tenant/AnnouncementsPage";
 import TenantSettings from "./pages/tenant/TenantSettings";
 
+// Invitation
+import AcceptInvitation from "./pages/invitation/AcceptInvitation";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -81,6 +84,9 @@ const App = () => (
             {/* Auth Routes */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/setup" element={<Setup />} />
+            
+            {/* Invitation Routes (Public) */}
+            <Route path="/invitation/accept" element={<AcceptInvitation />} />
 
             {/* Admin Dashboard */}
             <Route path="/admin" element={<DashboardLayout />}>
