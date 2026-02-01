@@ -24,6 +24,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface NavItem {
   title: string;
@@ -136,34 +142,52 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
-        {navSections.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {section.label}
-              </p>
-            )}
-            <div className="space-y-1">
-              {section.items.map((item) => (
-                <Link
-                  key={item.title}
-                  to={item.url}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive(item.url)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                    collapsed && 'justify-center'
-                  )}
-                  title={collapsed ? item.title : undefined}
-                >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
-                  {!collapsed && <span>{item.title}</span>}
-                </Link>
-              ))}
+        <TooltipProvider delayDuration={0}>
+          {navSections.map((section) => (
+            <div key={section.label}>
+              {!collapsed && (
+                <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {section.label}
+                </p>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const linkContent = (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                        isActive(item.url)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                        collapsed && 'justify-center'
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </Link>
+                  );
+
+                  if (collapsed) {
+                    return (
+                      <Tooltip key={item.title}>
+                        <TooltipTrigger asChild>
+                          {linkContent}
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="font-medium">
+                          {item.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return linkContent;
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </TooltipProvider>
       </nav>
 
       {/* Footer */}
