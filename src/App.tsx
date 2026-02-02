@@ -65,6 +65,7 @@ import AttendancePage from "./pages/tenant/AttendancePage";
 import AnnouncementsPage from "./pages/tenant/AnnouncementsPage";
 import TenantSettings from "./pages/tenant/TenantSettings";
 import CalendarPage from "./pages/tenant/CalendarPage";
+import CommunicationsPage from "./pages/tenant/CommunicationsPage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -157,6 +158,7 @@ const App = () => (
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="communications" element={<CommunicationsPage />} />
               <Route path="settings" element={<TenantSettings />} />
               <Route path="calendar" element={<CalendarPage />} />
             </Route>

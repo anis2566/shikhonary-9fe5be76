@@ -77,8 +77,8 @@ const navSections: NavSection[] = [
   {
     label: 'Communication',
     items: [
-      { title: 'Announcements', url: '/tenant/announcements', icon: Megaphone },
-      { title: 'Notifications', url: '/tenant/notifications', icon: Bell },
+      { title: 'Communications', url: '/tenant/communications', icon: Megaphone },
+      { title: 'Announcements', url: '/tenant/announcements', icon: Bell },
     ],
   },
   {
