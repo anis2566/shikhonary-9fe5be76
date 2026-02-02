@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal,
   Eye,
@@ -7,7 +7,6 @@ import {
   Trash2,
   Mail,
   Phone,
-  ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +20,9 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
+import SwipeableCard from '@/components/ui/swipeable-card';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { Student } from '@/lib/tenant-mock-data';
 
 interface StudentCardProps {
@@ -29,6 +30,7 @@ interface StudentCardProps {
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   showCheckbox?: boolean;
+  enableSwipe?: boolean;
 }
 
 const StudentCard: React.FC<StudentCardProps> = ({
@@ -36,8 +38,25 @@ const StudentCard: React.FC<StudentCardProps> = ({
   isSelected = false,
   onSelect,
   showCheckbox = false,
+  enableSwipe = true,
 }) => {
-  return (
+  const navigate = useNavigate();
+
+  const handleEdit = () => {
+    navigate(`/tenant/students/${student.id}/edit`);
+  };
+
+  const handleDelete = () => {
+    toast.error(`Delete ${student.name}?`, {
+      description: 'This action cannot be undone.',
+      action: {
+        label: 'Delete',
+        onClick: () => toast.success('Student deleted'),
+      },
+    });
+  };
+
+  const cardContent = (
     <Card className={cn(
       'transition-all',
       isSelected && 'ring-2 ring-primary'
@@ -169,6 +188,16 @@ const StudentCard: React.FC<StudentCardProps> = ({
       </CardContent>
     </Card>
   );
+
+  if (enableSwipe) {
+    return (
+      <SwipeableCard onEdit={handleEdit} onDelete={handleDelete}>
+        {cardContent}
+      </SwipeableCard>
+    );
+  }
+
+  return cardContent;
 };
 
 export default StudentCard;

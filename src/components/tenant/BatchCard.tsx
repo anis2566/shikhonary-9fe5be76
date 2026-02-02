@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal,
   Eye,
@@ -20,7 +20,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import SwipeableCard from '@/components/ui/swipeable-card';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface BatchCardProps {
   batch: {
@@ -32,9 +34,11 @@ interface BatchCardProps {
     capacity?: number;
     isActive: boolean;
   };
+  enableSwipe?: boolean;
 }
 
-const BatchCard: React.FC<BatchCardProps> = ({ batch }) => {
+const BatchCard: React.FC<BatchCardProps> = ({ batch, enableSwipe = true }) => {
+  const navigate = useNavigate();
   const capacityPercent = batch.capacity
     ? Math.round((batch.currentSize / batch.capacity) * 100)
     : 0;
@@ -45,7 +49,21 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch }) => {
     return 'text-emerald-500';
   };
 
-  return (
+  const handleEdit = () => {
+    navigate(`/tenant/batches/${batch.id}/edit`);
+  };
+
+  const handleDelete = () => {
+    toast.error(`Delete "${batch.name}"?`, {
+      description: 'This action cannot be undone.',
+      action: {
+        label: 'Delete',
+        onClick: () => toast.success('Batch deleted'),
+      },
+    });
+  };
+
+  const cardContent = (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         {/* Header */}
@@ -148,6 +166,16 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch }) => {
       </CardContent>
     </Card>
   );
+
+  if (enableSwipe) {
+    return (
+      <SwipeableCard onEdit={handleEdit} onDelete={handleDelete}>
+        {cardContent}
+      </SwipeableCard>
+    );
+  }
+
+  return cardContent;
 };
 
 export default BatchCard;

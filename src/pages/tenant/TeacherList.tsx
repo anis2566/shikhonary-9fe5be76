@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -43,11 +43,18 @@ import {
 import { mockTeachers } from '@/lib/tenant-mock-data';
 import { useIsMobile } from '@/hooks/use-mobile';
 import TeacherCard from '@/components/tenant/TeacherCard';
+import PullToRefresh from '@/components/ui/pull-to-refresh';
+import { toast } from 'sonner';
 
 const TeacherList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const isMobile = useIsMobile();
+
+  const handleRefresh = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success('Teachers refreshed');
+  }, []);
 
   const filteredTeachers = mockTeachers.filter((teacher) => {
     const matchesSearch =
@@ -168,21 +175,23 @@ const TeacherList: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Mobile Card Grid */}
+      {/* Mobile Card Grid with Pull to Refresh */}
       {isMobile ? (
-        <div className="space-y-3">
-          {filteredTeachers.map((teacher) => (
-            <TeacherCard key={teacher.id} teacher={teacher} />
-          ))}
-          {filteredTeachers.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <UserCheck className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-muted-foreground">No teachers found</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <PullToRefresh onRefresh={handleRefresh}>
+          <div className="space-y-3 pb-20">
+            {filteredTeachers.map((teacher) => (
+              <TeacherCard key={teacher.id} teacher={teacher} enableSwipe={true} />
+            ))}
+            {filteredTeachers.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <UserCheck className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No teachers found</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </PullToRefresh>
       ) : (
         /* Desktop Data Table */
         <Card>
