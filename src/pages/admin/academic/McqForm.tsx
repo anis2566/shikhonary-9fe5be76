@@ -18,10 +18,17 @@ import { mockMcqs, mockSubjects, mockChapters, mockTopics, mockSubTopics, getCha
 const mcqSchema = z.object({
   question: z.string().min(1, 'Question is required'),
   options: z.array(z.string().min(1, 'Option cannot be empty')).min(2, 'At least 2 options required'),
+  statements: z.array(z.string()).default([]),
   answer: z.string().min(1, 'Answer is required'),
+  type: z.string().min(1, 'Type is required'),
+  reference: z.array(z.string()).default([]),
   explanation: z.string().optional(),
-  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
-  marks: z.number().min(0.5, 'Marks must be at least 0.5'),
+  isMath: z.boolean().default(false),
+  session: z.number().min(2000, 'Session must be a valid year'),
+  source: z.string().optional(),
+  questionUrl: z.string().optional(),
+  context: z.string().optional(),
+  contextUrl: z.string().optional(),
   subjectId: z.string().min(1, 'Subject is required'),
   chapterId: z.string().min(1, 'Chapter is required'),
   topicId: z.string().optional(),
@@ -31,12 +38,16 @@ const mcqSchema = z.object({
 
 type McqFormData = z.infer<typeof mcqSchema>;
 
+const MCQ_TYPES = ['single', 'multiple', 'assertion', 'statement'];
+
 const McqForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
 
   const [options, setOptions] = useState<string[]>(['', '', '', '']);
+  const [statements, setStatements] = useState<string[]>([]);
+  const [references, setReferences] = useState<string[]>([]);
   const [availableChapters, setAvailableChapters] = useState(mockChapters);
   const [availableTopics, setAvailableTopics] = useState(mockTopics);
   const [availableSubTopics, setAvailableSubTopics] = useState(mockSubTopics);
@@ -46,10 +57,17 @@ const McqForm: React.FC = () => {
     defaultValues: {
       question: '',
       options: ['', '', '', ''],
+      statements: [],
       answer: '',
+      type: 'single',
+      reference: [],
       explanation: '',
-      difficulty: 'MEDIUM',
-      marks: 1,
+      isMath: false,
+      session: new Date().getFullYear(),
+      source: '',
+      questionUrl: '',
+      context: '',
+      contextUrl: '',
       subjectId: '',
       chapterId: '',
       topicId: '',
@@ -65,10 +83,17 @@ const McqForm: React.FC = () => {
         form.reset({
           question: mcq.question,
           options: mcq.options,
+          statements: mcq.statements,
           answer: mcq.answer,
+          type: mcq.type,
+          reference: mcq.reference,
           explanation: mcq.explanation || '',
-          difficulty: mcq.difficulty,
-          marks: mcq.marks,
+          isMath: mcq.isMath,
+          session: mcq.session,
+          source: mcq.source || '',
+          questionUrl: mcq.questionUrl || '',
+          context: mcq.context || '',
+          contextUrl: mcq.contextUrl || '',
           subjectId: mcq.subjectId,
           chapterId: mcq.chapterId,
           topicId: mcq.topicId || '',
@@ -76,6 +101,8 @@ const McqForm: React.FC = () => {
           isActive: mcq.isActive,
         });
         setOptions(mcq.options);
+        setStatements(mcq.statements);
+        setReferences(mcq.reference);
         setAvailableChapters(getChaptersBySubject(mcq.subjectId));
         if (mcq.chapterId) {
           setAvailableTopics(getTopicsByChapter(mcq.chapterId));
@@ -111,6 +138,7 @@ const McqForm: React.FC = () => {
     setAvailableSubTopics(getSubTopicsByTopic(value));
   };
 
+  // Options management
   const addOption = () => {
     if (options.length < 6) {
       const newOptions = [...options, ''];
@@ -132,6 +160,46 @@ const McqForm: React.FC = () => {
     newOptions[index] = value;
     setOptions(newOptions);
     form.setValue('options', newOptions);
+  };
+
+  // Statements management
+  const addStatement = () => {
+    const newStatements = [...statements, ''];
+    setStatements(newStatements);
+    form.setValue('statements', newStatements);
+  };
+
+  const removeStatement = (index: number) => {
+    const newStatements = statements.filter((_, i) => i !== index);
+    setStatements(newStatements);
+    form.setValue('statements', newStatements);
+  };
+
+  const updateStatement = (index: number, value: string) => {
+    const newStatements = [...statements];
+    newStatements[index] = value;
+    setStatements(newStatements);
+    form.setValue('statements', newStatements);
+  };
+
+  // References management
+  const addReference = () => {
+    const newRefs = [...references, ''];
+    setReferences(newRefs);
+    form.setValue('reference', newRefs);
+  };
+
+  const removeReference = (index: number) => {
+    const newRefs = references.filter((_, i) => i !== index);
+    setReferences(newRefs);
+    form.setValue('reference', newRefs);
+  };
+
+  const updateReference = (index: number, value: string) => {
+    const newRefs = [...references];
+    newRefs[index] = value;
+    setReferences(newRefs);
+    form.setValue('reference', newRefs);
   };
 
   const onSubmit = (data: McqFormData) => {
@@ -173,6 +241,62 @@ const McqForm: React.FC = () => {
                 )}
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="questionUrl">Question Image URL (optional)</Label>
+                <Input
+                  id="questionUrl"
+                  {...form.register('questionUrl')}
+                  placeholder="https://example.com/image.png"
+                />
+              </div>
+
+              {/* Context */}
+              <div className="space-y-2">
+                <Label htmlFor="context">Context (optional)</Label>
+                <Textarea
+                  id="context"
+                  {...form.register('context')}
+                  placeholder="Additional context or passage for the question..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contextUrl">Context Image URL (optional)</Label>
+                <Input
+                  id="contextUrl"
+                  {...form.register('contextUrl')}
+                  placeholder="https://example.com/context-image.png"
+                />
+              </div>
+
+              {/* Statements */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Statements (optional)</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addStatement}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Statement
+                  </Button>
+                </div>
+                {statements.map((statement, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+                      {index + 1}.
+                    </span>
+                    <Input
+                      value={statement}
+                      onChange={(e) => updateStatement(index, e.target.value)}
+                      placeholder={`Statement ${index + 1}`}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeStatement(index)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
               {/* Options */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -211,7 +335,7 @@ const McqForm: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {options.filter(o => o.trim()).map((option, index) => (
-                      <SelectItem key={index} value={option}>
+                      <SelectItem key={index} value={String.fromCharCode(65 + index)}>
                         {String.fromCharCode(65 + index)}. {option}
                       </SelectItem>
                     ))}
@@ -335,31 +459,74 @@ const McqForm: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Difficulty *</Label>
+                  <Label>Type *</Label>
                   <Select
-                    value={form.watch('difficulty')}
-                    onValueChange={(value: 'EASY' | 'MEDIUM' | 'HARD') => form.setValue('difficulty', value)}
+                    value={form.watch('type')}
+                    onValueChange={(value) => form.setValue('type', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="EASY">Easy</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="HARD">Hard</SelectItem>
+                      {MCQ_TYPES.map((type) => (
+                        <SelectItem key={type} value={type} className="capitalize">
+                          {type}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="marks">Marks</Label>
+                  <Label htmlFor="session">Session (Year)</Label>
                   <Input
-                    id="marks"
+                    id="session"
                     type="number"
-                    step="0.5"
-                    {...form.register('marks', { valueAsNumber: true })}
+                    {...form.register('session', { valueAsNumber: true })}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="source">Source (optional)</Label>
+                  <Input
+                    id="source"
+                    {...form.register('source')}
+                    placeholder="e.g., Board Exam 2023"
+                  />
+                </div>
+              </div>
+
+              {/* References */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>References (optional)</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addReference}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Reference
+                  </Button>
+                </div>
+                {references.map((ref, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={ref}
+                      onChange={(e) => updateReference(index, e.target.value)}
+                      placeholder={`Reference ${index + 1}`}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeReference(index)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="isMath">Contains Math Content</Label>
+                <Switch
+                  id="isMath"
+                  checked={form.watch('isMath')}
+                  onCheckedChange={(checked) => form.setValue('isMath', checked)}
+                />
               </div>
 
               <div className="flex items-center justify-between">

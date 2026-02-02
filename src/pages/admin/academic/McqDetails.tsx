@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, ChevronRight, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, ChevronRight, CheckCircle, XCircle, Copy, Calculator, Hash, Tag, Link2, ExternalLink, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,12 @@ const McqDetails: React.FC = () => {
   const handleDelete = () => { toast.success('MCQ deleted'); navigate('/admin/mcqs'); };
   const handleDuplicate = () => { toast.success('MCQ duplicated'); };
 
-  const difficultyColors = { EASY: 'bg-green-100 text-green-700', MEDIUM: 'bg-yellow-100 text-yellow-700', HARD: 'bg-red-100 text-red-700' };
+  const typeColors: Record<string, string> = {
+    'single': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    'multiple': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    'assertion': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    'statement': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,9 +44,15 @@ const McqDetails: React.FC = () => {
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin/mcqs')}><ArrowLeft className="h-5 w-5" /></Button>
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h1 className="text-xl lg:text-2xl font-bold">MCQ Details</h1>
-                  <Badge className={cn(difficultyColors[mcq.difficulty])}>{mcq.difficulty}</Badge>
+                  <Badge className={cn('capitalize', typeColors[mcq.type.toLowerCase()] || 'bg-muted')}>{mcq.type}</Badge>
+                  {mcq.isMath && (
+                    <Badge variant="outline" className="gap-1">
+                      <Calculator className="w-3 h-3" />
+                      Math
+                    </Badge>
+                  )}
                   <Badge variant={mcq.isActive ? 'default' : 'secondary'} className={mcq.isActive ? 'bg-green-100 text-green-700' : ''}>{mcq.isActive ? 'Active' : 'Inactive'}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{subject?.displayName} • {chapter?.displayName}</p>
@@ -66,23 +77,75 @@ const McqDetails: React.FC = () => {
           {subTopic && <><ChevronRight className="h-3 w-3" /><Link to={`/admin/subtopics/${subTopic.id}`} className="hover:text-foreground">{subTopic.displayName}</Link></>}
         </div>
 
+        {/* Context (if available) */}
+        {mcq.context && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileText className="h-4 w-4" />
+                Context
+                {mcq.contextUrl && (
+                  <a href={mcq.contextUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary hover:underline text-sm font-normal flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    View Image
+                  </a>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{mcq.context}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Question */}
         <Card>
-          <CardHeader><CardTitle>Question</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              Question
+              {mcq.questionUrl && (
+                <a href={mcq.questionUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary hover:underline text-sm font-normal flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" />
+                  View Image
+                </a>
+              )}
+            </CardTitle>
+          </CardHeader>
           <CardContent>
-            <p className="text-lg font-medium">{mcq.question}</p>
+            <p className="text-lg font-medium whitespace-pre-line">{mcq.question}</p>
           </CardContent>
         </Card>
+
+        {/* Statements (if available) */}
+        {mcq.statements.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageSquare className="h-4 w-4" />
+                Statements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {mcq.statements.map((statement, idx) => (
+                <div key={idx} className="flex items-start gap-3 p-2 bg-muted/30 rounded-md">
+                  <span className="font-medium text-muted-foreground">{idx + 1}.</span>
+                  <span>{statement}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Options */}
         <Card>
           <CardHeader><CardTitle>Options</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {mcq.options.map((option, index) => {
-              const isCorrect = option === mcq.answer;
+              const letter = String.fromCharCode(65 + index);
+              const isCorrect = option === mcq.answer || letter === mcq.answer;
               return (
-                <div key={index} className={cn('flex items-center gap-3 p-3 rounded-lg border', isCorrect ? 'border-green-500 bg-green-50' : 'border-border')}>
-                  <span className={cn('w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium', isCorrect ? 'bg-green-500 text-white' : 'bg-muted')}>{String.fromCharCode(65 + index)}</span>
+                <div key={index} className={cn('flex items-center gap-3 p-3 rounded-lg border', isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-border')}>
+                  <span className={cn('w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium', isCorrect ? 'bg-green-500 text-white' : 'bg-muted')}>{letter}</span>
                   <span className="flex-1">{option}</span>
                   {isCorrect ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-muted-foreground/30" />}
                 </div>
@@ -97,6 +160,25 @@ const McqDetails: React.FC = () => {
             <CardHeader><CardTitle>Explanation</CardTitle></CardHeader>
             <CardContent>
               <p className="text-muted-foreground">{mcq.explanation}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* References */}
+        {mcq.reference.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Link2 className="h-4 w-4" />
+                References
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {mcq.reference.map((ref, idx) => (
+                  <Badge key={idx} variant="outline">{ref}</Badge>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -117,9 +199,37 @@ const McqDetails: React.FC = () => {
           <Card>
             <CardHeader><CardTitle>Metadata</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between"><span className="text-muted-foreground">Difficulty</span><Badge className={cn(difficultyColors[mcq.difficulty])}>{mcq.difficulty}</Badge></div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Type</span>
+                <Badge className={cn('capitalize', typeColors[mcq.type.toLowerCase()] || 'bg-muted')}>{mcq.type}</Badge>
+              </div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Marks</span><span className="font-medium">{mcq.marks}</span></div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Session</span>
+                <Badge variant="outline" className="gap-1">
+                  <Hash className="w-3 h-3" />
+                  {mcq.session}
+                </Badge>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Math Content</span>
+                <Badge variant={mcq.isMath ? 'default' : 'secondary'}>
+                  {mcq.isMath ? 'Yes' : 'No'}
+                </Badge>
+              </div>
+              {mcq.source && (
+                <>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Source</span>
+                    <span className="flex items-center gap-1 text-sm">
+                      <Tag className="w-3 h-3" />
+                      {mcq.source}
+                    </span>
+                  </div>
+                </>
+              )}
               <Separator />
               <div className="flex justify-between items-center"><span className="text-muted-foreground">Created</span><span className="text-sm">{mcq.createdAt.toLocaleDateString()}</span></div>
               <Separator />
