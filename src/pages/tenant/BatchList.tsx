@@ -34,6 +34,7 @@ import { mockBatches } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BatchCard from '@/components/tenant/BatchCard';
+import { BatchCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
 
@@ -41,10 +42,13 @@ const BatchList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isMobile = useIsMobile();
 
   const handleRefresh = useCallback(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
     toast.success('Batches refreshed');
   }, []);
 
@@ -190,16 +194,22 @@ const BatchList: React.FC = () => {
       {isMobile ? (
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="space-y-3 pb-20">
-            {filteredBatches.map((batch) => (
-              <BatchCard key={batch.id} batch={batch} enableSwipe={true} />
-            ))}
-            {filteredBatches.length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                  <p className="text-muted-foreground">No batches found</p>
-                </CardContent>
-              </Card>
+            {isRefreshing ? (
+              [...Array(3)].map((_, i) => <BatchCardSkeleton key={i} />)
+            ) : (
+              <>
+                {filteredBatches.map((batch) => (
+                  <BatchCard key={batch.id} batch={batch} enableSwipe={true} />
+                ))}
+                {filteredBatches.length === 0 && (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                      <p className="text-muted-foreground">No batches found</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
         </PullToRefresh>

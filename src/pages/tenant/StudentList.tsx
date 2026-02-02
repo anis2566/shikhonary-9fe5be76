@@ -47,6 +47,7 @@ import { mockStudents, mockBatches } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import StudentCard from '@/components/tenant/StudentCard';
+import { StudentCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
 
@@ -55,11 +56,14 @@ const StudentList: React.FC = () => {
   const [selectedBatch, setSelectedBatch] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isMobile = useIsMobile();
 
   const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
     toast.success('Students refreshed');
   }, []);
 
@@ -318,25 +322,32 @@ const StudentList: React.FC = () => {
       {isMobile && (
         <PullToRefresh onRefresh={handleRefresh} className="lg:hidden -mx-4 px-4">
           <div className="space-y-3 pb-20">
-            {filteredStudents.map((student) => (
-              <StudentCard
-                key={student.id}
-                student={student}
-                isSelected={selectedRows.includes(student.id)}
-                onSelect={toggleSelectRow}
-                showCheckbox={selectedRows.length > 0}
-                enableSwipe={true}
-              />
-            ))}
-            
-            {filteredStudents.length === 0 && (
-              <div className="text-center py-12">
-                <GraduationCap className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-muted-foreground">No students found</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Try adjusting your search or filters
-                </p>
-              </div>
+            {isRefreshing ? (
+              // Show skeleton loading during refresh
+              [...Array(4)].map((_, i) => <StudentCardSkeleton key={i} />)
+            ) : (
+              <>
+                {filteredStudents.map((student) => (
+                  <StudentCard
+                    key={student.id}
+                    student={student}
+                    isSelected={selectedRows.includes(student.id)}
+                    onSelect={toggleSelectRow}
+                    showCheckbox={selectedRows.length > 0}
+                    enableSwipe={true}
+                  />
+                ))}
+                
+                {filteredStudents.length === 0 && (
+                  <div className="text-center py-12">
+                    <GraduationCap className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No students found</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Try adjusting your search or filters
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </PullToRefresh>

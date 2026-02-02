@@ -45,6 +45,7 @@ import { mockExams } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ExamCard from '@/components/tenant/ExamCard';
+import { ExamCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
 
@@ -52,10 +53,13 @@ const ExamList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isMobile = useIsMobile();
 
   const handleRefresh = useCallback(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
     toast.success('Exams refreshed');
   }, []);
 
@@ -326,18 +330,24 @@ const ExamList: React.FC = () => {
       {isMobile && (
         <PullToRefresh onRefresh={handleRefresh} className="lg:hidden -mx-4 px-4">
           <div className="space-y-3 pb-20">
-            {filteredExams.map((exam) => (
-              <ExamCard key={exam.id} exam={exam} enableSwipe={true} />
-            ))}
-            
-            {filteredExams.length === 0 && (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-muted-foreground">No exams found</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Try adjusting your filters
-                </p>
-              </div>
+            {isRefreshing ? (
+              [...Array(3)].map((_, i) => <ExamCardSkeleton key={i} />)
+            ) : (
+              <>
+                {filteredExams.map((exam) => (
+                  <ExamCard key={exam.id} exam={exam} enableSwipe={true} />
+                ))}
+                
+                {filteredExams.length === 0 && (
+                  <div className="text-center py-12">
+                    <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No exams found</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Try adjusting your filters
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </PullToRefresh>
