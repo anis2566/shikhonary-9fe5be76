@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal,
   Eye,
@@ -23,14 +23,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import SwipeableCard from '@/components/ui/swipeable-card';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { Exam } from '@/lib/tenant-mock-data';
 
 interface ExamCardProps {
   exam: Exam;
+  enableSwipe?: boolean;
 }
 
-const ExamCard: React.FC<ExamCardProps> = ({ exam }) => {
+const ExamCard: React.FC<ExamCardProps> = ({ exam, enableSwipe = true }) => {
+  const navigate = useNavigate();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed':
@@ -74,7 +79,21 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam }) => {
     }
   };
 
-  return (
+  const handleEdit = () => {
+    navigate(`/tenant/exams/${exam.id}/edit`);
+  };
+
+  const handleDelete = () => {
+    toast.error(`Delete "${exam.title}"?`, {
+      description: 'This action cannot be undone.',
+      action: {
+        label: 'Delete',
+        onClick: () => toast.success('Exam deleted'),
+      },
+    });
+  };
+
+  const cardContent = (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         {/* Header with type color accent */}
@@ -238,6 +257,16 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam }) => {
       </CardContent>
     </Card>
   );
+
+  if (enableSwipe) {
+    return (
+      <SwipeableCard onEdit={handleEdit} onDelete={handleDelete}>
+        {cardContent}
+      </SwipeableCard>
+    );
+  }
+
+  return cardContent;
 };
 
 export default ExamCard;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MoreHorizontal,
   Eye,
@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import SwipeableCard from '@/components/ui/swipeable-card';
+import { toast } from 'sonner';
 
 interface TeacherCardProps {
   teacher: {
@@ -33,15 +35,31 @@ interface TeacherCardProps {
     subjectNames: string[];
     isActive: boolean;
   };
+  enableSwipe?: boolean;
 }
 
-const TeacherCard: React.FC<TeacherCardProps> = ({ teacher }) => {
+const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, enableSwipe = true }) => {
+  const navigate = useNavigate();
   const initials = teacher.name
     .split(' ')
     .map((n) => n[0])
     .join('');
 
-  return (
+  const handleEdit = () => {
+    navigate(`/tenant/teachers/${teacher.id}/edit`);
+  };
+
+  const handleDelete = () => {
+    toast.error(`Delete ${teacher.name}?`, {
+      description: 'This action cannot be undone.',
+      action: {
+        label: 'Delete',
+        onClick: () => toast.success('Teacher deleted'),
+      },
+    });
+  };
+
+  const cardContent = (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         {/* Header with Avatar and Status */}
@@ -167,6 +185,16 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher }) => {
       </CardContent>
     </Card>
   );
+
+  if (enableSwipe) {
+    return (
+      <SwipeableCard onEdit={handleEdit} onDelete={handleDelete}>
+        {cardContent}
+      </SwipeableCard>
+    );
+  }
+
+  return cardContent;
 };
 
 export default TeacherCard;
