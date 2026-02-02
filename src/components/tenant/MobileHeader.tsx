@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import NotificationCenter from './NotificationCenter';
 
 const MobileHeader: React.FC = () => {
   const [searchOpen, setSearchOpen] = React.useState(false);
@@ -79,41 +80,7 @@ const MobileHeader: React.FC = () => {
           </Dialog>
 
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Notifications</span>
-                <Button variant="ghost" size="sm" className="text-xs h-auto p-1">
-                  Mark all read
-                </Button>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-64 overflow-y-auto">
-                <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                  <p className="text-sm font-medium">Weekly Test completed</p>
-                  <p className="text-xs text-muted-foreground">
-                    23 students submitted • 2 hours ago
-                  </p>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                  <p className="text-sm font-medium">New student enrolled</p>
-                  <p className="text-xs text-muted-foreground">
-                    Ayesha Khan joined Class 10 • 3 hours ago
-                  </p>
-                </DropdownMenuItem>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                View all notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationCenter />
 
           {/* Profile Avatar */}
           <DropdownMenu>

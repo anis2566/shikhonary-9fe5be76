@@ -44,6 +44,12 @@ import {
   recentActivities,
 } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
+import {
+  TodayHighlightsWidget,
+  AttendanceSummaryWidget,
+  UpcomingEventsWidget,
+  QuickMetricsWidget,
+} from '@/components/tenant/DashboardWidgets';
 
 const TenantOverview: React.FC = () => {
   const stats = mockDashboardStats;
@@ -191,6 +197,12 @@ const TenantOverview: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Mobile Dashboard Widgets */}
+      <div className="lg:hidden space-y-4">
+        <TodayHighlightsWidget />
+        <AttendanceSummaryWidget />
       </div>
 
       {/* Charts Row - Hidden on Mobile, show simpler version */}
