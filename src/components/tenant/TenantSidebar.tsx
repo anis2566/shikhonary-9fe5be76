@@ -18,6 +18,7 @@ import {
   ClipboardList,
   TrendingUp,
   BookOpen,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,7 @@ const navSections: NavSection[] = [
     items: [
       { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
       { title: 'Attendance', url: '/tenant/attendance', icon: CalendarDays },
+      { title: 'Reports', url: '/tenant/reports', icon: FileSpreadsheet },
       { title: 'Calendar', url: '/tenant/calendar', icon: Calendar },
     ],
   },
