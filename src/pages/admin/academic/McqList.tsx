@@ -1,41 +1,40 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, CircleHelp, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, CircleHelp, Filter, Download, Upload, LayoutGrid, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import AcademicDataTable, { Column, StatusBadge, DifficultyBadge } from '@/components/academic/AcademicDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
 import BulkActions from '@/components/academic/BulkActions';
+import McqCard, { McqCardData } from '@/components/academic/McqCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Mcq } from '@/types';
-import { mockMcqs, mockSubjects, getSubjectById, getChapterById } from '@/lib/academic-mock-data';
+import { mockMcqs, mockSubjects, getSubjectById, getChapterById, getTopicById, getSubTopicById, McqData } from '@/lib/academic-mock-data';
 
 const McqList: React.FC = () => {
   const navigate = useNavigate();
-  const [mcqs, setMcqs] = useState<Mcq[]>(mockMcqs);
+  const [mcqs, setMcqs] = useState<McqData[]>(mockMcqs);
   const [search, setSearch] = useState('');
   const [filterSubject, setFilterSubject] = useState<string>('all');
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingMcq, setDeletingMcq] = useState<Mcq | null>(null);
+  const [deletingMcq, setDeletingMcq] = useState<McqData | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
 
   const filteredMcqs = useMemo(() => {
     return mcqs.filter((mcq) => {
       const matchesSearch = mcq.question.toLowerCase().includes(search.toLowerCase());
       const matchesSubject = filterSubject === 'all' || mcq.subjectId === filterSubject;
-      const matchesDifficulty = filterDifficulty === 'all' || mcq.difficulty === filterDifficulty;
+      const matchesType = filterType === 'all' || mcq.type.toLowerCase() === filterType.toLowerCase();
       const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' && mcq.isActive) || (filterStatus === 'inactive' && !mcq.isActive);
-      return matchesSearch && matchesSubject && matchesDifficulty && matchesStatus;
+      return matchesSearch && matchesSubject && matchesType && matchesStatus;
     });
-  }, [mcqs, search, filterSubject, filterDifficulty, filterStatus]);
+  }, [mcqs, search, filterSubject, filterType, filterStatus]);
 
   const paginatedMcqs = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -44,13 +43,29 @@ const McqList: React.FC = () => {
 
   const totalPages = Math.ceil(filteredMcqs.length / itemsPerPage);
 
+  // Get unique types from data
+  const uniqueTypes = useMemo(() => {
+    return [...new Set(mcqs.map(m => m.type))];
+  }, [mcqs]);
+
   const stats = useMemo(() => {
     const activeCount = mcqs.filter((m) => m.isActive).length;
-    const easyCount = mcqs.filter((m) => m.difficulty === 'EASY').length;
-    const mediumCount = mcqs.filter((m) => m.difficulty === 'MEDIUM').length;
-    const hardCount = mcqs.filter((m) => m.difficulty === 'HARD').length;
-    return { total: mcqs.length, active: activeCount, easy: easyCount, medium: mediumCount, hard: hardCount };
+    const singleCount = mcqs.filter((m) => m.type === 'single').length;
+    const assertionCount = mcqs.filter((m) => m.type === 'assertion').length;
+    const statementCount = mcqs.filter((m) => m.type === 'statement').length;
+    return { total: mcqs.length, active: activeCount, single: singleCount, assertion: assertionCount, statement: statementCount };
   }, [mcqs]);
+
+  // Convert McqData to McqCardData with resolved names
+  const mcqCards: McqCardData[] = useMemo(() => {
+    return paginatedMcqs.map(mcq => ({
+      ...mcq,
+      subjectName: getSubjectById(mcq.subjectId)?.displayName,
+      chapterName: getChapterById(mcq.chapterId)?.displayName,
+      topicName: mcq.topicId ? getTopicById(mcq.topicId)?.displayName : undefined,
+      subTopicName: mcq.subTopicId ? getSubTopicById(mcq.subTopicId)?.displayName : undefined,
+    }));
+  }, [paginatedMcqs]);
 
   const handleDelete = () => {
     if (deletingMcq) {
@@ -61,13 +76,13 @@ const McqList: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = (mcq: Mcq) => {
+  const handleToggleStatus = (mcq: McqData) => {
     setMcqs(mcqs.map((m) => (m.id === mcq.id ? { ...m, isActive: !m.isActive, updatedAt: new Date() } : m)));
     toast.success(`MCQ ${mcq.isActive ? 'deactivated' : 'activated'} successfully`);
   };
 
-  const handleDuplicate = (mcq: Mcq) => {
-    const newMcq: Mcq = {
+  const handleDuplicate = (mcq: McqData) => {
+    const newMcq: McqData = {
       ...mcq,
       id: `mcq-${Date.now()}`,
       question: `${mcq.question} (Copy)`,
@@ -78,45 +93,13 @@ const McqList: React.FC = () => {
     toast.success('MCQ duplicated successfully');
   };
 
-  const columns: Column<Mcq>[] = [
-    {
-      key: 'question',
-      header: 'Question',
-      render: (mcq) => (
-        <div className="max-w-xs lg:max-w-md">
-          <p className="font-medium text-foreground line-clamp-2">{mcq.question}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {getChapterById(mcq.chapterId)?.displayName || 'N/A'}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: 'subjectId',
-      header: 'Subject',
-      hideOnMobile: true,
-      render: (mcq) => {
-        const subject = getSubjectById(mcq.subjectId);
-        return <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-sm">{subject?.displayName || 'N/A'}</span>;
-      },
-    },
-    {
-      key: 'difficulty',
-      header: 'Difficulty',
-      render: (mcq) => <DifficultyBadge difficulty={mcq.difficulty} />,
-    },
-    {
-      key: 'marks',
-      header: 'Marks',
-      hideOnMobile: true,
-    },
-    {
-      key: 'isActive',
-      header: 'Status',
-      hideOnMobile: true,
-      render: (mcq) => <StatusBadge active={mcq.isActive} />,
-    },
-  ];
+  const handleSelectItem = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(i => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -127,9 +110,9 @@ const McqList: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard title="Total MCQs" value={stats.total} icon={<CircleHelp className="h-5 w-5" />} />
           <StatsCard title="Active" value={stats.active} icon={<CircleHelp className="h-5 w-5" />} />
-          <StatsCard title="Easy" value={stats.easy} icon={<CircleHelp className="h-5 w-5" />} />
-          <StatsCard title="Medium" value={stats.medium} icon={<CircleHelp className="h-5 w-5" />} />
-          <StatsCard title="Hard" value={stats.hard} icon={<CircleHelp className="h-5 w-5" />} />
+          <StatsCard title="Single Choice" value={stats.single} icon={<CircleHelp className="h-5 w-5" />} />
+          <StatsCard title="Assertion" value={stats.assertion} icon={<CircleHelp className="h-5 w-5" />} />
+          <StatsCard title="Statement" value={stats.statement} icon={<CircleHelp className="h-5 w-5" />} />
         </div>
 
         {/* Actions Bar */}
@@ -165,15 +148,15 @@ const McqList: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterDifficulty} onValueChange={(v) => { setFilterDifficulty(v); setCurrentPage(1); }}>
+            <Select value={filterType} onValueChange={(v) => { setFilterType(v); setCurrentPage(1); }}>
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Difficulty" />
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="EASY">Easy</SelectItem>
-                <SelectItem value="MEDIUM">Medium</SelectItem>
-                <SelectItem value="HARD">Hard</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
+                {uniqueTypes.map((type) => (
+                  <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
@@ -198,21 +181,40 @@ const McqList: React.FC = () => {
           />
         </div>
 
-        {/* Table */}
-        <AcademicDataTable
-          columns={columns}
-          data={paginatedMcqs}
-          onView={(mcq) => navigate(`/admin/mcqs/${mcq.id}`)}
-          onEdit={(mcq) => navigate(`/admin/mcqs/${mcq.id}/edit`)}
-          onDelete={(mcq) => { setDeletingMcq(mcq); setDeleteDialogOpen(true); }}
-          onToggleStatus={handleToggleStatus}
-          onDuplicate={handleDuplicate}
-          emptyMessage="No MCQs found"
-          selectable
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
-          getItemStatus={(mcq) => mcq.isActive}
-        />
+        {/* Cards Grid */}
+        {mcqCards.length === 0 ? (
+          <div className="bg-card rounded-xl border border-border p-8 text-center">
+            <p className="text-muted-foreground">No MCQs found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {mcqCards.map((mcq) => (
+              <McqCard
+                key={mcq.id}
+                mcq={mcq}
+                selected={selectedIds.includes(mcq.id)}
+                onSelect={handleSelectItem}
+                onView={() => navigate(`/admin/mcqs/${mcq.id}`)}
+                onEdit={() => navigate(`/admin/mcqs/${mcq.id}/edit`)}
+                onDelete={() => { 
+                  const original = mcqs.find(m => m.id === mcq.id);
+                  if (original) {
+                    setDeletingMcq(original); 
+                    setDeleteDialogOpen(true); 
+                  }
+                }}
+                onToggleStatus={() => {
+                  const original = mcqs.find(m => m.id === mcq.id);
+                  if (original) handleToggleStatus(original);
+                }}
+                onDuplicate={() => {
+                  const original = mcqs.find(m => m.id === mcq.id);
+                  if (original) handleDuplicate(original);
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {filteredMcqs.length > 0 && (
           <Pagination

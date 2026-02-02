@@ -209,15 +209,43 @@ export const mockSubTopics: AcademicSubTopic[] = [
   },
 ];
 
-export const mockMcqs: Mcq[] = [
+export interface McqData {
+  id: string;
+  question: string;
+  options: string[];
+  statements: string[];
+  answer: string;
+  type: string;
+  reference: string[];
+  explanation?: string;
+  isMath: boolean;
+  session: number;
+  source?: string;
+  questionUrl?: string;
+  context?: string;
+  contextUrl?: string;
+  subjectId: string;
+  chapterId: string;
+  topicId?: string;
+  subTopicId?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const mockMcqs: McqData[] = [
   {
     id: 'mcq-1',
     question: 'What is the SI unit of velocity?',
     options: ['m/s', 'km/h', 'm/s²', 'N'],
-    answer: 'm/s',
-    explanation: 'Velocity is measured in meters per second (m/s) in the SI system.',
-    difficulty: 'EASY',
-    marks: 1,
+    statements: [],
+    answer: 'A',
+    type: 'single',
+    reference: ['NCERT Class 9', 'Physics Textbook'],
+    explanation: 'Velocity is measured in meters per second (m/s) in the SI system. It is a vector quantity having both magnitude and direction.',
+    isMath: false,
+    session: 2024,
+    source: 'Board Exam 2023',
     subjectId: 'subject-1',
     chapterId: 'chapter-1',
     topicId: 'topic-2',
@@ -229,10 +257,14 @@ export const mockMcqs: Mcq[] = [
     id: 'mcq-2',
     question: 'Which of the following is a vector quantity?',
     options: ['Speed', 'Distance', 'Displacement', 'Time'],
-    answer: 'Displacement',
-    explanation: 'Displacement has both magnitude and direction, making it a vector quantity.',
-    difficulty: 'EASY',
-    marks: 1,
+    statements: [],
+    answer: 'C',
+    type: 'single',
+    reference: ['Physics Guide'],
+    explanation: 'Displacement has both magnitude and direction, making it a vector quantity. Speed, distance, and time are scalar quantities.',
+    isMath: false,
+    session: 2024,
+    source: 'Practice Set',
     subjectId: 'subject-1',
     chapterId: 'chapter-1',
     topicId: 'topic-1',
@@ -244,10 +276,13 @@ export const mockMcqs: Mcq[] = [
     id: 'mcq-3',
     question: 'What is the acceleration due to gravity on Earth?',
     options: ['9.8 m/s²', '10 m/s', '9.8 m/s', '10 m/s²'],
-    answer: '9.8 m/s²',
-    explanation: 'The standard acceleration due to gravity on Earth is approximately 9.8 m/s².',
-    difficulty: 'MEDIUM',
-    marks: 1,
+    statements: [],
+    answer: 'A',
+    type: 'single',
+    reference: ['NCERT'],
+    explanation: 'The standard acceleration due to gravity on Earth is approximately 9.8 m/s². Note the unit is m/s² for acceleration.',
+    isMath: true,
+    session: 2024,
     subjectId: 'subject-1',
     chapterId: 'chapter-1',
     topicId: 'topic-3',
@@ -259,15 +294,60 @@ export const mockMcqs: Mcq[] = [
     id: 'mcq-4',
     question: "According to Newton's first law, an object at rest will:",
     options: ['Always remain at rest', 'Start moving slowly', 'Remain at rest unless acted upon by an external force', 'Accelerate'],
-    answer: 'Remain at rest unless acted upon by an external force',
-    difficulty: 'MEDIUM',
-    marks: 1,
+    statements: [],
+    answer: 'C',
+    type: 'single',
+    reference: ["Newton's Laws", 'Physics Fundamentals'],
+    explanation: "Newton's first law of motion, also known as the law of inertia, states that an object will remain at rest or in uniform motion unless acted upon by an external unbalanced force.",
+    isMath: false,
+    session: 2023,
+    source: 'Board Exam 2022',
     subjectId: 'subject-1',
     chapterId: 'chapter-2',
     topicId: 'topic-4',
     isActive: true,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
+  },
+  {
+    id: 'mcq-5',
+    question: 'Consider the following statements about motion:\nI. Distance is always positive\nII. Displacement can be zero\nIII. Speed and velocity are always equal\n\nWhich of the above statements are correct?',
+    options: ['I and II only', 'II and III only', 'I and III only', 'All of the above'],
+    statements: ['Distance is always positive', 'Displacement can be zero', 'Speed and velocity are always equal'],
+    answer: 'A',
+    type: 'statement',
+    reference: ['Physics MCQ Bank'],
+    explanation: 'Statement I is true as distance is a scalar and always positive. Statement II is true as displacement can be zero when start and end points are the same. Statement III is false as speed is scalar while velocity is vector.',
+    isMath: false,
+    session: 2024,
+    context: 'A car travels from point A to B and returns back to A.',
+    subjectId: 'subject-1',
+    chapterId: 'chapter-1',
+    topicId: 'topic-1',
+    subTopicId: 'subtopic-1',
+    isActive: true,
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15'),
+  },
+  {
+    id: 'mcq-6',
+    question: 'Assertion (A): The velocity of a body can change even if its speed remains constant.\nReason (R): Velocity is a vector quantity.',
+    options: ['Both A and R are true and R is the correct explanation of A', 'Both A and R are true but R is not the correct explanation of A', 'A is true but R is false', 'A is false but R is true'],
+    statements: [],
+    answer: 'A',
+    type: 'assertion',
+    reference: ['Assertion-Reason Questions'],
+    explanation: 'Both the assertion and reason are true. Velocity being a vector quantity means it has both magnitude and direction. When direction changes (like in circular motion), velocity changes even if speed remains constant.',
+    isMath: false,
+    session: 2023,
+    source: 'Competitive Exam',
+    subjectId: 'subject-1',
+    chapterId: 'chapter-1',
+    topicId: 'topic-2',
+    subTopicId: 'subtopic-3',
+    isActive: false,
+    createdAt: new Date('2024-02-01'),
+    updatedAt: new Date('2024-02-01'),
   },
 ];
 
