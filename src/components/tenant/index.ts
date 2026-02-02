@@ -12,3 +12,9 @@ export {
   UpcomingEventsWidget,
   QuickMetricsWidget,
 } from './DashboardWidgets';
+
+// Communication exports
+export { default as NotificationSender } from './communication/NotificationSender';
+export { default as AnnouncementScheduler } from './communication/AnnouncementScheduler';
+export { default as MessageTemplateCard } from './communication/MessageTemplateCard';
+export { default as MessageTemplateList } from './communication/MessageTemplateList';
