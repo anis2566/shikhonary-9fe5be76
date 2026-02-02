@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import TenantSidebar from '@/components/tenant/TenantSidebar';
 import TenantHeader from '@/components/tenant/TenantHeader';
+import MobileHeader from '@/components/tenant/MobileHeader';
+import MobileBottomNav from '@/components/tenant/MobileBottomNav';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TenantLayout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Show loading state
   if (loading) {
@@ -18,13 +22,20 @@ const TenantLayout: React.FC = () => {
     );
   }
 
-  // Redirect if not authenticated (for now, we'll use mock data so skip this)
-  // In production, uncomment this:
-  // if (!user) {
-  //   navigate('/auth');
-  //   return null;
-  // }
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <MobileHeader />
+        <main className="flex-1 overflow-auto pb-20">
+          <Outlet />
+        </main>
+        <MobileBottomNav />
+      </div>
+    );
+  }
 
+  // Desktop Layout
   return (
     <div className="min-h-screen flex w-full bg-background">
       <TenantSidebar
