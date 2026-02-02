@@ -7,6 +7,7 @@ import {
   UserCheck,
   FileText,
   CalendarDays,
+  Calendar,
   BarChart3,
   Bell,
   Megaphone,
@@ -70,6 +71,7 @@ const navSections: NavSection[] = [
     items: [
       { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
       { title: 'Attendance', url: '/tenant/attendance', icon: CalendarDays },
+      { title: 'Calendar', url: '/tenant/calendar', icon: Calendar },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   GraduationCap,
@@ -50,12 +50,35 @@ import {
   UpcomingEventsWidget,
   QuickMetricsWidget,
 } from '@/components/tenant/DashboardWidgets';
+import OnboardingTour from '@/components/tenant/OnboardingTour';
+import StatsComparisonCard from '@/components/tenant/StatsComparisonCard';
+
+const ONBOARDING_KEY = 'tenant_onboarding_completed';
 
 const TenantOverview: React.FC = () => {
   const stats = mockDashboardStats;
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    const completed = localStorage.getItem(ONBOARDING_KEY);
+    if (!completed) {
+      // Delay to let page render first
+      const timer = setTimeout(() => setShowTour(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTourComplete = () => {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    setShowTour(false);
+  };
 
   return (
-    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
+    <>
+      {/* Onboarding Tour */}
+      <OnboardingTour isOpen={showTour} onComplete={handleTourComplete} />
+      
+      <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Mobile Welcome Banner */}
       <div className="lg:hidden">
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-4">
@@ -170,6 +193,34 @@ const TenantOverview: React.FC = () => {
           icon={TrendingUp}
           trend={{ value: 3.5, isPositive: true }}
           color="success"
+        />
+      </div>
+
+      {/* Stats Comparison Section - Desktop */}
+      <div className="hidden lg:grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsComparisonCard
+          title="Pass Rate"
+          icon={CheckCircle2}
+          data={{ current: 85, previous: 78, label: 'Current month' }}
+          format="percentage"
+        />
+        <StatsComparisonCard
+          title="Attendance"
+          icon={Users}
+          data={{ current: stats.averageAttendance, previous: 88, label: 'Current month' }}
+          format="percentage"
+        />
+        <StatsComparisonCard
+          title="New Students"
+          icon={GraduationCap}
+          data={{ current: 24, previous: 18, label: 'This month' }}
+          format="number"
+        />
+        <StatsComparisonCard
+          title="Exams Taken"
+          icon={FileText}
+          data={{ current: 156, previous: 142, label: 'This month' }}
+          format="number"
         />
       </div>
 
@@ -629,6 +680,7 @@ const TenantOverview: React.FC = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 
