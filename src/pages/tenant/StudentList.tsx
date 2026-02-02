@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Search,
   Plus,
-  Filter,
   Download,
   MoreHorizontal,
   Eye,
@@ -13,12 +12,14 @@ import {
   Phone,
   GraduationCap,
   Users,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -44,12 +45,15 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { mockStudents, mockBatches } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import StudentCard from '@/components/tenant/StudentCard';
 
 const StudentList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   const filteredStudents = mockStudents.filter((student) => {
     const matchesSearch =
@@ -87,9 +91,24 @@ const StudentList: React.FC = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
+      {/* Mobile Header */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-xl font-bold text-foreground">Students</h1>
+          <Button size="sm" asChild>
+            <Link to="/tenant/students/create">
+              <Plus className="w-4 h-4" />
+            </Link>
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {stats.total} students • {stats.active} active
+        </p>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Students</h1>
           <p className="text-muted-foreground mt-1">
@@ -110,8 +129,41 @@ const StudentList: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Mobile Stats - Horizontal Scroll */}
+      <div className="lg:hidden -mx-4 px-4">
+        <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+          <Card className="min-w-[100px] snap-start shrink-0">
+            <CardContent className="p-3 text-center">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary mx-auto w-fit mb-1">
+                <Users className="w-4 h-4" />
+              </div>
+              <p className="text-lg font-bold">{stats.total}</p>
+              <p className="text-[10px] text-muted-foreground">Total</p>
+            </CardContent>
+          </Card>
+          <Card className="min-w-[100px] snap-start shrink-0">
+            <CardContent className="p-3 text-center">
+              <div className="p-2 rounded-lg bg-green-500/10 text-green-600 mx-auto w-fit mb-1">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <p className="text-lg font-bold">{stats.active}</p>
+              <p className="text-[10px] text-muted-foreground">Active</p>
+            </CardContent>
+          </Card>
+          <Card className="min-w-[100px] snap-start shrink-0">
+            <CardContent className="p-3 text-center">
+              <div className="p-2 rounded-lg bg-muted text-muted-foreground mx-auto w-fit mb-1">
+                <Users className="w-4 h-4" />
+              </div>
+              <p className="text-lg font-bold">{stats.inactive}</p>
+              <p className="text-[10px] text-muted-foreground">Inactive</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Desktop Stats Cards */}
+      <div className="hidden lg:grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -153,8 +205,46 @@ const StudentList: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
+      {/* Mobile Search */}
+      <div className="lg:hidden relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search students..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* Mobile Filters */}
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
+        <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+          <SelectTrigger className="w-auto min-w-[120px] h-8 text-xs shrink-0">
+            <SelectValue placeholder="Batch" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Batches</SelectItem>
+            {mockBatches.map((batch) => (
+              <SelectItem key={batch.id} value={batch.id}>
+                {batch.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-auto min-w-[100px] h-8 text-xs shrink-0">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Desktop Filters */}
+      <Card className="hidden lg:block">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
@@ -199,15 +289,15 @@ const StudentList: React.FC = () => {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
-                {selectedRows.length} student(s) selected
+                {selectedRows.length} selected
               </span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Send Email
+                <Button variant="outline" size="sm" className="h-7 text-xs">
+                  <Mail className="w-3.5 h-3.5 mr-1.5" />
+                  Email
                 </Button>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="w-4 h-4 mr-2" />
+                <Button variant="destructive" size="sm" className="h-7 text-xs">
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                   Delete
                 </Button>
               </div>
@@ -216,8 +306,33 @@ const StudentList: React.FC = () => {
         </Card>
       )}
 
-      {/* Data Table */}
-      <Card>
+      {/* Mobile Card Grid */}
+      {isMobile && (
+        <div className="lg:hidden space-y-3">
+          {filteredStudents.map((student) => (
+            <StudentCard
+              key={student.id}
+              student={student}
+              isSelected={selectedRows.includes(student.id)}
+              onSelect={toggleSelectRow}
+              showCheckbox={selectedRows.length > 0}
+            />
+          ))}
+          
+          {filteredStudents.length === 0 && (
+            <div className="text-center py-12">
+              <GraduationCap className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+              <p className="text-muted-foreground">No students found</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Try adjusting your search or filters
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop Data Table */}
+      <Card className="hidden lg:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
