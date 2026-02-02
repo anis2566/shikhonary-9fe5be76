@@ -4,6 +4,7 @@ import TenantSidebar from '@/components/tenant/TenantSidebar';
 import TenantHeader from '@/components/tenant/TenantHeader';
 import MobileHeader from '@/components/tenant/MobileHeader';
 import MobileBottomNav from '@/components/tenant/MobileBottomNav';
+import QuickActionsFab from '@/components/tenant/QuickActionsFab';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -30,6 +31,7 @@ const TenantLayout: React.FC = () => {
         <main className="flex-1 overflow-auto pb-20">
           <Outlet />
         </main>
+        <QuickActionsFab />
         <MobileBottomNav />
       </div>
     );
