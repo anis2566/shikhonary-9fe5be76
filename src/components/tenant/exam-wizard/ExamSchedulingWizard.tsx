@@ -13,13 +13,18 @@ import StepBatchSelection from './StepBatchSelection';
 import StepSubjectPicker from './StepSubjectPicker';
 import StepScheduling from './StepScheduling';
 import StepConfiguration from './StepConfiguration';
+import StepQuestionSelection from './StepQuestionSelection';
 import StepReview from './StepReview';
 import {
   detectConflicts,
-  validateExamSchedule,
   ScheduleConflict,
 } from '@/lib/exam-scheduling-utils';
 import { mockExams } from '@/lib/tenant-mock-data';
+
+interface SelectedQuestion {
+  id: string;
+  type: 'mcq' | 'cq';
+}
 
 interface ExamFormData {
   title: string;
@@ -28,6 +33,7 @@ interface ExamFormData {
   batchIds: string[];
   subjectId: string;
   chapterIds: string[];
+  selectedQuestions: SelectedQuestion[];
   startDate?: Date;
   startTime: string;
   duration: number;
@@ -46,9 +52,10 @@ const steps = [
   { id: 1, title: 'Basic Info', description: 'Title & type' },
   { id: 2, title: 'Batches', description: 'Select groups' },
   { id: 3, title: 'Subject', description: 'Pick subject' },
-  { id: 4, title: 'Schedule', description: 'Date & time' },
-  { id: 5, title: 'Configure', description: 'Marks & settings' },
-  { id: 6, title: 'Review', description: 'Confirm details' },
+  { id: 4, title: 'Questions', description: 'Select questions' },
+  { id: 5, title: 'Schedule', description: 'Date & time' },
+  { id: 6, title: 'Configure', description: 'Marks & settings' },
+  { id: 7, title: 'Review', description: 'Confirm details' },
 ];
 
 const initialFormData: ExamFormData = {
@@ -58,13 +65,14 @@ const initialFormData: ExamFormData = {
   batchIds: [],
   subjectId: '',
   chapterIds: [],
+  selectedQuestions: [],
   startDate: undefined,
   startTime: '',
   duration: 60,
   totalMarks: 100,
   passingMarks: 40,
-  mcqCount: 30,
-  cqCount: 5,
+  mcqCount: 0,
+  cqCount: 0,
   hasNegativeMark: false,
   negativeMark: 0.25,
   shuffleQuestions: true,
@@ -139,11 +147,14 @@ const ExamSchedulingWizard: React.FC = () => {
         // Subject is optional
         break;
       case 4:
+        // Questions selection - optional but show warning
+        break;
+      case 5:
         if (!formData.startDate) newErrors.startDate = 'Please select a date';
         if (!formData.startTime) newErrors.startTime = 'Please select a start time';
         if (formData.duration < 10) newErrors.duration = 'Duration must be at least 10 minutes';
         break;
-      case 5:
+      case 6:
         if (formData.totalMarks <= 0) newErrors.totalMarks = 'Total marks must be greater than 0';
         if (formData.passingMarks > formData.totalMarks)
           newErrors.passingMarks = 'Passing marks cannot exceed total marks';
@@ -175,8 +186,9 @@ const ExamSchedulingWizard: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate all steps
-    for (let step = 1; step <= 5; step++) {
+    // Validate required steps
+    const requiredSteps = [1, 2, 5, 6];
+    for (const step of requiredSteps) {
       if (!validateStep(step)) {
         setCurrentStep(step);
         toast.error(`Please complete step ${step} correctly`);
@@ -188,7 +200,7 @@ const ExamSchedulingWizard: React.FC = () => {
     const blockingConflicts = conflicts.filter((c) => c.severity === 'error');
     if (blockingConflicts.length > 0) {
       toast.error('Please resolve scheduling conflicts before creating the exam');
-      setCurrentStep(4);
+      setCurrentStep(5);
       return;
     }
 
@@ -199,7 +211,7 @@ const ExamSchedulingWizard: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast.success('Exam created successfully!', {
-        description: 'You can now add questions from the question bank.',
+        description: `${formData.selectedQuestions.length} questions added to the exam.`,
       });
 
       navigate('/tenant/exams');
@@ -214,7 +226,8 @@ const ExamSchedulingWizard: React.FC = () => {
     if (
       formData.title ||
       formData.batchIds.length > 0 ||
-      formData.startDate
+      formData.startDate ||
+      formData.selectedQuestions.length > 0
     ) {
       if (window.confirm('Are you sure you want to discard this exam?')) {
         navigate('/tenant/exams');
@@ -252,6 +265,14 @@ const ExamSchedulingWizard: React.FC = () => {
         );
       case 4:
         return (
+          <StepQuestionSelection
+            data={formData}
+            errors={errors}
+            onChange={handleChange}
+          />
+        );
+      case 5:
+        return (
           <StepScheduling
             data={formData}
             conflicts={conflicts}
@@ -259,7 +280,7 @@ const ExamSchedulingWizard: React.FC = () => {
             onChange={handleChange}
           />
         );
-      case 5:
+      case 6:
         return (
           <StepConfiguration
             data={formData}
@@ -267,7 +288,7 @@ const ExamSchedulingWizard: React.FC = () => {
             onChange={handleChange}
           />
         );
-      case 6:
+      case 7:
         return <StepReview data={formData} onEditStep={handleGoToStep} />;
       default:
         return null;
@@ -278,7 +299,7 @@ const ExamSchedulingWizard: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
+        <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">Create New Exam</h1>
@@ -293,7 +314,7 @@ const ExamSchedulingWizard: React.FC = () => {
         </div>
       </div>
 
-      <div className="container max-w-4xl mx-auto px-4 py-6">
+      <div className="container max-w-5xl mx-auto px-4 py-6">
         {/* Progress */}
         <Card className="mb-6">
           <CardContent className="p-4 sm:p-6">
