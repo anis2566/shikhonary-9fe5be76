@@ -68,6 +68,9 @@ import TenantSettings from "./pages/tenant/TenantSettings";
 import CalendarPage from "./pages/tenant/CalendarPage";
 import CommunicationsPage from "./pages/tenant/CommunicationsPage";
 import ReportsPage from "./pages/tenant/ReportsPage";
+import QuestionBankPage from "./pages/tenant/QuestionBankPage";
+import TenantMcqDetailsPage from "./pages/tenant/McqDetailsPage";
+import TenantCqDetailsPage from "./pages/tenant/CqDetailsPage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -157,6 +160,9 @@ const App = () => (
               <Route path="batches" element={<BatchList />} />
               <Route path="exams" element={<ExamList />} />
               <Route path="exams/create" element={<ExamCreate />} />
+              <Route path="question-bank" element={<QuestionBankPage />} />
+              <Route path="question-bank/mcqs/:id" element={<TenantMcqDetailsPage />} />
+              <Route path="question-bank/cqs/:id" element={<TenantCqDetailsPage />} />
               <Route path="results" element={<ResultsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="attendance" element={<AttendancePage />} />
