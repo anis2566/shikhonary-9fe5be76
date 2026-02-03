@@ -16,6 +16,7 @@ import {
   Sparkles,
   Layers,
   BarChart3,
+  Bookmark,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +26,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
+import { Toggle } from '@/components/ui/toggle';
 import {
   Select,
   SelectContent,
@@ -52,6 +54,8 @@ import {
   McqData,
 } from '@/lib/academic-mock-data';
 import { Cq } from '@/types';
+import { useQuestionBookmarks } from '@/hooks/useQuestionBookmarks';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SelectedQuestion {
   id: string;
@@ -622,11 +626,15 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
   errors,
   onChange,
 }) => {
+  const { user } = useAuth();
+  const { isBookmarked, getBookmarkedIds } = useQuestionBookmarks();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'mcq' | 'cq'>('mcq');
   const [filterChapter, setFilterChapter] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSession, setFilterSession] = useState<string>('all');
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectionMode, setSelectionMode] = useState<'manual' | 'random'>('manual');
   const [previewQuestion, setPreviewQuestion] = useState<{
@@ -644,6 +652,10 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
     balanceByChapter: false,
   });
 
+  // Get bookmarked question IDs
+  const bookmarkedMcqIds = getBookmarkedIds('mcq');
+  const bookmarkedCqIds = getBookmarkedIds('cq');
+
   // Filter questions based on subject and other filters
   const filteredMcqs = useMemo(() => {
     return mockMcqs.filter((mcq) => {
@@ -656,6 +668,7 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
       const matchesType = filterType === 'all' || mcq.type === filterType;
       const matchesSession =
         filterSession === 'all' || mcq.session.toString() === filterSession;
+      const matchesBookmark = !showBookmarkedOnly || bookmarkedMcqIds.includes(mcq.id);
       const isActive = mcq.isActive;
 
       return (
@@ -664,10 +677,11 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
         matchesChapter &&
         matchesType &&
         matchesSession &&
+        matchesBookmark &&
         isActive
       );
     });
-  }, [data.subjectId, searchQuery, filterChapter, filterType, filterSession]);
+  }, [data.subjectId, searchQuery, filterChapter, filterType, filterSession, showBookmarkedOnly, bookmarkedMcqIds]);
 
   const filteredCqs = useMemo(() => {
     return mockCqs.filter((cq) => {
@@ -678,11 +692,12 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
         cq.questionA.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesChapter =
         filterChapter === 'all' || cq.chapterId === filterChapter;
+      const matchesBookmark = !showBookmarkedOnly || bookmarkedCqIds.includes(cq.id);
       const isActive = cq.isActive;
 
-      return matchesSubject && matchesSearch && matchesChapter && isActive;
+      return matchesSubject && matchesSearch && matchesChapter && matchesBookmark && isActive;
     });
-  }, [data.subjectId, searchQuery, filterChapter]);
+  }, [data.subjectId, searchQuery, filterChapter, showBookmarkedOnly, bookmarkedCqIds]);
 
   // Available questions for random selection (respecting subject filter)
   const availableMcqsForRandom = useMemo(() => {
@@ -781,6 +796,7 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
     setFilterChapter('all');
     setFilterType('all');
     setFilterSession('all');
+    setShowBookmarkedOnly(false);
     setSearchQuery('');
   };
 
@@ -857,6 +873,7 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
     filterChapter !== 'all' ||
     filterType !== 'all' ||
     filterSession !== 'all' ||
+    showBookmarkedOnly ||
     searchQuery;
 
   return (
@@ -1001,8 +1018,8 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
 
           {/* Search and Filters */}
           <div className="space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="flex flex-wrap gap-2">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search questions..."
@@ -1011,6 +1028,20 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
                   className="pl-9"
                 />
               </div>
+              {user && (bookmarkedMcqIds.length > 0 || bookmarkedCqIds.length > 0) && (
+                <Toggle
+                  pressed={showBookmarkedOnly}
+                  onPressedChange={setShowBookmarkedOnly}
+                  className="gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  aria-label="Show bookmarked only"
+                >
+                  <Bookmark className={cn('h-4 w-4', showBookmarkedOnly && 'fill-current')} />
+                  <span className="hidden sm:inline">Bookmarked</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {activeTab === 'mcq' ? bookmarkedMcqIds.length : bookmarkedCqIds.length}
+                  </Badge>
+                </Toggle>
+              )}
               <Button
                 type="button"
                 variant={showFilters ? 'secondary' : 'outline'}
@@ -1018,7 +1049,7 @@ const StepQuestionSelection: React.FC<StepQuestionSelectionProps> = ({
                 className="gap-2"
               >
                 <Filter className="w-4 h-4" />
-                Filters
+                <span className="hidden sm:inline">Filters</span>
                 {hasActiveFilters && (
                   <span className="w-2 h-2 rounded-full bg-primary" />
                 )}
