@@ -9,12 +9,14 @@ import {
   Settings,
   Edit,
   CheckCircle2,
+  FileQuestion,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { examTypes } from '@/lib/exam-scheduling-utils';
 import { mockBatches } from '@/lib/tenant-mock-data';
+import { mockMcqs, mockCqs } from '@/lib/academic-mock-data';
 
 // Mock subjects - same as StepSubjectPicker
 const mockSubjects = [
@@ -26,7 +28,17 @@ const mockSubjects = [
   { id: 'sub-6', name: 'Biology', code: 'BIO' },
   { id: 'sub-7', name: 'ICT', code: 'ICT' },
   { id: 'sub-8', name: 'Higher Math', code: 'HMATH' },
+  // Academic mock data subjects
+  { id: 'subject-1', name: 'Physics', code: 'PHY' },
+  { id: 'subject-2', name: 'Chemistry', code: 'CHEM' },
+  { id: 'subject-3', name: 'Mathematics', code: 'MATH' },
+  { id: 'subject-4', name: 'Biology', code: 'BIO' },
 ];
+
+interface SelectedQuestion {
+  id: string;
+  type: 'mcq' | 'cq';
+}
 
 interface ExamFormData {
   title: string;
@@ -35,6 +47,7 @@ interface ExamFormData {
   batchIds: string[];
   subjectId: string;
   chapterIds: string[];
+  selectedQuestions: SelectedQuestion[];
   startDate?: Date;
   startTime: string;
   duration: number;
@@ -59,6 +72,10 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
   const selectedBatches = mockBatches.filter((b) => data.batchIds.includes(b.id));
   const selectedSubject = mockSubjects.find((s) => s.id === data.subjectId);
   const totalStudents = selectedBatches.reduce((sum, b) => sum + b.currentSize, 0);
+
+  // Get selected question details
+  const selectedMcqCount = data.selectedQuestions.filter(q => q.type === 'mcq').length;
+  const selectedCqCount = data.selectedQuestions.filter(q => q.type === 'cq').length;
 
   const sections = [
     {
@@ -91,13 +108,23 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
       step: 3,
       icon: BookOpen,
       items: [
-        { label: 'Subject', value: selectedSubject?.name || 'Not selected' },
+        { label: 'Subject', value: selectedSubject?.name || 'All subjects' },
         { label: 'Code', value: selectedSubject?.code || '-' },
       ],
     },
     {
-      title: 'Schedule',
+      title: 'Questions',
       step: 4,
+      icon: FileQuestion,
+      items: [
+        { label: 'Total Questions', value: data.selectedQuestions.length.toString() },
+        { label: 'MCQs Selected', value: selectedMcqCount.toString() },
+        { label: 'CQs Selected', value: selectedCqCount.toString() },
+      ],
+    },
+    {
+      title: 'Schedule',
+      step: 5,
       icon: Calendar,
       items: [
         {
@@ -112,7 +139,7 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
     },
     {
       title: 'Configuration',
-      step: 5,
+      step: 6,
       icon: Settings,
       items: [
         { label: 'Total Marks', value: data.totalMarks.toString() },
@@ -122,8 +149,6 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
             (data.passingMarks / data.totalMarks) * 100
           )}%)`,
         },
-        { label: 'MCQ Count', value: data.mcqCount.toString() },
-        { label: 'CQ Count', value: data.cqCount.toString() },
         {
           label: 'Negative Marking',
           value: data.hasNegativeMark ? `-${data.negativeMark} per wrong` : 'Disabled',
@@ -214,7 +239,7 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
         </div>
         <div className="p-3 rounded-lg bg-blue-500/10 text-center">
           <p className="text-2xl font-bold text-blue-600">
-            {data.mcqCount + data.cqCount}
+            {data.selectedQuestions.length}
           </p>
           <p className="text-xs text-muted-foreground">Questions</p>
         </div>
@@ -228,10 +253,20 @@ const StepReview: React.FC<StepReviewProps> = ({ data, onEditStep }) => {
         </div>
       </div>
 
+      {/* Warning if no questions selected */}
+      {data.selectedQuestions.length === 0 && (
+        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <p className="text-sm text-amber-600">
+            <strong>Note:</strong> No questions have been selected. You can add
+            questions later from the question bank.
+          </p>
+        </div>
+      )}
+
       <div className="p-4 rounded-lg bg-muted/50 border">
         <p className="text-sm text-muted-foreground">
-          <strong>Next Steps:</strong> After creating the exam, you can add
-          questions from the question bank and publish it when ready.
+          <strong>Next Steps:</strong> After creating the exam, you can publish it
+          when ready. Students will be able to access it at the scheduled time.
         </p>
       </div>
     </div>

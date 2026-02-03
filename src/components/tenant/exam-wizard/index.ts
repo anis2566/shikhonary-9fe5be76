@@ -3,6 +3,7 @@ export { default as WizardProgress } from './WizardProgress';
 export { default as StepBasicInfo } from './StepBasicInfo';
 export { default as StepBatchSelection } from './StepBatchSelection';
 export { default as StepSubjectPicker } from './StepSubjectPicker';
+export { default as StepQuestionSelection } from './StepQuestionSelection';
 export { default as StepScheduling } from './StepScheduling';
 export { default as StepConfiguration } from './StepConfiguration';
 export { default as StepReview } from './StepReview';
