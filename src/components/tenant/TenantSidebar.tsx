@@ -64,6 +64,7 @@ const navSections: NavSection[] = [
     items: [
       { title: 'All Exams', url: '/tenant/exams', icon: ClipboardList },
       { title: 'Create Exam', url: '/tenant/exams/create', icon: FileText },
+      { title: 'Question Bank', url: '/tenant/question-bank', icon: BookOpen },
       { title: 'Results', url: '/tenant/results', icon: TrendingUp },
     ],
   },
