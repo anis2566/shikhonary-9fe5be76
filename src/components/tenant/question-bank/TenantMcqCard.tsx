@@ -4,7 +4,6 @@ import {
   BookOpen, 
   FileText, 
   Hash, 
-  Calendar, 
   Link2, 
   Image as ImageIcon,
   Calculator,
@@ -12,7 +11,8 @@ import {
   Layers,
   MessageSquare,
   ExternalLink,
-  Eye
+  Eye,
+  Bookmark
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -48,6 +48,8 @@ export interface TenantMcqCardData {
 
 interface TenantMcqCardProps {
   mcq: TenantMcqCardData;
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
   onView?: () => void;
 }
 
@@ -96,9 +98,12 @@ function OptionItem({ option, index, isCorrect }: { option: string; index: numbe
   );
 }
 
-const TenantMcqCard: React.FC<TenantMcqCardProps> = ({ mcq, onView }) => {
+const TenantMcqCard: React.FC<TenantMcqCardProps> = ({ mcq, isBookmarked, onToggleBookmark, onView }) => {
   return (
-    <Card className="relative overflow-hidden transition-all hover:shadow-md">
+    <Card className={cn(
+      'relative overflow-hidden transition-all hover:shadow-md',
+      isBookmarked && 'ring-2 ring-primary/50'
+    )}>
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
@@ -115,17 +120,47 @@ const TenantMcqCard: React.FC<TenantMcqCardProps> = ({ mcq, onView }) => {
                 <Hash className="w-3 h-3" />
                 Session {mcq.session}
               </Badge>
+              {isBookmarked && (
+                <Badge variant="default" className="text-xs gap-1 bg-primary">
+                  <Bookmark className="w-3 h-3" />
+                  Saved
+                </Badge>
+              )}
             </div>
             
             {/* Question */}
             <p className="font-medium text-foreground leading-relaxed">{mcq.question}</p>
           </div>
           
-          {onView && (
-            <Button variant="ghost" size="icon" onClick={onView} className="h-8 w-8 flex-shrink-0">
-              <Eye className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onToggleBookmark && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={onToggleBookmark} 
+                      className={cn(
+                        'h-8 w-8',
+                        isBookmarked && 'text-primary hover:text-primary'
+                      )}
+                    >
+                      <Bookmark className={cn('h-4 w-4', isBookmarked && 'fill-current')} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {onView && (
+              <Button variant="ghost" size="icon" onClick={onView} className="h-8 w-8">
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
