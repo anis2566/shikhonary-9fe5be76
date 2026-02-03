@@ -52,7 +52,7 @@ const steps = [
   { id: 1, title: 'Basic Info', description: 'Title & type' },
   { id: 2, title: 'Batches', description: 'Select groups' },
   { id: 3, title: 'Subject', description: 'Pick subject' },
-  { id: 4, title: 'Questions', description: 'Select questions' },
+  { id: 4, title: 'Questions', description: 'Optional', optional: true },
   { id: 5, title: 'Schedule', description: 'Date & time' },
   { id: 6, title: 'Configure', description: 'Marks & settings' },
   { id: 7, title: 'Review', description: 'Confirm details' },
@@ -348,10 +348,18 @@ const ExamSchedulingWizard: React.FC = () => {
             </Button>
 
             {currentStep < steps.length ? (
-              <Button onClick={handleNext}>
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="flex gap-2">
+                {currentStep === 4 && (
+                  <Button variant="outline" onClick={handleNext}>
+                    Skip for now
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+                <Button onClick={handleNext}>
+                  {currentStep === 4 && formData.selectedQuestions.length > 0 ? 'Continue' : 'Next'}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             ) : (
               <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (

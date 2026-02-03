@@ -13,6 +13,7 @@ import {
   Calendar,
   CheckCircle2,
   Play,
+  FileQuestion,
   Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -440,6 +441,12 @@ const ExamList: React.FC = () => {
                           <Link to={`/tenant/exams/${exam.id}/edit`}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to={`/tenant/exams/${exam.id}/questions`}>
+                            <FileQuestion className="w-4 h-4 mr-2" />
+                            Select Questions
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
