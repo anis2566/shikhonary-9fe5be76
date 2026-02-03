@@ -12,6 +12,7 @@ import {
   Copy,
   FileText,
   TrendingUp,
+  FileQuestion,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -237,6 +238,12 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, enableSwipe = true }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to={`/tenant/exams/${exam.id}/questions`}>
+                    <FileQuestion className="w-4 h-4 mr-2" />
+                    Select Questions
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Copy className="w-4 h-4 mr-2" />
                   Duplicate

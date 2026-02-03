@@ -60,6 +60,7 @@ import TeacherList from "./pages/tenant/TeacherList";
 import BatchList from "./pages/tenant/BatchList";
 import ExamList from "./pages/tenant/ExamList";
 import ExamCreate from "./pages/tenant/ExamCreate";
+import ExamQuestionsPage from "./pages/tenant/ExamQuestionsPage";
 import ResultsPage from "./pages/tenant/ResultsPage";
 import AnalyticsPage from "./pages/tenant/AnalyticsPage";
 import AttendancePage from "./pages/tenant/AttendancePage";
@@ -160,6 +161,7 @@ const App = () => (
               <Route path="batches" element={<BatchList />} />
               <Route path="exams" element={<ExamList />} />
               <Route path="exams/create" element={<ExamCreate />} />
+              <Route path="exams/:id/questions" element={<ExamQuestionsPage />} />
               <Route path="question-bank" element={<QuestionBankPage />} />
               <Route path="question-bank/mcqs/:id" element={<TenantMcqDetailsPage />} />
               <Route path="question-bank/cqs/:id" element={<TenantCqDetailsPage />} />
