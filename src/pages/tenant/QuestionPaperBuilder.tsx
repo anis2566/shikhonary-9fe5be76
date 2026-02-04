@@ -168,43 +168,49 @@ const QuestionPaperBuilder: React.FC = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      for (let i = 0; i < pageElements.length; i++) {
-        const element = pageElements[i] as HTMLElement;
-        
-        // Clone the element to remove the page indicator before capture
-        const clone = element.cloneNode(true) as HTMLElement;
-        const pageIndicator = clone.querySelector('.absolute.top-2.right-3');
-        if (pageIndicator) {
-          pageIndicator.remove();
+      const restore: Array<() => void> = [];
+
+      try {
+        for (let i = 0; i < pageElements.length; i++) {
+          const element = pageElements[i] as HTMLElement;
+
+          // Hide page indicator in export without cloning (cloning loses input/textarea values)
+          const indicator = element.querySelector<HTMLElement>('[data-page-indicator]');
+          if (indicator) {
+            const prevDisplay = indicator.style.display;
+            indicator.style.display = 'none';
+            restore.push(() => {
+              indicator.style.display = prevDisplay;
+            });
+          }
+
+          // Ensure form controls render with their current values
+          element.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+            input.setAttribute('value', input.value);
+          });
+          element.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((ta) => {
+            ta.textContent = ta.value;
+          });
+
+          const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            foreignObjectRendering: true,
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+
+          if (i > 0) {
+            pdf.addPage();
+          }
+
+          // Since we capture exactly one page container, render it as a full PDF page.
+          pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
         }
-        
-        // Temporarily add clone to DOM for capture
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        document.body.appendChild(clone);
-        
-        const canvas = await html2canvas(clone, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          allowTaint: true,
-          foreignObjectRendering: false,
-        });
-        
-        // Remove clone
-        document.body.removeChild(clone);
-
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        if (i > 0) {
-          pdf.addPage();
-        }
-
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+      } finally {
+        restore.reverse().forEach((fn) => fn());
       }
 
       pdf.save(`question-paper-${Date.now()}.pdf`);

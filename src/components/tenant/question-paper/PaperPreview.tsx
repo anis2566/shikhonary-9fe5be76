@@ -724,8 +724,11 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
                   }}
                   id={`paper-preview-page-${pageIndex + 1}`}
                 >
-                  {/* Page number indicator */}
-                  <div className="absolute top-2 right-3 text-xs text-muted-foreground/50">
+                  {/* Page number indicator (hidden during PDF export) */}
+                  <div
+                    data-page-indicator
+                    className="page-indicator absolute top-2 right-3 text-xs text-muted-foreground/50"
+                  >
                     পৃষ্ঠা {pageIndex + 1}/{pages.length}
                   </div>
 
