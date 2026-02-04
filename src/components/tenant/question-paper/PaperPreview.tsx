@@ -1,4 +1,19 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { PaperQuestion, PaperSettings, ElementStyle, ActiveElementContext, HeaderStyles } from './types';
 import EditableQuestion from './EditableQuestion';
@@ -10,6 +25,7 @@ interface PaperPreviewProps {
   onUpdateQuestion: (question: PaperQuestion) => void;
   onDeleteQuestion: (id: string) => void;
   onDuplicateQuestion: (question: PaperQuestion) => void;
+  onReorderQuestions?: (questions: PaperQuestion[]) => void;
   onSettingsChange: (settings: PaperSettings) => void;
   isEditing: boolean;
   zoom?: number | 'auto';
@@ -26,6 +42,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   onUpdateQuestion,
   onDeleteQuestion,
   onDuplicateQuestion,
+  onReorderQuestions,
   onSettingsChange,
   isEditing,
   zoom = 'auto',
@@ -38,6 +55,35 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = questions.findIndex((q) => q.id === active.id);
+      const newIndex = questions.findIndex((q) => q.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reordered = arrayMove(questions, oldIndex, newIndex);
+        // Renumber questions
+        const renumbered = reordered.map((q, idx) => ({ ...q, number: idx + 1 }));
+        onReorderQuestions?.(renumbered);
+      }
+    }
+  }, [questions, onReorderQuestions]);
 
   // Effective scale based on zoom mode
   const effectiveScale = zoom === 'auto' ? autoScale : zoom;
@@ -468,33 +514,64 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           </p>
         )}
 
-        {/* Questions */}
-        <div
-          className={cn(
-            'gap-8',
-            settings.columns === 2 ? 'grid grid-cols-2' : '',
-            settings.columns === 3 ? 'grid grid-cols-3' : '',
-            settings.showColumnDivider && settings.columns > 1 && 'divide-x'
-          )}
+        {/* Questions with DnD */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          {columnedQuestions.map((columnQuestions, colIdx) => (
-            <div key={colIdx} className={cn(colIdx > 0 && 'pl-4')}>
-              {columnQuestions.map((question) => (
-                <EditableQuestion
-                  key={question.id}
-                  question={question}
-                  settings={settings}
-                  onUpdate={onUpdateQuestion}
-                  onDelete={onDeleteQuestion}
-                  onDuplicate={onDuplicateQuestion}
-                  isEditing={isEditing}
-                  onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
-                  onBlur={handleBlur}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+          <div
+            className={cn(
+              'gap-8',
+              settings.columns === 2 ? 'grid grid-cols-2' : '',
+              settings.columns === 3 ? 'grid grid-cols-3' : '',
+              settings.showColumnDivider && settings.columns > 1 && 'divide-x'
+            )}
+          >
+            {settings.columns === 1 ? (
+              <SortableContext
+                items={questions.map((q) => q.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div>
+                  {questions.map((question) => (
+                    <EditableQuestion
+                      key={question.id}
+                      question={question}
+                      settings={settings}
+                      onUpdate={onUpdateQuestion}
+                      onDelete={onDeleteQuestion}
+                      onDuplicate={onDuplicateQuestion}
+                      isEditing={isEditing}
+                      isDraggable={isEditing && !!onReorderQuestions}
+                      onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+                      onBlur={handleBlur}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            ) : (
+              columnedQuestions.map((columnQuestions, colIdx) => (
+                <div key={colIdx} className={cn(colIdx > 0 && 'pl-4')}>
+                  {columnQuestions.map((question) => (
+                    <EditableQuestion
+                      key={question.id}
+                      question={question}
+                      settings={settings}
+                      onUpdate={onUpdateQuestion}
+                      onDelete={onDeleteQuestion}
+                      onDuplicate={onDuplicateQuestion}
+                      isEditing={isEditing}
+                      isDraggable={false}
+                      onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+                      onBlur={handleBlur}
+                    />
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </DndContext>
 
         {/* Watermark */}
         {settings.showWatermark && settings.watermark && (

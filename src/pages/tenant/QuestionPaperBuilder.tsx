@@ -119,6 +119,10 @@ const QuestionPaperBuilder: React.FC = () => {
     toast.success('Question duplicated');
   }, [questions.length]);
 
+  const handleReorderQuestions = useCallback((reorderedQuestions: PaperQuestion[]) => {
+    setQuestions(reorderedQuestions);
+  }, []);
+
   const handleAddQuestion = useCallback(() => {
     const newQuestion: PaperQuestion = {
       id: `pq-${Date.now()}`,
@@ -282,6 +286,7 @@ const QuestionPaperBuilder: React.FC = () => {
               onUpdateQuestion={handleUpdateQuestion}
               onDeleteQuestion={handleDeleteQuestion}
               onDuplicateQuestion={handleDuplicateQuestion}
+              onReorderQuestions={handleReorderQuestions}
               onSettingsChange={handleSettingsChange}
               isEditing={isEditing}
               zoom={zoom}
