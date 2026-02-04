@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Download,
   Settings2,
-  FileText,
   Type,
   Shuffle,
   MapPin,
@@ -70,46 +69,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
-          {/* Question Settings */}
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
-              <FileText className="w-4 h-4" />
-              প্রশ্নে সংযুক্তি
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">উত্তরপত্র</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">OMR সংযুক্তি</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">গুরুত্বপূর্ণ প্রশ্ন</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">প্রশ্নের তথ্য</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">শিক্ষার্থীর তথ্য</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">প্রশ্ন নম্বর ঘর</Label>
-                <Switch checked={false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">বিষয় কোড</Label>
-                <Switch checked={false} />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Separator />
-
           {/* Header Visibility Controls */}
           <Collapsible defaultOpen>
             <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
