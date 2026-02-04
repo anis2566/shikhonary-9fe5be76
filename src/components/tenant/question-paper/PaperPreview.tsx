@@ -13,6 +13,11 @@ interface PaperPreviewProps {
   isEditing: boolean;
 }
 
+// Inline editable styles
+const editableBaseClass = 'transition-all duration-200 rounded px-1 -mx-1';
+const editableHoverClass = 'hover:bg-primary/10 hover:ring-1 hover:ring-primary/30';
+const editableFocusClass = 'focus:bg-primary/5 focus:ring-2 focus:ring-primary focus:outline-none';
+
 const PaperPreview: React.FC<PaperPreviewProps> = ({
   questions,
   settings,
@@ -68,25 +73,33 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
   const columnedQuestions = getColumnedQuestions();
 
-  const EditableField: React.FC<{
+  // Inline editable text component
+  const InlineEditable: React.FC<{
     value: string;
     onChange: (value: string) => void;
     className?: string;
-    multiline?: boolean;
-  }> = ({ value, onChange, className, multiline }) => {
+    as?: 'input' | 'textarea';
+    placeholder?: string;
+  }> = ({ value, onChange, className, as = 'input', placeholder }) => {
     if (!isEditing) {
       return <span className={className}>{value}</span>;
     }
 
-    if (multiline) {
+    const inputClasses = cn(
+      'bg-transparent border-0 w-full',
+      editableBaseClass,
+      editableHoverClass,
+      editableFocusClass,
+      className
+    );
+
+    if (as === 'textarea') {
       return (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={cn(
-            'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none resize-none w-full',
-            className
-          )}
+          className={cn(inputClasses, 'resize-none min-h-[3em]')}
+          placeholder={placeholder}
           rows={2}
         />
       );
@@ -97,15 +110,14 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none text-center w-full',
-          className
-        )}
+        className={inputClasses}
+        placeholder={placeholder}
       />
     );
   };
 
-  const EditableNumber: React.FC<{
+  // Inline editable number component
+  const InlineEditableNumber: React.FC<{
     value: number;
     onChange: (value: number) => void;
     className?: string;
@@ -120,7 +132,10 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value) || 0)}
         className={cn(
-          'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none w-16 text-center',
+          'bg-transparent border-0 w-12 text-center',
+          editableBaseClass,
+          editableHoverClass,
+          editableFocusClass,
           className
         )}
       />
@@ -138,18 +153,20 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     >
       {/* Header */}
       <div className="text-center mb-4 border-b pb-4">
-        <EditableField
+        <InlineEditable
           value={settings.institutionName}
           onChange={(v) => updateSetting('institutionName', v)}
-          className="text-xl font-bold block"
+          className="text-xl font-bold block text-center"
+          placeholder="প্রতিষ্ঠানের নাম"
         />
 
         <div className="flex items-center justify-center gap-4 mt-2 text-sm flex-wrap">
           {settings.showClassName && (
-            <EditableField
+            <InlineEditable
               value={settings.className}
               onChange={(v) => updateSetting('className', v)}
-              className="inline-block"
+              className="inline-block text-center"
+              placeholder="শ্রেণি"
             />
           )}
           {settings.showSetCode && (
@@ -160,7 +177,12 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
                   type="text"
                   value={settings.setCode}
                   onChange={(e) => updateSetting('setCode', e.target.value)}
-                  className="border px-2 py-0.5 font-bold w-10 text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                  className={cn(
+                    'border px-2 py-0.5 font-bold w-10 text-center bg-transparent',
+                    editableBaseClass,
+                    editableHoverClass,
+                    editableFocusClass
+                  )}
                 />
               ) : (
                 <span className="border px-2 py-0.5 font-bold">{settings.setCode}</span>
@@ -171,19 +193,21 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
         {settings.showSubjectName && (
           <div className="mt-1">
-            <EditableField
+            <InlineEditable
               value={settings.subjectName}
               onChange={(v) => updateSetting('subjectName', v)}
-              className="font-medium inline-block"
+              className="font-medium inline-block text-center"
+              placeholder="বিষয়ের নাম"
             />
           </div>
         )}
         {settings.showChapterName && (
-          <div className="text-sm text-muted-foreground">
-            <EditableField
+          <div className="text-sm text-muted-foreground mt-0.5">
+            <InlineEditable
               value={settings.chapterName}
               onChange={(v) => updateSetting('chapterName', v)}
-              className="inline-block"
+              className="inline-block text-center"
+              placeholder="অধ্যায়ের নাম"
             />
           </div>
         )}
@@ -194,17 +218,18 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         {settings.showTime && (
           <span className="flex items-center gap-1">
             সময়—{' '}
-            <EditableField
+            <InlineEditable
               value={settings.time}
               onChange={(v) => updateSetting('time', v)}
               className="inline-block"
+              placeholder="সময়"
             />
           </span>
         )}
         {settings.showTotalMarks && (
           <span className="flex items-center gap-1">
             পূর্ণমান—{' '}
-            <EditableNumber
+            <InlineEditableNumber
               value={settings.totalMarks}
               onChange={(v) => updateSetting('totalMarks', v)}
             />
@@ -215,11 +240,12 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       {/* Instructions */}
       {settings.showInstructions && (
         <div className="text-xs text-muted-foreground mb-4 p-2 bg-muted/30 rounded">
-          <EditableField
+          <InlineEditable
             value={settings.instructions}
             onChange={(v) => updateSetting('instructions', v)}
-            multiline
+            as="textarea"
             className="w-full"
+            placeholder="নির্দেশনা লিখুন..."
           />
         </div>
       )}

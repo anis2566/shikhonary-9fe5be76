@@ -116,24 +116,13 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 
           <Separator />
 
-          {/* Header Metadata */}
+          {/* Header Visibility Controls */}
           <Collapsible defaultOpen>
             <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
               <Type className="w-4 h-4" />
-              প্রশ্নের মেটাডাটা (হেডার)
+              হেডার দৃশ্যমানতা
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-3 space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">প্রতিষ্ঠানের নাম</Label>
-                </div>
-                <Input
-                  value={settings.institutionName}
-                  onChange={(e) => updateSetting('institutionName', e.target.value)}
-                  placeholder="প্রতিষ্ঠানের নাম"
-                  className="text-sm"
-                />
-              </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm">শ্রেণির নাম</Label>
                 <Switch
@@ -141,14 +130,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showClassName', v)}
                 />
               </div>
-              {settings.showClassName && (
-                <Input
-                  value={settings.className}
-                  onChange={(e) => updateSetting('className', e.target.value)}
-                  placeholder="শ্রেণি"
-                  className="text-sm"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">বিষয়ের নাম</Label>
                 <Switch
@@ -156,14 +137,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showSubjectName', v)}
                 />
               </div>
-              {settings.showSubjectName && (
-                <Input
-                  value={settings.subjectName}
-                  onChange={(e) => updateSetting('subjectName', e.target.value)}
-                  placeholder="বিষয়"
-                  className="text-sm"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">অধ্যায়ের নাম</Label>
                 <Switch
@@ -171,14 +144,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showChapterName', v)}
                 />
               </div>
-              {settings.showChapterName && (
-                <Input
-                  value={settings.chapterName}
-                  onChange={(e) => updateSetting('chapterName', e.target.value)}
-                  placeholder="অধ্যায়"
-                  className="text-sm"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">সেট কোড</Label>
                 <Switch
@@ -186,14 +151,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showSetCode', v)}
                 />
               </div>
-              {settings.showSetCode && (
-                <Input
-                  value={settings.setCode}
-                  onChange={(e) => updateSetting('setCode', e.target.value)}
-                  placeholder="সেট কোড"
-                  className="text-sm w-20"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">পরীক্ষার নাম</Label>
                 <Switch
@@ -201,14 +158,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showExamName', v)}
                 />
               </div>
-              {settings.showExamName && (
-                <Input
-                  value={settings.examName}
-                  onChange={(e) => updateSetting('examName', e.target.value)}
-                  placeholder="পরীক্ষার নাম"
-                  className="text-sm"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">সময়</Label>
                 <Switch
@@ -216,14 +165,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showTime', v)}
                 />
               </div>
-              {settings.showTime && (
-                <Input
-                  value={settings.time}
-                  onChange={(e) => updateSetting('time', e.target.value)}
-                  placeholder="সময়"
-                  className="text-sm"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">পূর্ণমান</Label>
                 <Switch
@@ -231,15 +172,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showTotalMarks', v)}
                 />
               </div>
-              {settings.showTotalMarks && (
-                <Input
-                  type="number"
-                  value={settings.totalMarks}
-                  onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
-                  placeholder="পূর্ণমান"
-                  className="text-sm w-24"
-                />
-              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">নির্দেশনা</Label>
                 <Switch

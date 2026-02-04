@@ -19,6 +19,11 @@ interface EditableQuestionProps {
   isEditing: boolean;
 }
 
+// Inline editable styles
+const editableBaseClass = 'transition-all duration-200 rounded px-1 -mx-1';
+const editableHoverClass = 'hover:bg-primary/10 hover:ring-1 hover:ring-primary/30';
+const editableFocusClass = 'focus:bg-primary/5 focus:ring-2 focus:ring-primary focus:outline-none';
+
 const EditableQuestion: React.FC<EditableQuestionProps> = ({
   question,
   settings,
@@ -117,9 +122,15 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             <textarea
               value={localQuestion.question}
               onChange={(e) => handleQuestionChange(e.target.value)}
-              className="w-full bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none resize-none transition-colors"
+              className={cn(
+                'w-full bg-transparent border-0 resize-none',
+                editableBaseClass,
+                editableHoverClass,
+                editableFocusClass
+              )}
               style={{ fontSize: settings.fontSize }}
               rows={Math.ceil(localQuestion.question.length / 50) || 1}
+              placeholder="প্রশ্ন লিখুন..."
             />
           ) : (
             <p style={{ fontSize: settings.fontSize }}>{localQuestion.question}</p>
@@ -130,7 +141,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             <div className="mt-2 pl-4 space-y-1">
               {question.statements.map((statement, idx) => (
                 <div key={idx} className="flex gap-2" style={{ fontSize: settings.fontSize - 1 }}>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground shrink-0">
                     {['i', 'ii', 'iii', 'iv'][idx]}.
                   </span>
                   {isEditing ? (
@@ -144,7 +155,13 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                         setLocalQuestion(updated);
                         onUpdate(updated);
                       }}
-                      className="flex-1 bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors"
+                      className={cn(
+                        'flex-1 bg-transparent border-0',
+                        editableBaseClass,
+                        editableHoverClass,
+                        editableFocusClass
+                      )}
+                      placeholder="বিবৃতি লিখুন..."
                     />
                   ) : (
                     <span>{statement}</span>
@@ -176,7 +193,13 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                     type="text"
                     value={option.text}
                     onChange={(e) => handleOptionChange(idx, e.target.value)}
-                    className="flex-1 bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors min-w-0"
+                    className={cn(
+                      'flex-1 bg-transparent border-0 min-w-0',
+                      editableBaseClass,
+                      editableHoverClass,
+                      editableFocusClass
+                    )}
+                    placeholder="অপশন লিখুন..."
                   />
                 ) : (
                   <span>{option.text}</span>
