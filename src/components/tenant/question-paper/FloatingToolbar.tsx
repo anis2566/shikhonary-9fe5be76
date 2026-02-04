@@ -10,12 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ElementStyle } from './types';
 
@@ -25,7 +23,16 @@ interface FloatingToolbarProps {
   currentStyle: ElementStyle;
   onStyleChange: (style: ElementStyle) => void;
   showAlignment?: boolean;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
+
+const fontOptions = [
+  { value: 'SolaimanLipi', label: 'SolaimanLipi' },
+  { value: 'Nikosh', label: 'Nikosh' },
+  { value: 'Kalpurush', label: 'Kalpurush' },
+  { value: 'Arial', label: 'Arial' },
+];
 
 const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   targetRef,
@@ -33,8 +40,11 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   currentStyle,
   onStyleChange,
   showAlignment = true,
+  onInteractionStart,
+  onInteractionEnd,
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [fontPopoverOpen, setFontPopoverOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   const fontSize = currentStyle.fontSize || 14;
@@ -62,7 +72,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
       setPosition({ top, left });
     }
-  }, [isVisible, targetRef]);
+  }, [isVisible, targetRef, currentStyle]);
 
   if (!isVisible) return null;
 
@@ -70,32 +80,75 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     onStyleChange({ ...currentStyle, ...updates });
   };
 
+  const handleFontSelect = (font: string) => {
+    updateStyle({ fontFamily: font });
+    setFontPopoverOpen(false);
+    onInteractionEnd?.();
+  };
+
   return (
     <div
       ref={toolbarRef}
       className={cn(
-        'fixed z-50 bg-popover border shadow-lg rounded-lg p-2 flex items-center gap-2 animate-in fade-in-0 zoom-in-95 duration-200',
-        !isVisible && 'hidden'
+        'fixed z-[100] bg-popover border shadow-lg rounded-lg p-2 flex items-center gap-2 animate-in fade-in-0 zoom-in-95 duration-200'
       )}
       style={{
         top: position.top,
         left: position.left,
       }}
-      onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onMouseEnter={() => onInteractionStart?.()}
+      onMouseLeave={() => {
+        if (!fontPopoverOpen) {
+          onInteractionEnd?.();
+        }
+      }}
     >
-      {/* Font Family */}
-      <Select value={fontFamily} onValueChange={(v) => updateStyle({ fontFamily: v })}>
-        <SelectTrigger className="w-28 h-8 text-xs bg-background">
-          <Type className="w-3 h-3 mr-1" />
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="bg-popover border shadow-md z-[60]">
-          <SelectItem value="SolaimanLipi">SolaimanLipi</SelectItem>
-          <SelectItem value="Nikosh">Nikosh</SelectItem>
-          <SelectItem value="Kalpurush">Kalpurush</SelectItem>
-          <SelectItem value="Arial">Arial</SelectItem>
-        </SelectContent>
-      </Select>
+      {/* Font Family - Using Popover instead of Select */}
+      <Popover 
+        open={fontPopoverOpen} 
+        onOpenChange={(open) => {
+          setFontPopoverOpen(open);
+          if (open) {
+            onInteractionStart?.();
+          } else {
+            onInteractionEnd?.();
+          }
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-28 h-8 text-xs justify-start gap-1"
+          >
+            <Type className="w-3 h-3" />
+            <span className="truncate">{fontFamily}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-32 p-1 z-[110] bg-popover border shadow-lg" 
+          align="start"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {fontOptions.map((font) => (
+            <button
+              key={font.value}
+              className={cn(
+                'w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent',
+                fontFamily === font.value && 'bg-accent font-medium'
+              )}
+              onClick={() => handleFontSelect(font.value)}
+              style={{ fontFamily: font.value }}
+            >
+              {font.label}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
 
       <div className="w-px h-6 bg-border" />
 
