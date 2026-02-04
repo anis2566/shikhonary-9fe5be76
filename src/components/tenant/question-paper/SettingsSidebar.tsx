@@ -8,6 +8,8 @@ import {
   Stamp,
   Eye,
   Circle,
+  Bold,
+  ALargeSmall,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -23,8 +25,24 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { PaperSettings } from './types';
+
+const FONT_FAMILIES = [
+  { value: 'SolaimanLipi', label: 'সোলাইমানলিপি' },
+  { value: 'Kalpurush', label: 'কালপুরুষ' },
+  { value: 'Nikosh', label: 'নিকষ' },
+  { value: 'AdorshoLipi', label: 'আদর্শলিপি' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+];
 
 interface SettingsSidebarProps {
   settings: PaperSettings;
@@ -321,6 +339,78 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  ফন্ট ফ্যামিলি
+                </Label>
+                <Select
+                  value={settings.fontFamily}
+                  onValueChange={(v) => updateSetting('fontFamily', v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="ফন্ট নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_FAMILIES.map((font) => (
+                      <SelectItem key={font.value} value={font.value}>
+                        <span style={{ fontFamily: font.value }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Font Size */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <ALargeSmall className="w-3.5 h-3.5" />
+                  ফন্ট সাইজ
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    value={[settings.fontSize]}
+                    onValueChange={([v]) => updateSetting('fontSize', v)}
+                    min={10}
+                    max={24}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-medium w-8 text-right">{settings.fontSize}px</span>
+                </div>
+              </div>
+
+              {/* Font Weight */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Bold className="w-3.5 h-3.5" />
+                  ফন্ট ওয়েট
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  value={settings.fontWeight}
+                  onValueChange={(v) =>
+                    v && updateSetting('fontWeight', v as PaperSettings['fontWeight'])
+                  }
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="normal" size="sm" className="flex-1 text-xs">
+                    Normal
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="medium" size="sm" className="flex-1 text-xs font-medium">
+                    Medium
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="semibold" size="sm" className="flex-1 text-xs font-semibold">
+                    Semi
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="bold" size="sm" className="flex-1 text-xs font-bold">
+                    Bold
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <Separator />
+
               {/* Option Style */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground uppercase tracking-wide">
