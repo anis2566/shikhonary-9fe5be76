@@ -71,6 +71,7 @@ export interface PaperSettings {
   optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
   fontFamily: string;
   fontSize: number;
+  fontWeight: 'normal' | 'medium' | 'semibold' | 'bold';
   textAlign: 'left' | 'center' | 'right' | 'justify';
   
   // Tools

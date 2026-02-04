@@ -49,8 +49,9 @@ export const defaultPaperSettings: PaperSettings = {
   
   // Typography
   optionStyle: 'parentheses',
-  fontFamily: 'Bangla',
+  fontFamily: 'SolaimanLipi',
   fontSize: 14,
+  fontWeight: 'normal',
   textAlign: 'left',
   
   // Tools
