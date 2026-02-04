@@ -1,53 +1,16 @@
-// Mock data for question paper builder
+import { PaperQuestion, PaperSettings, HeaderStyles } from '@/components/tenant/question-paper/types';
 
-export interface PaperQuestion {
-  id: string;
-  number: number;
-  question: string;
-  options: { label: string; text: string }[];
-  correctAnswer?: string;
-  context?: string;
-  statements?: string[];
-  type: 'single' | 'multiple' | 'assertion' | 'statement';
-}
-
-export interface PaperSettings {
-  // Header settings
-  institutionName: string;
-  showClassName: boolean;
-  showSubjectName: boolean;
-  showChapterName: boolean;
-  showSetCode: boolean;
-  setCode: string;
-  showExamName: boolean;
-  examName: string;
-  showInstructions: boolean;
-  instructions: string;
-  showTime: boolean;
-  time: string;
-  showTotalMarks: boolean;
-  totalMarks: number;
-  className: string;
-  subjectName: string;
-  chapterName: string;
-  
-  // Document customization
-  paperSize: 'A4' | 'Letter' | 'Legal' | 'A5';
-  optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
-  fontFamily: string;
-  fontSize: number;
-  columns: 1 | 2 | 3;
-  showColumnDivider: boolean;
-  textAlign: 'left' | 'center' | 'right' | 'justify';
-  
-  // Additional tools
-  detectDuplicates: boolean;
-  enableShuffle: boolean;
-  showAddress: boolean;
-  address: string;
-  showWatermark: boolean;
-  watermark: string;
-}
+const defaultHeaderStyles: HeaderStyles = {
+  institutionName: { fontSize: 20, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  className: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  subjectName: { fontSize: 16, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  chapterName: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  setCode: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  examName: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'center' },
+  time: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
+  totalMarks: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'right' },
+  instructions: { fontSize: 12, fontFamily: 'SolaimanLipi', textAlign: 'left' },
+};
 
 export const defaultPaperSettings: PaperSettings = {
   institutionName: 'Basic Education Care',
@@ -67,6 +30,8 @@ export const defaultPaperSettings: PaperSettings = {
   className: 'নবম/দশম',
   subjectName: 'বাংলা ১ম পত্র',
   chapterName: 'গদ্য ১ - সুভা',
+  
+  headerStyles: defaultHeaderStyles,
   
   paperSize: 'A4',
   optionStyle: 'parentheses',
@@ -89,6 +54,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-1',
     number: 1,
     question: "'সুভা' গল্পে উল্লিখিত 'গভীর নিস্তব্ধ পাতালপুরী' কেমন?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'বিস্তীর্ণপুর্ণ' },
       { label: 'খ', text: 'তরুচ্ছায়াময়' },
@@ -102,6 +68,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-2',
     number: 2,
     question: "'সুভা' গল্পে 'চির নিস্তব্ধ হৃদয় উপকূল' বলতে কী বোঝানো হয়েছে?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'শান্ত হৃদয়' },
       { label: 'খ', text: 'কূলের সদৃশ্য' },
@@ -115,6 +82,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-3',
     number: 3,
     question: 'সরশেষে অসহায় সুভা আত্মসমর্পণ করেছে কার কাছে?',
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'ধরণির কাছে' },
       { label: 'খ', text: 'গাভী দুটির কাছে' },
@@ -128,6 +96,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-4',
     number: 4,
     question: "সুভার সঙ্গীদের মধ্যে তায়াবিশিষ্ট জীব বলা হয়েছে কাকে?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'সর্বশী' },
       { label: 'খ', text: 'পাঙ্গুলি' },
@@ -141,6 +110,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-5',
     number: 5,
     question: "সুভা বিধাতার কাছে অলৌকিক ক্ষমতা প্রার্থনা করত-\ni. প্রতাপের মনোযোগ আকর্ষণ করার জন্য\nii. মায়ের বিরম্বনি দূর করার জন্য",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'i' },
       { label: 'খ', text: 'ii' },
@@ -158,6 +128,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-6',
     number: 6,
     question: "'নীলমণি' কবিতায় কোন চরিত্র?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'নীলমণি' },
       { label: 'খ', text: 'হরিহর রায়' },
@@ -171,6 +142,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-7',
     number: 7,
     question: "'তুমি আমাকে মাইতে দিয়ো না, মা।'- সুভার এ কথা কী প্রকাশ পেয়েছে?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'আকুলতা' },
       { label: 'খ', text: 'অভিব্রত' },
@@ -184,6 +156,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-8',
     number: 8,
     question: "সুভা সাধারণের দৃষ্টিপথ থেকে নিজেকে গোপন রাখতে সচেষ্ট ছিল কেন?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'পিতামাতা নীর হৃদয়তার তলে' },
       { label: 'খ', text: 'বিধাতার অভিশাপরূপে মনে করে' },
@@ -197,6 +170,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-9',
     number: 9,
     question: "'সুভা' গল্পে পিতা-মাতার মনে কে সর্বদাই জাগ্রুক ছিল?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'সুকেশিনী' },
       { label: 'খ', text: 'সুভাষিণী' },
@@ -210,6 +184,7 @@ export const mockPaperQuestions: PaperQuestion[] = [
     id: 'pq-10',
     number: 10,
     question: "গদ্যাংশ অনুযায়ী সভা অসহায় সলা আত্মসমর্পণ করতে কার কাছে?",
+    questionStyle: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
     options: [
       { label: 'ক', text: 'মায়ের কাছে' },
       { label: 'খ', text: 'বাণীকণ্ঠের কাছে' },

@@ -5,8 +5,6 @@ import {
   AlignRight,
   Minus,
   Plus,
-  Bold,
-  Italic,
   Type,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,42 +17,37 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { ElementStyle } from './types';
 
 interface FloatingToolbarProps {
   targetRef: React.RefObject<HTMLElement | null>;
   isVisible: boolean;
-  fontSize: number;
-  onFontSizeChange: (size: number) => void;
-  fontFamily: string;
-  onFontFamilyChange: (font: string) => void;
-  textAlign?: 'left' | 'center' | 'right';
-  onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
+  currentStyle: ElementStyle;
+  onStyleChange: (style: ElementStyle) => void;
   showAlignment?: boolean;
 }
 
 const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   targetRef,
   isVisible,
-  fontSize,
-  onFontSizeChange,
-  fontFamily,
-  onFontFamilyChange,
-  textAlign = 'left',
-  onTextAlignChange,
+  currentStyle,
+  onStyleChange,
   showAlignment = true,
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const toolbarRef = useRef<HTMLDivElement>(null);
 
+  const fontSize = currentStyle.fontSize || 14;
+  const fontFamily = currentStyle.fontFamily || 'SolaimanLipi';
+  const textAlign = currentStyle.textAlign || 'left';
+
   useEffect(() => {
     if (isVisible && targetRef.current && toolbarRef.current) {
       const targetRect = targetRef.current.getBoundingClientRect();
       const toolbarRect = toolbarRef.current.getBoundingClientRect();
-      const scrollContainer = document.querySelector('.overflow-auto');
-      const scrollOffset = scrollContainer?.scrollTop || 0;
 
       // Position above the element
-      let top = targetRect.top - toolbarRect.height - 8 + scrollOffset;
+      let top = targetRect.top - toolbarRect.height - 8;
       let left = targetRect.left + (targetRect.width / 2) - (toolbarRect.width / 2);
 
       // Keep within viewport
@@ -64,7 +57,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       }
       if (top < 60) {
         // Position below if not enough space above
-        top = targetRect.bottom + 8 + scrollOffset;
+        top = targetRect.bottom + 8;
       }
 
       setPosition({ top, left });
@@ -72,6 +65,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   }, [isVisible, targetRef]);
 
   if (!isVisible) return null;
+
+  const updateStyle = (updates: Partial<ElementStyle>) => {
+    onStyleChange({ ...currentStyle, ...updates });
+  };
 
   return (
     <div
@@ -87,16 +84,16 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
     >
       {/* Font Family */}
-      <Select value={fontFamily} onValueChange={onFontFamilyChange}>
+      <Select value={fontFamily} onValueChange={(v) => updateStyle({ fontFamily: v })}>
         <SelectTrigger className="w-28 h-8 text-xs bg-background">
           <Type className="w-3 h-3 mr-1" />
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-popover border shadow-md z-[60]">
-          <SelectItem value="Bangla">বাংলা</SelectItem>
           <SelectItem value="SolaimanLipi">SolaimanLipi</SelectItem>
           <SelectItem value="Nikosh">Nikosh</SelectItem>
           <SelectItem value="Kalpurush">Kalpurush</SelectItem>
+          <SelectItem value="Arial">Arial</SelectItem>
         </SelectContent>
       </Select>
 
@@ -108,7 +105,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
+          onClick={() => updateStyle({ fontSize: Math.max(10, fontSize - 1) })}
         >
           <Minus className="w-3 h-3" />
         </Button>
@@ -117,13 +114,13 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={() => onFontSizeChange(Math.min(24, fontSize + 1))}
+          onClick={() => updateStyle({ fontSize: Math.min(32, fontSize + 1) })}
         >
           <Plus className="w-3 h-3" />
         </Button>
       </div>
 
-      {showAlignment && onTextAlignChange && (
+      {showAlignment && (
         <>
           <div className="w-px h-6 bg-border" />
 
@@ -131,7 +128,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           <ToggleGroup
             type="single"
             value={textAlign}
-            onValueChange={(v) => v && onTextAlignChange(v as 'left' | 'center' | 'right')}
+            onValueChange={(v) => v && updateStyle({ textAlign: v as 'left' | 'center' | 'right' })}
             className="gap-0"
           >
             <ToggleGroupItem value="left" size="sm" className="h-7 w-7 p-0">
@@ -146,18 +143,6 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           </ToggleGroup>
         </>
       )}
-
-      <div className="w-px h-6 bg-border" />
-
-      {/* Bold & Italic (visual only for now) */}
-      <div className="flex items-center gap-0">
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <Bold className="w-3 h-3" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <Italic className="w-3 h-3" />
-        </Button>
-      </div>
     </div>
   );
 };

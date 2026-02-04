@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GripVertical, Trash2, Copy, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PaperQuestion, PaperSettings } from './types';
+import { PaperQuestion, PaperSettings, ElementStyle } from './types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,12 @@ interface EditableQuestionProps {
   onDelete: (id: string) => void;
   onDuplicate: (question: PaperQuestion) => void;
   isEditing: boolean;
-  onFocus?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onFocus?: (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+    type: 'question' | 'option' | 'statement',
+    index?: number,
+    currentStyle?: ElementStyle
+  ) => void;
   onBlur?: () => void;
 }
 
@@ -37,6 +42,35 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
   onBlur,
 }) => {
   const [localQuestion, setLocalQuestion] = useState(question);
+
+  // Sync local state when question prop changes
+  React.useEffect(() => {
+    setLocalQuestion(question);
+  }, [question]);
+
+  const getQuestionStyle = (): ElementStyle => {
+    return localQuestion.questionStyle || { 
+      fontSize: settings.fontSize, 
+      fontFamily: settings.fontFamily, 
+      textAlign: 'left' 
+    };
+  };
+
+  const getOptionStyle = (index: number): ElementStyle => {
+    return localQuestion.options[index]?.style || { 
+      fontSize: settings.fontSize, 
+      fontFamily: settings.fontFamily, 
+      textAlign: 'left' 
+    };
+  };
+
+  const getStatementStyle = (index: number): ElementStyle => {
+    return localQuestion.statementStyles?.[index] || { 
+      fontSize: settings.fontSize - 1, 
+      fontFamily: settings.fontFamily, 
+      textAlign: 'left' 
+    };
+  };
 
   const handleQuestionChange = (value: string) => {
     const updated = { ...localQuestion, question: value };
@@ -79,6 +113,8 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
       .join('');
   };
 
+  const questionStyle = getQuestionStyle();
+
   return (
     <div
       className={cn(
@@ -118,7 +154,13 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
       )}
 
       <div className="flex gap-2">
-        <span className="font-medium shrink-0" style={{ fontSize: settings.fontSize }}>
+        <span 
+          className="font-medium shrink-0" 
+          style={{ 
+            fontSize: questionStyle.fontSize,
+            fontFamily: questionStyle.fontFamily,
+          }}
+        >
           {getBengaliNumber(question.number)}।
         </span>
         <div className="flex-1">
@@ -126,7 +168,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             <textarea
               value={localQuestion.question}
               onChange={(e) => handleQuestionChange(e.target.value)}
-              onFocus={onFocus}
+              onFocus={(e) => onFocus?.(e, 'question', undefined, questionStyle)}
               onBlur={onBlur}
               className={cn(
                 'w-full bg-transparent border-0 resize-none',
@@ -134,48 +176,75 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                 editableHoverClass,
                 editableFocusClass
               )}
-              style={{ fontSize: settings.fontSize }}
+              style={{ 
+                fontSize: questionStyle.fontSize,
+                fontFamily: questionStyle.fontFamily,
+                textAlign: questionStyle.textAlign as React.CSSProperties['textAlign'],
+              }}
               rows={Math.ceil(localQuestion.question.length / 50) || 1}
               placeholder="প্রশ্ন লিখুন..."
             />
           ) : (
-            <p style={{ fontSize: settings.fontSize }}>{localQuestion.question}</p>
+            <p style={{ 
+              fontSize: questionStyle.fontSize,
+              fontFamily: questionStyle.fontFamily,
+              textAlign: questionStyle.textAlign as React.CSSProperties['textAlign'],
+            }}>
+              {localQuestion.question}
+            </p>
           )}
 
           {/* Statements if present */}
           {question.statements && question.statements.length > 0 && (
             <div className="mt-2 pl-4 space-y-1">
-              {question.statements.map((statement, idx) => (
-                <div key={idx} className="flex gap-2" style={{ fontSize: settings.fontSize - 1 }}>
-                  <span className="text-muted-foreground shrink-0">
-                    {['i', 'ii', 'iii', 'iv'][idx]}.
-                  </span>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={statement}
-                      onChange={(e) => {
-                        const newStatements = [...(localQuestion.statements || [])];
-                        newStatements[idx] = e.target.value;
-                        const updated = { ...localQuestion, statements: newStatements };
-                        setLocalQuestion(updated);
-                        onUpdate(updated);
-                      }}
-                      onFocus={onFocus}
-                      onBlur={onBlur}
-                      className={cn(
-                        'flex-1 bg-transparent border-0',
-                        editableBaseClass,
-                        editableHoverClass,
-                        editableFocusClass
-                      )}
-                      placeholder="বিবৃতি লিখুন..."
-                    />
-                  ) : (
-                    <span>{statement}</span>
-                  )}
-                </div>
-              ))}
+              {question.statements.map((statement, idx) => {
+                const statementStyle = getStatementStyle(idx);
+                return (
+                  <div 
+                    key={idx} 
+                    className="flex gap-2" 
+                    style={{ 
+                      fontSize: statementStyle.fontSize,
+                      fontFamily: statementStyle.fontFamily,
+                    }}
+                  >
+                    <span className="text-muted-foreground shrink-0">
+                      {['i', 'ii', 'iii', 'iv'][idx]}.
+                    </span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={statement}
+                        onChange={(e) => {
+                          const newStatements = [...(localQuestion.statements || [])];
+                          newStatements[idx] = e.target.value;
+                          const updated = { ...localQuestion, statements: newStatements };
+                          setLocalQuestion(updated);
+                          onUpdate(updated);
+                        }}
+                        onFocus={(e) => onFocus?.(e, 'statement', idx, statementStyle)}
+                        onBlur={onBlur}
+                        className={cn(
+                          'flex-1 bg-transparent border-0',
+                          editableBaseClass,
+                          editableHoverClass,
+                          editableFocusClass
+                        )}
+                        style={{
+                          textAlign: statementStyle.textAlign as React.CSSProperties['textAlign'],
+                        }}
+                        placeholder="বিবৃতি লিখুন..."
+                      />
+                    ) : (
+                      <span style={{
+                        textAlign: statementStyle.textAlign as React.CSSProperties['textAlign'],
+                      }}>
+                        {statement}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -186,36 +255,49 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
               settings.columns === 1 ? 'flex flex-col' : 'grid grid-cols-2'
             )}
           >
-            {localQuestion.options.map((option, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  'flex items-center gap-2',
-                  settings.optionStyle === 'round' && 'gap-2'
-                )}
-                style={{ fontSize: settings.fontSize }}
-              >
-                {renderOptionLabel(option.label)}
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={option.text}
-                    onChange={(e) => handleOptionChange(idx, e.target.value)}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    className={cn(
-                      'flex-1 bg-transparent border-0 min-w-0',
-                      editableBaseClass,
-                      editableHoverClass,
-                      editableFocusClass
-                    )}
-                    placeholder="অপশন লিখুন..."
-                  />
-                ) : (
-                  <span>{option.text}</span>
-                )}
-              </div>
-            ))}
+            {localQuestion.options.map((option, idx) => {
+              const optionStyle = getOptionStyle(idx);
+              return (
+                <div
+                  key={idx}
+                  className={cn(
+                    'flex items-center gap-2',
+                    settings.optionStyle === 'round' && 'gap-2'
+                  )}
+                  style={{ 
+                    fontSize: optionStyle.fontSize,
+                    fontFamily: optionStyle.fontFamily,
+                  }}
+                >
+                  {renderOptionLabel(option.label)}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={option.text}
+                      onChange={(e) => handleOptionChange(idx, e.target.value)}
+                      onFocus={(e) => onFocus?.(e, 'option', idx, optionStyle)}
+                      onBlur={onBlur}
+                      className={cn(
+                        'flex-1 bg-transparent border-0 min-w-0',
+                        editableBaseClass,
+                        editableHoverClass,
+                        editableFocusClass
+                      )}
+                      style={{
+                        textAlign: optionStyle.textAlign as React.CSSProperties['textAlign'],
+                      }}
+                      placeholder="অপশন লিখুন..."
+                    />
+                  ) : (
+                    <span style={{
+                      textAlign: optionStyle.textAlign as React.CSSProperties['textAlign'],
+                    }}>
+                      {option.text}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
