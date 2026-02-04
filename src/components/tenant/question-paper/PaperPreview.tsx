@@ -321,7 +321,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           id="paper-preview"
         >
         {/* Header */}
-        <div className="text-center border-b pb-2">
+        <div className="text-center border-b pb-1">
           <HeaderEditable
             value={settings.institutionName}
             onChange={(v) => updateSetting('institutionName', v)}
@@ -330,123 +330,127 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
             placeholder="প্রতিষ্ঠানের নাম"
           />
 
-          <div className="flex items-center justify-center gap-4 mt-1 text-sm flex-wrap">
-            {settings.showClassName && (
-              <HeaderEditable
-                value={settings.className}
-                onChange={(v) => updateSetting('className', v)}
-                field="className"
-                className="inline-block"
-                placeholder="শ্রেণি"
-              />
-            )}
-            {settings.showSetCode && (
-              <span className="flex items-center gap-1">
-                সেট:{' '}
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={settings.setCode}
-                    onChange={(e) => updateSetting('setCode', e.target.value)}
-                    onFocus={(e) => handleHeaderFocus(e, 'setCode')}
-                    onBlur={handleBlur}
-                    className={cn(
-                      'border px-2 py-0.5 font-bold w-10 text-center bg-transparent',
-                      editableBaseClass,
-                      editableHoverClass,
-                      editableFocusClass
-                    )}
-                    style={{
-                      fontSize: getHeaderStyle('setCode').fontSize,
-                      fontFamily: getHeaderStyle('setCode').fontFamily,
-                    }}
-                  />
-                ) : (
-                  <span 
-                    className="border px-2 py-0.5 font-bold"
-                    style={{
-                      fontSize: getHeaderStyle('setCode').fontSize,
-                      fontFamily: getHeaderStyle('setCode').fontFamily,
-                    }}
-                  >
-                    {settings.setCode}
-                  </span>
-                )}
-              </span>
-            )}
-          </div>
+          {settings.showClassName && (
+            <HeaderEditable
+              value={settings.className}
+              onChange={(v) => updateSetting('className', v)}
+              field="className"
+              className="block text-sm"
+              placeholder="শ্রেণি"
+            />
+          )}
 
-          {settings.showSubjectName && (
-            <div className="mt-0.5">
-              <HeaderEditable
-                value={settings.subjectName}
-                onChange={(v) => updateSetting('subjectName', v)}
-                field="subjectName"
-                className="font-medium inline-block"
-                placeholder="বিষয়ের নাম"
-              />
-            </div>
-          )}
-          {settings.showChapterName && (
-            <div className="text-muted-foreground mt-0.5">
-              <HeaderEditable
-                value={settings.chapterName}
-                onChange={(v) => updateSetting('chapterName', v)}
-                field="chapterName"
-                className="inline-block"
-                placeholder="অধ্যায়ের নাম"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Time & Marks */}
-        <div className="flex justify-between text-sm mt-2 mb-1">
-          {settings.showTime && (
-            <span className="flex items-center gap-1">
-              সময়—{' '}
-              <HeaderEditable
-                value={settings.time}
-                onChange={(v) => updateSetting('time', v)}
-                field="time"
-                className="inline-block"
-                placeholder="সময়"
-              />
-            </span>
-          )}
-          {settings.showTotalMarks && (
-            <span 
-              className="flex items-center gap-1"
-              style={{
-                fontSize: getHeaderStyle('totalMarks').fontSize,
-                fontFamily: getHeaderStyle('totalMarks').fontFamily,
-              }}
-            >
-              পূর্ণমান—{' '}
+          {settings.showSetCode && (
+            <span className="flex items-center justify-center gap-1 text-sm">
+              সেট:{' '}
               {isEditing ? (
                 <input
-                  type="number"
-                  value={settings.totalMarks}
-                  onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
-                  onFocus={(e) => handleHeaderFocus(e, 'totalMarks')}
+                  type="text"
+                  value={settings.setCode}
+                  onChange={(e) => updateSetting('setCode', e.target.value)}
+                  onFocus={(e) => handleHeaderFocus(e, 'setCode')}
                   onBlur={handleBlur}
                   className={cn(
-                    'bg-transparent border-0 w-12 text-center',
+                    'border px-1.5 py-0 font-bold w-8 text-center bg-transparent',
                     editableBaseClass,
                     editableHoverClass,
                     editableFocusClass
                   )}
+                  style={{
+                    fontSize: getHeaderStyle('setCode').fontSize,
+                    fontFamily: getHeaderStyle('setCode').fontFamily,
+                  }}
                 />
               ) : (
-                <span>{settings.totalMarks}</span>
+                <span 
+                  className="border px-1.5 font-bold"
+                  style={{
+                    fontSize: getHeaderStyle('setCode').fontSize,
+                    fontFamily: getHeaderStyle('setCode').fontFamily,
+                  }}
+                >
+                  {settings.setCode}
+                </span>
               )}
             </span>
           )}
+
+          {settings.showSubjectName && (
+            <HeaderEditable
+              value={settings.subjectName}
+              onChange={(v) => updateSetting('subjectName', v)}
+              field="subjectName"
+              className="font-medium block text-sm"
+              placeholder="বিষয়ের নাম"
+            />
+          )}
+          
+          {settings.showChapterName && (
+            <HeaderEditable
+              value={settings.chapterName}
+              onChange={(v) => updateSetting('chapterName', v)}
+              field="chapterName"
+              className="block text-sm text-muted-foreground"
+              placeholder="অধ্যায়ের নাম"
+            />
+          )}
         </div>
+
+        {/* Time & Marks - Styled row */}
+        {(settings.showTime || settings.showTotalMarks) && (
+          <div className="flex justify-between items-center text-sm py-1 border-b">
+            {settings.showTime ? (
+              <span 
+                className="flex items-center"
+                style={{
+                  fontSize: getHeaderStyle('time').fontSize,
+                  fontFamily: getHeaderStyle('time').fontFamily,
+                }}
+              >
+                সময়:{' '}
+                <HeaderEditable
+                  value={settings.time}
+                  onChange={(v) => updateSetting('time', v)}
+                  field="time"
+                  className="inline-block font-medium"
+                  placeholder="সময়"
+                />
+              </span>
+            ) : <span />}
+            {settings.showTotalMarks ? (
+              <span 
+                className="flex items-center"
+                style={{
+                  fontSize: getHeaderStyle('totalMarks').fontSize,
+                  fontFamily: getHeaderStyle('totalMarks').fontFamily,
+                }}
+              >
+                পূর্ণমান:{' '}
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={settings.totalMarks}
+                    onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
+                    onFocus={(e) => handleHeaderFocus(e, 'totalMarks')}
+                    onBlur={handleBlur}
+                    className={cn(
+                      'bg-transparent border-0 w-10 font-medium',
+                      editableBaseClass,
+                      editableHoverClass,
+                      editableFocusClass
+                    )}
+                  />
+                ) : (
+                  <span className="font-medium">{settings.totalMarks}</span>
+                )}
+              </span>
+            ) : <span />}
+          </div>
+        )}
 
         {/* Instructions */}
         {settings.showInstructions && (
-          <div className="text-muted-foreground mb-1 p-1.5 bg-muted/30 rounded text-sm">
+          <div className="text-muted-foreground py-1 text-sm">
             <HeaderEditable
               value={settings.instructions}
               onChange={(v) => updateSetting('instructions', v)}
@@ -458,7 +462,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           </div>
         )}
 
-        <p className="text-center text-sm mb-1.5 font-medium">
+        <p className="text-center text-sm py-1 font-medium border-t">
           প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
         </p>
 
