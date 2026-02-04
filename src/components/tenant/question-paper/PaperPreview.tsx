@@ -12,6 +12,7 @@ interface PaperPreviewProps {
   onDuplicateQuestion: (question: PaperQuestion) => void;
   onSettingsChange: (settings: PaperSettings) => void;
   isEditing: boolean;
+  zoom?: number | 'auto';
 }
 
 // Inline editable styles
@@ -27,13 +28,17 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   onDuplicateQuestion,
   onSettingsChange,
   isEditing,
+  zoom = 'auto',
 }) => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeContext, setActiveContext] = useState<ActiveElementContext | null>(null);
-  const [scale, setScale] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
   const activeRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
+
+  // Effective scale based on zoom mode
+  const effectiveScale = zoom === 'auto' ? autoScale : zoom;
 
   // Paper dimensions in mm
   const getPaperDimensions = () => {
@@ -52,26 +57,26 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       : size;
   };
 
-  // Calculate scale to fit paper in container
+  // Calculate auto-scale to fit paper in container
   useEffect(() => {
+    if (zoom !== 'auto') return;
+    
     const calculateScale = () => {
       if (!containerRef.current) return;
       
       const container = containerRef.current;
-      const containerWidth = container.clientWidth - 48; // padding
+      const containerWidth = container.clientWidth - 48;
       const containerHeight = container.clientHeight - 48;
       
       const paper = getPaperDimensions();
-      // Convert mm to px (1mm ≈ 3.78px at 96dpi)
       const paperWidthPx = paper.width * 3.78;
       const paperHeightPx = paper.height * 3.78;
       
       const scaleX = containerWidth / paperWidthPx;
       const scaleY = containerHeight / paperHeightPx;
       
-      // Use the smaller scale to ensure full page fits
-      const newScale = Math.min(scaleX, scaleY, 1); // Max scale is 1
-      setScale(Math.max(0.3, newScale)); // Min scale is 0.3
+      const newScale = Math.min(scaleX, scaleY, 1);
+      setAutoScale(Math.max(0.25, newScale));
     };
 
     calculateScale();
@@ -82,7 +87,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     }
     
     return () => resizeObserver.disconnect();
-  }, [settings.paperSize, settings.paperOrientation]);
+  }, [settings.paperSize, settings.paperOrientation, zoom]);
 
   const getPaperSizeClass = () => {
     const isLandscape = settings.paperOrientation === 'landscape';
@@ -264,7 +269,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full flex items-center justify-center overflow-hidden"
+      className="w-full h-full min-h-0 overflow-auto p-6"
     >
       {/* Floating Toolbar */}
       <FloatingToolbar
@@ -275,10 +280,14 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         showAlignment={true}
       />
 
-      <div
-        className="origin-center transition-transform duration-200"
-        style={{ transform: `scale(${scale})` }}
+      <div 
+        className="flex justify-center"
+        style={{ minHeight: zoom === 'auto' ? '100%' : 'auto' }}
       >
+        <div
+          className="origin-top transition-transform duration-200 shrink-0"
+          style={{ transform: `scale(${effectiveScale})` }}
+        >
         <div
           ref={paperRef}
           className={cn(
@@ -464,6 +473,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
             {settings.watermark}
           </div>
         )}
+        </div>
         </div>
       </div>
     </div>
