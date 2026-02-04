@@ -118,9 +118,10 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
   return (
     <div
       className={cn(
-        'group relative py-2 transition-all',
+        'group relative py-1 transition-all',
         isEditing && 'hover:bg-muted/30 rounded-lg px-2'
       )}
+      style={{ lineHeight: 1.1 }}
     >
       {isEditing && (
         <div className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -196,7 +197,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
 
           {/* Statements if present */}
           {question.statements && question.statements.length > 0 && (
-            <div className="mt-2 pl-4 space-y-1">
+            <div className="mt-1 pl-4 space-y-0">
               {question.statements.map((statement, idx) => {
                 const statementStyle = getStatementStyle(idx);
                 return (
@@ -251,7 +252,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
           {/* Options Grid */}
           <div
             className={cn(
-              'mt-2 gap-x-6 gap-y-1',
+              'mt-1 gap-x-4 gap-y-0',
               settings.columns === 1 ? 'flex flex-col' : 'grid grid-cols-2'
             )}
           >
