@@ -33,9 +33,11 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeContext, setActiveContext] = useState<ActiveElementContext | null>(null);
   const [autoScale, setAutoScale] = useState(1);
+  const [isToolbarInteracting, setIsToolbarInteracting] = useState(false);
   const activeRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
+  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Effective scale based on zoom mode
   const effectiveScale = zoom === 'auto' ? autoScale : zoom;
@@ -150,13 +152,32 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     setShowToolbar(true);
   };
 
-  const handleBlur = () => {
-    setTimeout(() => {
-      setShowToolbar(false);
-      setActiveContext(null);
-      activeRef.current = null;
-    }, 200);
-  };
+  const handleBlur = useCallback(() => {
+    // Clear any existing timeout
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    
+    blurTimeoutRef.current = setTimeout(() => {
+      // Only hide if not interacting with toolbar
+      if (!isToolbarInteracting) {
+        setShowToolbar(false);
+        setActiveContext(null);
+        activeRef.current = null;
+      }
+    }, 150);
+  }, [isToolbarInteracting]);
+
+  const handleToolbarInteractionStart = useCallback(() => {
+    setIsToolbarInteracting(true);
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+  }, []);
+
+  const handleToolbarInteractionEnd = useCallback(() => {
+    setIsToolbarInteracting(false);
+  }, []);
 
   const handleStyleChange = useCallback((newStyle: ElementStyle) => {
     if (!activeContext) return;
@@ -278,6 +299,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         currentStyle={activeContext?.currentStyle || { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' }}
         onStyleChange={handleStyleChange}
         showAlignment={true}
+        onInteractionStart={handleToolbarInteractionStart}
+        onInteractionEnd={handleToolbarInteractionEnd}
       />
 
       <div 
