@@ -11,18 +11,16 @@ import html2canvas from 'html2canvas';
 
 import PaperPreview from '@/components/tenant/question-paper/PaperPreview';
 import SettingsSidebar from '@/components/tenant/question-paper/SettingsSidebar';
-import { PaperQuestion, PaperSettings, PaperMetadata } from '@/components/tenant/question-paper/types';
+import { PaperQuestion, PaperSettings } from '@/components/tenant/question-paper/types';
 import {
   mockPaperQuestions,
   defaultPaperSettings,
-  paperMetadata,
 } from '@/lib/question-paper-mock-data';
 
 const QuestionPaperBuilder: React.FC = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<PaperQuestion[]>(mockPaperQuestions);
   const [settings, setSettings] = useState<PaperSettings>(defaultPaperSettings);
-  const [metadata] = useState<PaperMetadata>(paperMetadata);
   const [isEditing, setIsEditing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -70,7 +68,8 @@ const QuestionPaperBuilder: React.FC = () => {
 
   const handleResetQuestions = useCallback(() => {
     setQuestions(mockPaperQuestions);
-    toast.success('Questions reset to default');
+    setSettings(defaultPaperSettings);
+    toast.success('Reset to default');
   }, []);
 
   const handleExportPdf = useCallback(async () => {
@@ -177,10 +176,10 @@ const QuestionPaperBuilder: React.FC = () => {
             <PaperPreview
               questions={questions}
               settings={settings}
-              metadata={metadata}
               onUpdateQuestion={handleUpdateQuestion}
               onDeleteQuestion={handleDeleteQuestion}
               onDuplicateQuestion={handleDuplicateQuestion}
+              onSettingsChange={setSettings}
               isEditing={isEditing}
             />
           </ScrollArea>

@@ -25,10 +25,13 @@ export interface PaperSettings {
   time: string;
   showTotalMarks: boolean;
   totalMarks: number;
+  className: string;
+  subjectName: string;
+  chapterName: string;
   
   // Document customization
   paperSize: 'A4' | 'Letter' | 'Legal' | 'A5';
-  optionStyle: 'parentheses' | 'dot' | 'bracket';
+  optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
   fontFamily: string;
   fontSize: number;
   columns: 1 | 2 | 3;
