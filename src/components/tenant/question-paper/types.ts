@@ -55,6 +55,7 @@ export interface PaperSettings {
   
   // Document customization (defaults)
   paperSize: 'A4' | 'Letter' | 'Legal' | 'A5';
+  paperOrientation: 'portrait' | 'landscape';
   optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
   fontFamily: string;
   fontSize: number;

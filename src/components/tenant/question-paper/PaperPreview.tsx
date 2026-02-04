@@ -33,16 +33,18 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const activeRef = useRef<HTMLElement | null>(null);
 
   const getPaperSizeClass = () => {
+    const isLandscape = settings.paperOrientation === 'landscape';
+    
     switch (settings.paperSize) {
       case 'Letter':
-        return 'w-[216mm] min-h-[279mm]';
+        return isLandscape ? 'w-[279mm] min-h-[216mm]' : 'w-[216mm] min-h-[279mm]';
       case 'Legal':
-        return 'w-[216mm] min-h-[356mm]';
+        return isLandscape ? 'w-[356mm] min-h-[216mm]' : 'w-[216mm] min-h-[356mm]';
       case 'A5':
-        return 'w-[148mm] min-h-[210mm]';
+        return isLandscape ? 'w-[210mm] min-h-[148mm]' : 'w-[148mm] min-h-[210mm]';
       case 'A4':
       default:
-        return 'w-[210mm] min-h-[297mm]';
+        return isLandscape ? 'w-[297mm] min-h-[210mm]' : 'w-[210mm] min-h-[297mm]';
     }
   };
 
