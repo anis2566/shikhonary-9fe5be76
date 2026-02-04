@@ -149,6 +149,9 @@ const QuestionPaperBuilder: React.FC = () => {
   const handleExportPdf = useCallback(async () => {
     setIsExporting(true);
     try {
+      // Wait for fonts to be fully loaded
+      await document.fonts.ready;
+      
       // Find all page elements (now we have multiple pages)
       const pageElements = document.querySelectorAll('[id^="paper-preview-page-"]');
       
@@ -168,12 +171,30 @@ const QuestionPaperBuilder: React.FC = () => {
       for (let i = 0; i < pageElements.length; i++) {
         const element = pageElements[i] as HTMLElement;
         
-        const canvas = await html2canvas(element, {
+        // Clone the element to remove the page indicator before capture
+        const clone = element.cloneNode(true) as HTMLElement;
+        const pageIndicator = clone.querySelector('.absolute.top-2.right-3');
+        if (pageIndicator) {
+          pageIndicator.remove();
+        }
+        
+        // Temporarily add clone to DOM for capture
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        document.body.appendChild(clone);
+        
+        const canvas = await html2canvas(clone, {
           scale: 2,
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff',
+          allowTaint: true,
+          foreignObjectRendering: false,
         });
+        
+        // Remove clone
+        document.body.removeChild(clone);
 
         const imgData = canvas.toDataURL('image/png');
         const imgWidth = pageWidth;
@@ -183,9 +204,7 @@ const QuestionPaperBuilder: React.FC = () => {
           pdf.addPage();
         }
 
-        // Center the image on the page if it's smaller than page height
-        const yOffset = imgHeight < pageHeight ? 0 : 0;
-        pdf.addImage(imgData, 'PNG', 0, yOffset, imgWidth, Math.min(imgHeight, pageHeight));
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
       }
 
       pdf.save(`question-paper-${Date.now()}.pdf`);
