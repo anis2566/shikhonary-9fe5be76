@@ -43,15 +43,21 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
     onUpdate(updated);
   };
 
-  const getOptionPrefix = (label: string) => {
+  const renderOptionLabel = (label: string) => {
     switch (settings.optionStyle) {
       case 'dot':
-        return `${label}.`;
+        return <span className="shrink-0 text-muted-foreground">{label}.</span>;
       case 'bracket':
-        return `${label})`;
+        return <span className="shrink-0 text-muted-foreground">{label})</span>;
+      case 'round':
+        return (
+          <span className="shrink-0 w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs font-medium">
+            {label}
+          </span>
+        );
       case 'parentheses':
       default:
-        return `(${label})`;
+        return <span className="shrink-0 text-muted-foreground">({label})</span>;
     }
   };
 
@@ -78,14 +84,14 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
       )}
 
       {isEditing && (
-        <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="bg-popover border shadow-md z-50">
               <DropdownMenuItem onClick={() => onDuplicate(question)}>
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
@@ -111,7 +117,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             <textarea
               value={localQuestion.question}
               onChange={(e) => handleQuestionChange(e.target.value)}
-              className="w-full bg-transparent border-0 border-b border-transparent hover:border-primary/30 focus:border-primary focus:outline-none resize-none transition-colors"
+              className="w-full bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none resize-none transition-colors"
               style={{ fontSize: settings.fontSize }}
               rows={Math.ceil(localQuestion.question.length / 50) || 1}
             />
@@ -138,7 +144,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                         setLocalQuestion(updated);
                         onUpdate(updated);
                       }}
-                      className="flex-1 bg-transparent border-0 border-b border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors"
+                      className="flex-1 bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors"
                     />
                   ) : (
                     <span>{statement}</span>
@@ -158,18 +164,19 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             {localQuestion.options.map((option, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-1"
+                className={cn(
+                  'flex items-center gap-2',
+                  settings.optionStyle === 'round' && 'gap-2'
+                )}
                 style={{ fontSize: settings.fontSize }}
               >
-                <span className="shrink-0 text-muted-foreground">
-                  {getOptionPrefix(option.label)}
-                </span>
+                {renderOptionLabel(option.label)}
                 {isEditing ? (
                   <input
                     type="text"
                     value={option.text}
                     onChange={(e) => handleOptionChange(idx, e.target.value)}
-                    className="flex-1 bg-transparent border-0 border-b border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors min-w-0"
+                    className="flex-1 bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors min-w-0"
                   />
                 ) : (
                   <span>{option.text}</span>

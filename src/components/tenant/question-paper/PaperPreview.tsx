@@ -1,25 +1,25 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { PaperQuestion, PaperSettings, PaperMetadata } from './types';
+import { PaperQuestion, PaperSettings } from './types';
 import EditableQuestion from './EditableQuestion';
 
 interface PaperPreviewProps {
   questions: PaperQuestion[];
   settings: PaperSettings;
-  metadata: PaperMetadata;
   onUpdateQuestion: (question: PaperQuestion) => void;
   onDeleteQuestion: (id: string) => void;
   onDuplicateQuestion: (question: PaperQuestion) => void;
+  onSettingsChange: (settings: PaperSettings) => void;
   isEditing: boolean;
 }
 
 const PaperPreview: React.FC<PaperPreviewProps> = ({
   questions,
   settings,
-  metadata,
   onUpdateQuestion,
   onDeleteQuestion,
   onDuplicateQuestion,
+  onSettingsChange,
   isEditing,
 }) => {
   const getPaperSizeClass = () => {
@@ -49,6 +49,13 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     }
   };
 
+  const updateSetting = <K extends keyof PaperSettings>(
+    key: K,
+    value: PaperSettings[K]
+  ) => {
+    onSettingsChange({ ...settings, [key]: value });
+  };
+
   // Split questions into columns
   const getColumnedQuestions = () => {
     if (settings.columns === 1) {
@@ -61,6 +68,65 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
   const columnedQuestions = getColumnedQuestions();
 
+  const EditableField: React.FC<{
+    value: string;
+    onChange: (value: string) => void;
+    className?: string;
+    multiline?: boolean;
+  }> = ({ value, onChange, className, multiline }) => {
+    if (!isEditing) {
+      return <span className={className}>{value}</span>;
+    }
+
+    if (multiline) {
+      return (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none resize-none w-full',
+            className
+          )}
+          rows={2}
+        />
+      );
+    }
+
+    return (
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none text-center w-full',
+          className
+        )}
+      />
+    );
+  };
+
+  const EditableNumber: React.FC<{
+    value: number;
+    onChange: (value: number) => void;
+    className?: string;
+  }> = ({ value, onChange, className }) => {
+    if (!isEditing) {
+      return <span className={className}>{value}</span>;
+    }
+
+    return (
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+        className={cn(
+          'bg-transparent border-0 border-b border-dashed border-transparent hover:border-primary/50 focus:border-primary focus:outline-none w-16 text-center',
+          className
+        )}
+      />
+    );
+  };
+
   return (
     <div
       className={cn(
@@ -72,47 +138,89 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     >
       {/* Header */}
       <div className="text-center mb-4 border-b pb-4">
-        {isEditing ? (
-          <input
-            type="text"
-            value={settings.institutionName}
-            className="text-xl font-bold text-center w-full bg-transparent border-0 border-b border-transparent hover:border-primary/30 focus:border-primary focus:outline-none"
-            readOnly
-          />
-        ) : (
-          <h1 className="text-xl font-bold">{settings.institutionName}</h1>
-        )}
+        <EditableField
+          value={settings.institutionName}
+          onChange={(v) => updateSetting('institutionName', v)}
+          className="text-xl font-bold block"
+        />
 
-        <div className="flex items-center justify-center gap-4 mt-2 text-sm">
-          {settings.showClassName && <span>{metadata.className}</span>}
+        <div className="flex items-center justify-center gap-4 mt-2 text-sm flex-wrap">
+          {settings.showClassName && (
+            <EditableField
+              value={settings.className}
+              onChange={(v) => updateSetting('className', v)}
+              className="inline-block"
+            />
+          )}
           {settings.showSetCode && (
             <span className="flex items-center gap-1">
               সেট:{' '}
-              <span className="border px-2 py-0.5 font-bold">{settings.setCode}</span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={settings.setCode}
+                  onChange={(e) => updateSetting('setCode', e.target.value)}
+                  className="border px-2 py-0.5 font-bold w-10 text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              ) : (
+                <span className="border px-2 py-0.5 font-bold">{settings.setCode}</span>
+              )}
             </span>
           )}
         </div>
 
         {settings.showSubjectName && (
-          <p className="mt-1 font-medium">{metadata.subjectName}</p>
+          <div className="mt-1">
+            <EditableField
+              value={settings.subjectName}
+              onChange={(v) => updateSetting('subjectName', v)}
+              className="font-medium inline-block"
+            />
+          </div>
         )}
         {settings.showChapterName && (
-          <p className="text-sm text-muted-foreground">{metadata.chapterName}</p>
+          <div className="text-sm text-muted-foreground">
+            <EditableField
+              value={settings.chapterName}
+              onChange={(v) => updateSetting('chapterName', v)}
+              className="inline-block"
+            />
+          </div>
         )}
       </div>
 
       {/* Time & Marks */}
       <div className="flex justify-between text-sm mb-4">
-        {settings.showTime && <span>সময়— {settings.time}</span>}
+        {settings.showTime && (
+          <span className="flex items-center gap-1">
+            সময়—{' '}
+            <EditableField
+              value={settings.time}
+              onChange={(v) => updateSetting('time', v)}
+              className="inline-block"
+            />
+          </span>
+        )}
         {settings.showTotalMarks && (
-          <span>পূর্ণমান— {settings.totalMarks}</span>
+          <span className="flex items-center gap-1">
+            পূর্ণমান—{' '}
+            <EditableNumber
+              value={settings.totalMarks}
+              onChange={(v) => updateSetting('totalMarks', v)}
+            />
+          </span>
         )}
       </div>
 
       {/* Instructions */}
-      {settings.showInstructions && settings.instructions && (
+      {settings.showInstructions && (
         <div className="text-xs text-muted-foreground mb-4 p-2 bg-muted/30 rounded">
-          {settings.instructions}
+          <EditableField
+            value={settings.instructions}
+            onChange={(v) => updateSetting('instructions', v)}
+            multiline
+            className="w-full"
+          />
         </div>
       )}
 

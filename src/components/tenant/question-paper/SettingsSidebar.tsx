@@ -4,16 +4,15 @@ import {
   Settings2,
   FileText,
   Type,
-  Columns,
   Shuffle,
   MapPin,
-  Droplets,
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
   Minus,
   Plus,
+  Circle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -21,7 +20,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Toggle } from '@/components/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Select,
@@ -125,6 +123,17 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               প্রশ্নের মেটাডাটা (হেডার)
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-3 space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">প্রতিষ্ঠানের নাম</Label>
+                </div>
+                <Input
+                  value={settings.institutionName}
+                  onChange={(e) => updateSetting('institutionName', e.target.value)}
+                  placeholder="প্রতিষ্ঠানের নাম"
+                  className="text-sm"
+                />
+              </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm">শ্রেণির নাম</Label>
                 <Switch
@@ -132,6 +141,14 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showClassName', v)}
                 />
               </div>
+              {settings.showClassName && (
+                <Input
+                  value={settings.className}
+                  onChange={(e) => updateSetting('className', e.target.value)}
+                  placeholder="শ্রেণি"
+                  className="text-sm"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">বিষয়ের নাম</Label>
                 <Switch
@@ -139,6 +156,14 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showSubjectName', v)}
                 />
               </div>
+              {settings.showSubjectName && (
+                <Input
+                  value={settings.subjectName}
+                  onChange={(e) => updateSetting('subjectName', e.target.value)}
+                  placeholder="বিষয়"
+                  className="text-sm"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">অধ্যায়ের নাম</Label>
                 <Switch
@@ -146,6 +171,14 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showChapterName', v)}
                 />
               </div>
+              {settings.showChapterName && (
+                <Input
+                  value={settings.chapterName}
+                  onChange={(e) => updateSetting('chapterName', e.target.value)}
+                  placeholder="অধ্যায়"
+                  className="text-sm"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">সেট কোড</Label>
                 <Switch
@@ -153,13 +186,60 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showSetCode', v)}
                 />
               </div>
+              {settings.showSetCode && (
+                <Input
+                  value={settings.setCode}
+                  onChange={(e) => updateSetting('setCode', e.target.value)}
+                  placeholder="সেট কোড"
+                  className="text-sm w-20"
+                />
+              )}
               <div className="flex items-center justify-between">
-                <Label className="text-sm">প্রোগ্রাম/পরীক্ষার নাম</Label>
+                <Label className="text-sm">পরীক্ষার নাম</Label>
                 <Switch
                   checked={settings.showExamName}
                   onCheckedChange={(v) => updateSetting('showExamName', v)}
                 />
               </div>
+              {settings.showExamName && (
+                <Input
+                  value={settings.examName}
+                  onChange={(e) => updateSetting('examName', e.target.value)}
+                  placeholder="পরীক্ষার নাম"
+                  className="text-sm"
+                />
+              )}
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">সময়</Label>
+                <Switch
+                  checked={settings.showTime}
+                  onCheckedChange={(v) => updateSetting('showTime', v)}
+                />
+              </div>
+              {settings.showTime && (
+                <Input
+                  value={settings.time}
+                  onChange={(e) => updateSetting('time', e.target.value)}
+                  placeholder="সময়"
+                  className="text-sm"
+                />
+              )}
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">পূর্ণমান</Label>
+                <Switch
+                  checked={settings.showTotalMarks}
+                  onCheckedChange={(v) => updateSetting('showTotalMarks', v)}
+                />
+              </div>
+              {settings.showTotalMarks && (
+                <Input
+                  type="number"
+                  value={settings.totalMarks}
+                  onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
+                  placeholder="পূর্ণমান"
+                  className="text-sm w-24"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <Label className="text-sm">নির্দেশনা</Label>
                 <Switch
@@ -179,12 +259,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               ডকুমেন্ট কাস্টমাইজেশন
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-3 space-y-4">
-              {/* Editing Mode */}
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">এডিটিং মোড</Label>
-                <Switch checked={true} />
-              </div>
-
               {/* Text Alignment */}
               <div className="space-y-2">
                 <Label className="text-sm">টেক্সট এলাইনমেন্ট</Label>
@@ -242,16 +316,20 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onValueChange={(v) =>
                     v && updateSetting('optionStyle', v as PaperSettings['optionStyle'])
                   }
-                  className="justify-start"
+                  className="justify-start flex-wrap"
                 >
-                  <ToggleGroupItem value="parentheses" size="sm" className="px-4">
+                  <ToggleGroupItem value="parentheses" size="sm" className="px-3">
                     (ক)
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="dot" size="sm" className="px-4">
+                  <ToggleGroupItem value="dot" size="sm" className="px-3">
                     ক.
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="bracket" size="sm" className="px-4">
+                  <ToggleGroupItem value="bracket" size="sm" className="px-3">
                     ক)
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="round" size="sm" className="px-3 gap-1">
+                    <Circle className="w-4 h-4" />
+                    ক
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
@@ -263,10 +341,10 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   value={settings.fontFamily}
                   onValueChange={(v) => updateSetting('fontFamily', v)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-popover border shadow-md z-50">
                     <SelectItem value="Bangla">বাংলা</SelectItem>
                     <SelectItem value="SolaimanLipi">SolaimanLipi</SelectItem>
                     <SelectItem value="Nikosh">Nikosh</SelectItem>
