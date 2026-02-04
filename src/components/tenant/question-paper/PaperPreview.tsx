@@ -137,32 +137,28 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     return () => resizeObserver.disconnect();
   }, [settings.paperSize, settings.paperOrientation, zoom]);
 
-  const getPaperSizeClass = () => {
+  // Get paper dimensions for styling
+  const getPaperStyle = (): React.CSSProperties => {
     const isLandscape = settings.paperOrientation === 'landscape';
+    const paper = getPaperDimensions();
     
-    // For multi-column layouts, we need height to force column flow
-    // For single column, only width is needed
-    const needsHeight = settings.columns > 1;
+    return {
+      width: `${paper.width}mm`,
+      minHeight: `${paper.height}mm`,
+      fontFamily: 'SolaimanLipi, sans-serif',
+      lineHeight: settings.lineHeight || 1.1,
+    };
+  };
+
+  // Get height for the questions container in multi-column mode
+  const getQuestionsContainerHeight = (): string | undefined => {
+    if (settings.columns === 1) return undefined;
     
-    switch (settings.paperSize) {
-      case 'Letter':
-        return isLandscape 
-          ? `w-[279mm]${needsHeight ? ' min-h-[216mm]' : ''}` 
-          : `w-[216mm]${needsHeight ? ' min-h-[279mm]' : ''}`;
-      case 'Legal':
-        return isLandscape 
-          ? `w-[356mm]${needsHeight ? ' min-h-[216mm]' : ''}` 
-          : `w-[216mm]${needsHeight ? ' min-h-[356mm]' : ''}`;
-      case 'A5':
-        return isLandscape 
-          ? `w-[210mm]${needsHeight ? ' min-h-[148mm]' : ''}` 
-          : `w-[148mm]${needsHeight ? ' min-h-[210mm]' : ''}`;
-      case 'A4':
-      default:
-        return isLandscape 
-          ? `w-[297mm]${needsHeight ? ' min-h-[210mm]' : ''}` 
-          : `w-[210mm]${needsHeight ? ' min-h-[297mm]' : ''}`;
-    }
+    const paper = getPaperDimensions();
+    // Subtract approximate header height (around 60mm for headers, time/marks, instructions)
+    const headerHeight = 55;
+    const contentHeight = paper.height - headerHeight;
+    return `${contentHeight}mm`;
   };
 
   const getHeaderStyle = (field: keyof HeaderStyles): ElementStyle => {
@@ -371,11 +367,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         >
         <div
           ref={paperRef}
-          className={cn(
-            'bg-white shadow-lg p-8 print:shadow-none print:p-0',
-            getPaperSizeClass()
-          )}
-          style={{ fontFamily: 'SolaimanLipi, sans-serif', lineHeight: settings.lineHeight || 1.1 }}
+          className="bg-white shadow-lg p-8 print:shadow-none print:p-0"
+          style={getPaperStyle()}
           id="paper-preview"
         >
         {/* Header */}
@@ -540,7 +533,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
               style={{
                 columnCount: settings.columns,
                 columnGap: '1.5rem',
-                columnFill: 'auto',
+                columnFill: settings.columns > 1 ? 'auto' : undefined,
+                height: getQuestionsContainerHeight(),
                 columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
               }}
             >
