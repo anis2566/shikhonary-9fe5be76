@@ -17,6 +17,8 @@ interface EditableQuestionProps {
   onDelete: (id: string) => void;
   onDuplicate: (question: PaperQuestion) => void;
   isEditing: boolean;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onBlur?: () => void;
 }
 
 // Inline editable styles
@@ -31,6 +33,8 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
   onDelete,
   onDuplicate,
   isEditing,
+  onFocus,
+  onBlur,
 }) => {
   const [localQuestion, setLocalQuestion] = useState(question);
 
@@ -122,6 +126,8 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
             <textarea
               value={localQuestion.question}
               onChange={(e) => handleQuestionChange(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
               className={cn(
                 'w-full bg-transparent border-0 resize-none',
                 editableBaseClass,
@@ -155,6 +161,8 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                         setLocalQuestion(updated);
                         onUpdate(updated);
                       }}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
                       className={cn(
                         'flex-1 bg-transparent border-0',
                         editableBaseClass,
@@ -193,6 +201,8 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
                     type="text"
                     value={option.text}
                     onChange={(e) => handleOptionChange(idx, e.target.value)}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
                     className={cn(
                       'flex-1 bg-transparent border-0 min-w-0',
                       editableBaseClass,
