@@ -149,40 +149,43 @@ const QuestionPaperBuilder: React.FC = () => {
   const handleExportPdf = useCallback(async () => {
     setIsExporting(true);
     try {
-      const element = document.getElementById('paper-preview');
-      if (!element) {
+      // Find all page elements (now we have multiple pages)
+      const pageElements = document.querySelectorAll('[id^="paper-preview-page-"]');
+      
+      if (pageElements.length === 0) {
         throw new Error('Preview element not found');
       }
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: settings.paperOrientation,
         unit: 'mm',
         format: settings.paperSize.toLowerCase() as 'a4' | 'letter' | 'legal',
       });
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      for (let i = 0; i < pageElements.length; i++) {
+        const element = pageElements[i] as HTMLElement;
+        
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        });
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        if (i > 0) {
+          pdf.addPage();
+        }
+
+        // Center the image on the page if it's smaller than page height
+        const yOffset = imgHeight < pageHeight ? 0 : 0;
+        pdf.addImage(imgData, 'PNG', 0, yOffset, imgWidth, Math.min(imgHeight, pageHeight));
       }
 
       pdf.save(`question-paper-${Date.now()}.pdf`);
@@ -193,7 +196,7 @@ const QuestionPaperBuilder: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [settings.paperSize]);
+  }, [settings.paperSize, settings.paperOrientation]);
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
