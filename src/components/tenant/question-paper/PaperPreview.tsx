@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PaperQuestion, PaperSettings } from './types';
 import EditableQuestion from './EditableQuestion';
+import FloatingToolbar from './FloatingToolbar';
 
 interface PaperPreviewProps {
   questions: PaperQuestion[];
@@ -27,6 +28,10 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   onSettingsChange,
   isEditing,
 }) => {
+  const [activeElement, setActiveElement] = useState<HTMLElement | null>(null);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const activeRef = useRef<HTMLElement | null>(null);
+
   const getPaperSizeClass = () => {
     switch (settings.paperSize) {
       case 'Letter':
@@ -59,6 +64,21 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     value: PaperSettings[K]
   ) => {
     onSettingsChange({ ...settings, [key]: value });
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    activeRef.current = e.target;
+    setActiveElement(e.target);
+    setShowToolbar(true);
+  };
+
+  const handleBlur = () => {
+    // Delay to allow toolbar clicks
+    setTimeout(() => {
+      setShowToolbar(false);
+      setActiveElement(null);
+      activeRef.current = null;
+    }, 200);
   };
 
   // Split questions into columns
@@ -98,6 +118,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           className={cn(inputClasses, 'resize-none min-h-[3em]')}
           placeholder={placeholder}
           rows={2}
@@ -110,6 +132,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         className={inputClasses}
         placeholder={placeholder}
       />
@@ -131,6 +155,8 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         type="number"
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         className={cn(
           'bg-transparent border-0 w-12 text-center',
           editableBaseClass,
@@ -143,150 +169,169 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   };
 
   return (
-    <div
-      className={cn(
-        'bg-white shadow-lg mx-auto p-8 print:shadow-none print:p-0',
-        getPaperSizeClass()
-      )}
-      style={{ fontFamily: settings.fontFamily === 'Bangla' ? 'SolaimanLipi, sans-serif' : 'inherit' }}
-      id="paper-preview"
-    >
-      {/* Header */}
-      <div className="text-center mb-4 border-b pb-4">
-        <InlineEditable
-          value={settings.institutionName}
-          onChange={(v) => updateSetting('institutionName', v)}
-          className="text-xl font-bold block text-center"
-          placeholder="প্রতিষ্ঠানের নাম"
-        />
+    <>
+      {/* Floating Toolbar */}
+      <FloatingToolbar
+        targetRef={activeRef}
+        isVisible={showToolbar && isEditing}
+        fontSize={settings.fontSize}
+        onFontSizeChange={(size) => updateSetting('fontSize', size)}
+        fontFamily={settings.fontFamily}
+        onFontFamilyChange={(font) => updateSetting('fontFamily', font)}
+        textAlign={settings.textAlign as 'left' | 'center' | 'right'}
+        onTextAlignChange={(align) => updateSetting('textAlign', align)}
+        showAlignment={true}
+      />
 
-        <div className="flex items-center justify-center gap-4 mt-2 text-sm flex-wrap">
-          {settings.showClassName && (
-            <InlineEditable
-              value={settings.className}
-              onChange={(v) => updateSetting('className', v)}
-              className="inline-block text-center"
-              placeholder="শ্রেণি"
-            />
+      <div
+        className={cn(
+          'bg-white shadow-lg mx-auto p-8 print:shadow-none print:p-0',
+          getPaperSizeClass()
+        )}
+        style={{ fontFamily: settings.fontFamily === 'Bangla' ? 'SolaimanLipi, sans-serif' : 'inherit' }}
+        id="paper-preview"
+      >
+        {/* Header */}
+        <div className="text-center mb-4 border-b pb-4">
+          <InlineEditable
+            value={settings.institutionName}
+            onChange={(v) => updateSetting('institutionName', v)}
+            className="text-xl font-bold block text-center"
+            placeholder="প্রতিষ্ঠানের নাম"
+          />
+
+          <div className="flex items-center justify-center gap-4 mt-2 text-sm flex-wrap">
+            {settings.showClassName && (
+              <InlineEditable
+                value={settings.className}
+                onChange={(v) => updateSetting('className', v)}
+                className="inline-block text-center"
+                placeholder="শ্রেণি"
+              />
+            )}
+            {settings.showSetCode && (
+              <span className="flex items-center gap-1">
+                সেট:{' '}
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={settings.setCode}
+                    onChange={(e) => updateSetting('setCode', e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={cn(
+                      'border px-2 py-0.5 font-bold w-10 text-center bg-transparent',
+                      editableBaseClass,
+                      editableHoverClass,
+                      editableFocusClass
+                    )}
+                  />
+                ) : (
+                  <span className="border px-2 py-0.5 font-bold">{settings.setCode}</span>
+                )}
+              </span>
+            )}
+          </div>
+
+          {settings.showSubjectName && (
+            <div className="mt-1">
+              <InlineEditable
+                value={settings.subjectName}
+                onChange={(v) => updateSetting('subjectName', v)}
+                className="font-medium inline-block text-center"
+                placeholder="বিষয়ের নাম"
+              />
+            </div>
           )}
-          {settings.showSetCode && (
+          {settings.showChapterName && (
+            <div className="text-sm text-muted-foreground mt-0.5">
+              <InlineEditable
+                value={settings.chapterName}
+                onChange={(v) => updateSetting('chapterName', v)}
+                className="inline-block text-center"
+                placeholder="অধ্যায়ের নাম"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Time & Marks */}
+        <div className="flex justify-between text-sm mb-4">
+          {settings.showTime && (
             <span className="flex items-center gap-1">
-              সেট:{' '}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={settings.setCode}
-                  onChange={(e) => updateSetting('setCode', e.target.value)}
-                  className={cn(
-                    'border px-2 py-0.5 font-bold w-10 text-center bg-transparent',
-                    editableBaseClass,
-                    editableHoverClass,
-                    editableFocusClass
-                  )}
-                />
-              ) : (
-                <span className="border px-2 py-0.5 font-bold">{settings.setCode}</span>
-              )}
+              সময়—{' '}
+              <InlineEditable
+                value={settings.time}
+                onChange={(v) => updateSetting('time', v)}
+                className="inline-block"
+                placeholder="সময়"
+              />
+            </span>
+          )}
+          {settings.showTotalMarks && (
+            <span className="flex items-center gap-1">
+              পূর্ণমান—{' '}
+              <InlineEditableNumber
+                value={settings.totalMarks}
+                onChange={(v) => updateSetting('totalMarks', v)}
+              />
             </span>
           )}
         </div>
 
-        {settings.showSubjectName && (
-          <div className="mt-1">
+        {/* Instructions */}
+        {settings.showInstructions && (
+          <div className="text-xs text-muted-foreground mb-4 p-2 bg-muted/30 rounded">
             <InlineEditable
-              value={settings.subjectName}
-              onChange={(v) => updateSetting('subjectName', v)}
-              className="font-medium inline-block text-center"
-              placeholder="বিষয়ের নাম"
+              value={settings.instructions}
+              onChange={(v) => updateSetting('instructions', v)}
+              as="textarea"
+              className="w-full"
+              placeholder="নির্দেশনা লিখুন..."
             />
           </div>
         )}
-        {settings.showChapterName && (
-          <div className="text-sm text-muted-foreground mt-0.5">
-            <InlineEditable
-              value={settings.chapterName}
-              onChange={(v) => updateSetting('chapterName', v)}
-              className="inline-block text-center"
-              placeholder="অধ্যায়ের নাম"
-            />
-          </div>
-        )}
-      </div>
 
-      {/* Time & Marks */}
-      <div className="flex justify-between text-sm mb-4">
-        {settings.showTime && (
-          <span className="flex items-center gap-1">
-            সময়—{' '}
-            <InlineEditable
-              value={settings.time}
-              onChange={(v) => updateSetting('time', v)}
-              className="inline-block"
-              placeholder="সময়"
-            />
-          </span>
-        )}
-        {settings.showTotalMarks && (
-          <span className="flex items-center gap-1">
-            পূর্ণমান—{' '}
-            <InlineEditableNumber
-              value={settings.totalMarks}
-              onChange={(v) => updateSetting('totalMarks', v)}
-            />
-          </span>
-        )}
-      </div>
+        <p className="text-center text-sm mb-4 font-medium">
+          প্রশ্নপত্রে কোনো প-্রকার দাগ/চিহ্ন দেয়া যাবেনা।
+        </p>
 
-      {/* Instructions */}
-      {settings.showInstructions && (
-        <div className="text-xs text-muted-foreground mb-4 p-2 bg-muted/30 rounded">
-          <InlineEditable
-            value={settings.instructions}
-            onChange={(v) => updateSetting('instructions', v)}
-            as="textarea"
-            className="w-full"
-            placeholder="নির্দেশনা লিখুন..."
-          />
+        {/* Questions */}
+        <div
+          className={cn(
+            'gap-8',
+            settings.columns === 2 ? 'grid grid-cols-2' : '',
+            settings.columns === 3 ? 'grid grid-cols-3' : '',
+            settings.showColumnDivider && settings.columns > 1 && 'divide-x'
+          )}
+        >
+          {columnedQuestions.map((columnQuestions, colIdx) => (
+            <div key={colIdx} className={cn(colIdx > 0 && 'pl-4', getTextAlignClass())}>
+              {columnQuestions.map((question) => (
+                <EditableQuestion
+                  key={question.id}
+                  question={question}
+                  settings={settings}
+                  onUpdate={onUpdateQuestion}
+                  onDelete={onDeleteQuestion}
+                  onDuplicate={onDuplicateQuestion}
+                  isEditing={isEditing}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                />
+              ))}
+            </div>
+          ))}
         </div>
-      )}
 
-      <p className="text-center text-sm mb-4 font-medium">
-        প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
-      </p>
-
-      {/* Questions */}
-      <div
-        className={cn(
-          'gap-8',
-          settings.columns === 2 ? 'grid grid-cols-2' : '',
-          settings.columns === 3 ? 'grid grid-cols-3' : '',
-          settings.showColumnDivider && settings.columns > 1 && 'divide-x'
-        )}
-      >
-        {columnedQuestions.map((columnQuestions, colIdx) => (
-          <div key={colIdx} className={cn(colIdx > 0 && 'pl-4', getTextAlignClass())}>
-            {columnQuestions.map((question) => (
-              <EditableQuestion
-                key={question.id}
-                question={question}
-                settings={settings}
-                onUpdate={onUpdateQuestion}
-                onDelete={onDeleteQuestion}
-                onDuplicate={onDuplicateQuestion}
-                isEditing={isEditing}
-              />
-            ))}
+        {/* Watermark */}
+        {settings.showWatermark && settings.watermark && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
+            {settings.watermark}
           </div>
-        ))}
+        )}
       </div>
-
-      {/* Watermark */}
-      {settings.showWatermark && settings.watermark && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
-          {settings.watermark}
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
