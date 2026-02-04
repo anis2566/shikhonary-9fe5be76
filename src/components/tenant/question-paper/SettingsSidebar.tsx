@@ -407,9 +407,9 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   );
 
   return (
-    <div className="w-80 border-l bg-muted/10 flex flex-col overflow-hidden">
+    <div className="w-80 border-l bg-muted/10 flex flex-col h-full overflow-hidden">
       {/* Header with Export Button */}
-      <div className="p-4 border-b bg-background space-y-3">
+      <div className="p-4 border-b bg-background space-y-3 shrink-0">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-primary/10">
             <FileText className="w-5 h-5 text-primary" />
@@ -430,7 +430,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 h-0">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-3">
           <Accordion
             type="multiple"
