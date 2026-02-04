@@ -69,15 +69,19 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     onSettingsChange({ ...settings, [key]: value });
   };
 
+  // Ensure margins has default values
+  const margins = settings.margins ?? { top: 20, bottom: 20, left: 15, right: 15 };
+
   const updateMargin = (side: 'top' | 'bottom' | 'left' | 'right', value: number) => {
     onSettingsChange({
       ...settings,
-      margins: { ...settings.margins, [side]: value },
+      margins: { ...margins, [side]: value },
     });
   };
 
   const adjustMargin = (side: 'top' | 'bottom' | 'left' | 'right', delta: number) => {
-    const newValue = Math.max(5, Math.min(50, settings.margins[side] + delta));
+    const currentValue = margins[side] ?? 20;
+    const newValue = Math.max(5, Math.min(50, currentValue + delta));
     updateMargin(side, newValue);
   };
 
@@ -97,10 +101,10 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           <div 
             className="absolute bg-primary/10 border border-dashed border-primary/40 rounded-sm"
             style={{
-              top: settings.margins.top * scale,
-              left: settings.margins.left * scale,
-              right: settings.margins.right * scale,
-              bottom: settings.margins.bottom * scale,
+              top: margins.top * scale,
+              left: margins.left * scale,
+              right: margins.right * scale,
+              bottom: margins.bottom * scale,
             }}
           >
             {/* Content lines */}
@@ -112,16 +116,16 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           </div>
           {/* Margin indicators */}
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground">
-            {settings.margins.top}
+            {margins.top}
           </div>
           <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground">
-            {settings.margins.bottom}
+            {margins.bottom}
           </div>
           <div className="absolute top-1/2 -left-4 -translate-y-1/2 text-[8px] text-muted-foreground">
-            {settings.margins.left}
+            {margins.left}
           </div>
           <div className="absolute top-1/2 -right-4 -translate-y-1/2 text-[8px] text-muted-foreground">
-            {settings.margins.right}
+            {margins.right}
           </div>
         </div>
       </div>
@@ -153,7 +157,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           <Minus className="h-3 w-3" />
         </Button>
         <span className="w-8 text-center text-sm font-medium">
-          {settings.margins[side]}
+          {margins[side]}
         </span>
         <Button
           variant="ghost"
@@ -403,7 +407,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   );
 
   return (
-    <div className="w-80 border-l bg-muted/10 flex flex-col h-full">
+    <div className="w-80 border-l bg-muted/10 flex flex-col overflow-hidden">
       {/* Header with Export Button */}
       <div className="p-4 border-b bg-background space-y-3">
         <div className="flex items-center gap-2">
@@ -426,12 +430,13 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <Accordion
-          type="multiple"
-          defaultValue={['page-setup', 'header-visibility']}
-          className="p-3 space-y-1"
-        >
+      <ScrollArea className="flex-1 h-0">
+        <div className="p-3">
+          <Accordion
+            type="multiple"
+            defaultValue={['page-setup', 'header-visibility']}
+            className="space-y-1"
+          >
           {/* Page Setup */}
           <AccordionItem value="page-setup" className="border rounded-xl bg-background px-3">
             <AccordionTrigger className="hover:no-underline py-3">
@@ -753,7 +758,8 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               )}
             </AccordionContent>
           </AccordionItem>
-        </Accordion>
+          </Accordion>
+        </div>
       </ScrollArea>
     </div>
   );
