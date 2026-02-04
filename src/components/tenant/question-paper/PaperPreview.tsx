@@ -140,17 +140,28 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const getPaperSizeClass = () => {
     const isLandscape = settings.paperOrientation === 'landscape';
     
-    // Use only width classes - avoid min-height to allow natural column flow
+    // For multi-column layouts, we need height to force column flow
+    // For single column, only width is needed
+    const needsHeight = settings.columns > 1;
+    
     switch (settings.paperSize) {
       case 'Letter':
-        return isLandscape ? 'w-[279mm]' : 'w-[216mm]';
+        return isLandscape 
+          ? `w-[279mm]${needsHeight ? ' min-h-[216mm]' : ''}` 
+          : `w-[216mm]${needsHeight ? ' min-h-[279mm]' : ''}`;
       case 'Legal':
-        return isLandscape ? 'w-[356mm]' : 'w-[216mm]';
+        return isLandscape 
+          ? `w-[356mm]${needsHeight ? ' min-h-[216mm]' : ''}` 
+          : `w-[216mm]${needsHeight ? ' min-h-[356mm]' : ''}`;
       case 'A5':
-        return isLandscape ? 'w-[210mm]' : 'w-[148mm]';
+        return isLandscape 
+          ? `w-[210mm]${needsHeight ? ' min-h-[148mm]' : ''}` 
+          : `w-[148mm]${needsHeight ? ' min-h-[210mm]' : ''}`;
       case 'A4':
       default:
-        return isLandscape ? 'w-[297mm]' : 'w-[210mm]';
+        return isLandscape 
+          ? `w-[297mm]${needsHeight ? ' min-h-[210mm]' : ''}` 
+          : `w-[210mm]${needsHeight ? ' min-h-[297mm]' : ''}`;
     }
   };
 
