@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, RotateCcw, Edit, Eye, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,16 @@ import {
   defaultPaperSettings,
 } from '@/lib/question-paper-mock-data';
 
+// Fisher-Yates shuffle algorithm
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const QuestionPaperBuilder: React.FC = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<PaperQuestion[]>(mockPaperQuestions);
@@ -23,6 +33,66 @@ const QuestionPaperBuilder: React.FC = () => {
   const [isEditing, setIsEditing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [zoom, setZoom] = useState<number | 'auto'>('auto');
+  const [shuffleSeed, setShuffleSeed] = useState(0);
+
+  // Process questions based on shuffle settings
+  const processedQuestions = useMemo(() => {
+    let processed = [...questions];
+    
+    // Shuffle questions if enabled
+    if (settings.shuffleQuestions) {
+      // Use seed to maintain consistent shuffle until re-triggered
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
+      // Shuffle with seed
+      for (let i = processed.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(shuffleSeed + i) * (i + 1));
+        [processed[i], processed[j]] = [processed[j], processed[i]];
+      }
+      
+      // Renumber questions after shuffle
+      processed = processed.map((q, idx) => ({ ...q, number: idx + 1 }));
+    }
+    
+    // Shuffle options within each question if enabled
+    if (settings.shuffleOptions) {
+      const optionLabels = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ', 'ছ', 'জ'];
+      processed = processed.map((q, qIdx) => {
+        const shuffledOptions = [...q.options];
+        for (let i = shuffledOptions.length - 1; i > 0; i--) {
+          const seed = shuffleSeed + qIdx * 100 + i;
+          const x = Math.sin(seed) * 10000;
+          const j = Math.floor((x - Math.floor(x)) * (i + 1));
+          [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+        }
+        // Re-label options
+        return {
+          ...q,
+          options: shuffledOptions.map((opt, idx) => ({
+            ...opt,
+            label: optionLabels[idx] || String.fromCharCode(65 + idx),
+          })),
+        };
+      });
+    }
+    
+    return processed;
+  }, [questions, settings.shuffleQuestions, settings.shuffleOptions, shuffleSeed]);
+
+  // Re-shuffle when settings are toggled
+  const handleSettingsChange = useCallback((newSettings: PaperSettings) => {
+    // If shuffle settings changed, generate new seed
+    if (
+      newSettings.shuffleQuestions !== settings.shuffleQuestions ||
+      newSettings.shuffleOptions !== settings.shuffleOptions
+    ) {
+      setShuffleSeed(Date.now());
+    }
+    setSettings(newSettings);
+  }, [settings.shuffleQuestions, settings.shuffleOptions]);
 
   const handleUpdateQuestion = useCallback((updatedQuestion: PaperQuestion) => {
     setQuestions((prev) =>
@@ -207,12 +277,12 @@ const QuestionPaperBuilder: React.FC = () => {
           {/* Paper Preview */}
           <div className="flex-1 bg-muted/50 overflow-auto">
             <PaperPreview
-              questions={questions}
+              questions={processedQuestions}
               settings={settings}
               onUpdateQuestion={handleUpdateQuestion}
               onDeleteQuestion={handleDeleteQuestion}
               onDuplicateQuestion={handleDuplicateQuestion}
-              onSettingsChange={setSettings}
+              onSettingsChange={handleSettingsChange}
               isEditing={isEditing}
               zoom={zoom}
             />
@@ -222,7 +292,7 @@ const QuestionPaperBuilder: React.FC = () => {
         {/* Settings Sidebar */}
         <SettingsSidebar
           settings={settings}
-          onSettingsChange={setSettings}
+          onSettingsChange={handleSettingsChange}
           onExportPdf={handleExportPdf}
           isExporting={isExporting}
         />
