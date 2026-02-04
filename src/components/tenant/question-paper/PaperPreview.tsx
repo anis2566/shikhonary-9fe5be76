@@ -51,9 +51,10 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const [activeContext, setActiveContext] = useState<ActiveElementContext | null>(null);
   const [autoScale, setAutoScale] = useState(1);
   const [isToolbarInteracting, setIsToolbarInteracting] = useState(false);
+  const [pages, setPages] = useState<PaperQuestion[][]>([[]]);
   const activeRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const paperRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // DnD sensors
@@ -105,6 +106,62 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       : size;
   };
 
+  // Convert mm to px (approximately 3.78 px per mm at 96 DPI)
+  const mmToPx = (mm: number) => mm * 3.78;
+
+  // Calculate available content height per page (excluding header on subsequent pages)
+  const getPageContentHeight = (isFirstPage: boolean) => {
+    const paper = getPaperDimensions();
+    const margins = settings.margins;
+    const totalHeight = mmToPx(paper.height);
+    const marginHeight = mmToPx(margins.top + margins.bottom);
+    
+    // Header takes approximately 120px on first page
+    const headerHeight = isFirstPage ? 120 : 0;
+    
+    return totalHeight - marginHeight - headerHeight - 32; // 32px for padding
+  };
+
+  // Paginate questions based on estimated heights
+  useEffect(() => {
+    // Simple pagination: estimate each question takes about 60-80px depending on content
+    const estimateQuestionHeight = (q: PaperQuestion) => {
+      const baseHeight = 50;
+      const optionHeight = 20 * (q.options?.length || 4);
+      const statementHeight = q.statements ? q.statements.length * 18 : 0;
+      const contextHeight = q.context ? 30 : 0;
+      
+      // Multi-column reduces effective height per question
+      const columnFactor = settings.columns > 1 ? 0.6 : 1;
+      
+      return (baseHeight + optionHeight + statementHeight + contextHeight) * columnFactor;
+    };
+
+    const firstPageHeight = getPageContentHeight(true);
+    const subsequentPageHeight = getPageContentHeight(false);
+    
+    const newPages: PaperQuestion[][] = [[]];
+    let currentPageIndex = 0;
+    let currentHeight = 0;
+    
+    questions.forEach((question) => {
+      const questionHeight = estimateQuestionHeight(question);
+      const maxHeight = currentPageIndex === 0 ? firstPageHeight : subsequentPageHeight;
+      
+      if (currentHeight + questionHeight > maxHeight && newPages[currentPageIndex].length > 0) {
+        // Start a new page
+        currentPageIndex++;
+        newPages.push([]);
+        currentHeight = 0;
+      }
+      
+      newPages[currentPageIndex].push(question);
+      currentHeight += questionHeight;
+    });
+    
+    setPages(newPages);
+  }, [questions, settings.paperSize, settings.paperOrientation, settings.margins, settings.columns]);
+
   // Calculate auto-scale to fit paper in container
   useEffect(() => {
     if (zoom !== 'auto') return;
@@ -114,16 +171,13 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       
       const container = containerRef.current;
       const containerWidth = container.clientWidth - 48;
-      const containerHeight = container.clientHeight - 48;
       
       const paper = getPaperDimensions();
       const paperWidthPx = paper.width * 3.78;
-      const paperHeightPx = paper.height * 3.78;
       
       const scaleX = containerWidth / paperWidthPx;
-      const scaleY = containerHeight / paperHeightPx;
       
-      const newScale = Math.min(scaleX, scaleY, 1);
+      const newScale = Math.min(scaleX, 1);
       setAutoScale(Math.max(0.25, newScale));
     };
 
@@ -143,7 +197,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     
     return {
       width: `${paper.width}mm`,
-      minHeight: `${paper.height}mm`,
+      height: `${paper.height}mm`,
       fontFamily: 'SolaimanLipi, sans-serif',
       lineHeight: settings.lineHeight || 1.1,
     };
@@ -253,18 +307,6 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     }
   }, [activeContext, questions, onUpdateQuestion, settings]);
 
-  // Split questions into columns
-  const getColumnedQuestions = () => {
-    if (settings.columns === 1) {
-      return [questions];
-    }
-    
-    const midpoint = Math.ceil(questions.length / 2);
-    return [questions.slice(0, midpoint), questions.slice(midpoint)];
-  };
-
-  const columnedQuestions = getColumnedQuestions();
-
   // Inline editable text component for header
   const HeaderEditable: React.FC<{
     value: string;
@@ -329,6 +371,187 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     onSettingsChange({ ...settings, [key]: value });
   };
 
+  // Render header (only on first page)
+  const renderHeader = () => (
+    <>
+      {/* Header */}
+      <div className="text-center border-b pb-1">
+        <HeaderEditable
+          value={settings.institutionName}
+          onChange={(v) => updateSetting('institutionName', v)}
+          field="institutionName"
+          className="font-bold block"
+          placeholder="প্রতিষ্ঠানের নাম"
+        />
+
+        {settings.showClassName && (
+          <HeaderEditable
+            value={settings.className}
+            onChange={(v) => updateSetting('className', v)}
+            field="className"
+            className="block text-sm"
+            placeholder="শ্রেণি"
+          />
+        )}
+
+        {settings.showSetCode && (
+          <span className="flex items-center justify-center gap-1 text-sm">
+            সেট:{' '}
+            {isEditing ? (
+              <input
+                type="text"
+                value={settings.setCode}
+                onChange={(e) => updateSetting('setCode', e.target.value)}
+                onFocus={(e) => handleHeaderFocus(e, 'setCode')}
+                onBlur={handleBlur}
+                className={cn(
+                  'border px-1.5 py-0 font-bold w-8 text-center bg-transparent',
+                  editableBaseClass,
+                  editableHoverClass,
+                  editableFocusClass
+                )}
+                style={{
+                  fontSize: getHeaderStyle('setCode').fontSize,
+                  fontFamily: getHeaderStyle('setCode').fontFamily,
+                }}
+              />
+            ) : (
+              <span 
+                className="border px-1.5 font-bold"
+                style={{
+                  fontSize: getHeaderStyle('setCode').fontSize,
+                  fontFamily: getHeaderStyle('setCode').fontFamily,
+                }}
+              >
+                {settings.setCode}
+              </span>
+            )}
+          </span>
+        )}
+
+        {settings.showSubjectName && (
+          <HeaderEditable
+            value={settings.subjectName}
+            onChange={(v) => updateSetting('subjectName', v)}
+            field="subjectName"
+            className="font-medium block text-sm"
+            placeholder="বিষয়ের নাম"
+          />
+        )}
+        
+        {settings.showChapterName && (
+          <HeaderEditable
+            value={settings.chapterName}
+            onChange={(v) => updateSetting('chapterName', v)}
+            field="chapterName"
+            className="block text-sm text-muted-foreground"
+            placeholder="অধ্যায়ের নাম"
+          />
+        )}
+      </div>
+
+      {/* Time & Marks - Styled row */}
+      {(settings.showTime || settings.showTotalMarks) && (
+        <div className="flex justify-between items-center text-sm py-1 border-b">
+          {settings.showTime ? (
+            <span 
+              className="flex items-center"
+              style={{
+                fontSize: getHeaderStyle('time').fontSize,
+                fontFamily: getHeaderStyle('time').fontFamily,
+              }}
+            >
+              সময়:{' '}
+              <HeaderEditable
+                value={settings.time}
+                onChange={(v) => updateSetting('time', v)}
+                field="time"
+                className="inline-block font-medium"
+                placeholder="সময়"
+              />
+            </span>
+          ) : <span />}
+          {settings.showTotalMarks ? (
+            <span 
+              className="flex items-center"
+              style={{
+                fontSize: getHeaderStyle('totalMarks').fontSize,
+                fontFamily: getHeaderStyle('totalMarks').fontFamily,
+              }}
+            >
+              পূর্ণমান:{' '}
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={settings.totalMarks}
+                  onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
+                  onFocus={(e) => handleHeaderFocus(e, 'totalMarks')}
+                  onBlur={handleBlur}
+                  className={cn(
+                    'bg-transparent border-0 w-10 font-medium',
+                    editableBaseClass,
+                    editableHoverClass,
+                    editableFocusClass
+                  )}
+                />
+              ) : (
+                <span className="font-medium">{settings.totalMarks}</span>
+              )}
+            </span>
+          ) : <span />}
+        </div>
+      )}
+
+      {/* Instructions */}
+      {settings.showInstructions && (
+        <div className="text-muted-foreground py-1 text-sm">
+          <HeaderEditable
+            value={settings.instructions}
+            onChange={(v) => updateSetting('instructions', v)}
+            field="instructions"
+            as="textarea"
+            className="w-full"
+            placeholder="নির্দেশনা লিখুন..."
+          />
+        </div>
+      )}
+
+      {settings.showNoMarkingNote && (
+        <p className="text-center text-sm py-1 font-medium border-t">
+          প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
+        </p>
+      )}
+    </>
+  );
+
+  // Render questions for a page
+  const renderQuestions = (pageQuestions: PaperQuestion[]) => (
+    <div
+      style={{
+        columnCount: settings.columns,
+        columnGap: '1.5rem',
+        columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
+        flex: 1,
+      }}
+    >
+      {pageQuestions.map((question) => (
+        <div key={question.id} style={{ breakInside: 'avoid' }}>
+          <EditableQuestion
+            question={question}
+            settings={settings}
+            onUpdate={onUpdateQuestion}
+            onDelete={onDeleteQuestion}
+            onDuplicate={onDuplicateQuestion}
+            isEditing={isEditing}
+            isDraggable={isEditing && !!onReorderQuestions && settings.columns === 1}
+            onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+            onBlur={handleBlur}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div 
       ref={containerRef}
@@ -346,168 +569,9 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       />
 
       <div 
-        className="flex justify-center"
+        className="flex flex-col items-center gap-8"
         style={{ minHeight: zoom === 'auto' ? '100%' : 'auto' }}
       >
-        <div
-          className="origin-top transition-transform duration-200 shrink-0"
-          style={{ transform: `scale(${effectiveScale})` }}
-        >
-        <div
-          ref={paperRef}
-          className="bg-white shadow-lg p-8 print:shadow-none print:p-0"
-          style={getPaperStyle()}
-          id="paper-preview"
-        >
-        {/* Header */}
-        <div className="text-center border-b pb-1">
-          <HeaderEditable
-            value={settings.institutionName}
-            onChange={(v) => updateSetting('institutionName', v)}
-            field="institutionName"
-            className="font-bold block"
-            placeholder="প্রতিষ্ঠানের নাম"
-          />
-
-          {settings.showClassName && (
-            <HeaderEditable
-              value={settings.className}
-              onChange={(v) => updateSetting('className', v)}
-              field="className"
-              className="block text-sm"
-              placeholder="শ্রেণি"
-            />
-          )}
-
-          {settings.showSetCode && (
-            <span className="flex items-center justify-center gap-1 text-sm">
-              সেট:{' '}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={settings.setCode}
-                  onChange={(e) => updateSetting('setCode', e.target.value)}
-                  onFocus={(e) => handleHeaderFocus(e, 'setCode')}
-                  onBlur={handleBlur}
-                  className={cn(
-                    'border px-1.5 py-0 font-bold w-8 text-center bg-transparent',
-                    editableBaseClass,
-                    editableHoverClass,
-                    editableFocusClass
-                  )}
-                  style={{
-                    fontSize: getHeaderStyle('setCode').fontSize,
-                    fontFamily: getHeaderStyle('setCode').fontFamily,
-                  }}
-                />
-              ) : (
-                <span 
-                  className="border px-1.5 font-bold"
-                  style={{
-                    fontSize: getHeaderStyle('setCode').fontSize,
-                    fontFamily: getHeaderStyle('setCode').fontFamily,
-                  }}
-                >
-                  {settings.setCode}
-                </span>
-              )}
-            </span>
-          )}
-
-          {settings.showSubjectName && (
-            <HeaderEditable
-              value={settings.subjectName}
-              onChange={(v) => updateSetting('subjectName', v)}
-              field="subjectName"
-              className="font-medium block text-sm"
-              placeholder="বিষয়ের নাম"
-            />
-          )}
-          
-          {settings.showChapterName && (
-            <HeaderEditable
-              value={settings.chapterName}
-              onChange={(v) => updateSetting('chapterName', v)}
-              field="chapterName"
-              className="block text-sm text-muted-foreground"
-              placeholder="অধ্যায়ের নাম"
-            />
-          )}
-        </div>
-
-        {/* Time & Marks - Styled row */}
-        {(settings.showTime || settings.showTotalMarks) && (
-          <div className="flex justify-between items-center text-sm py-1 border-b">
-            {settings.showTime ? (
-              <span 
-                className="flex items-center"
-                style={{
-                  fontSize: getHeaderStyle('time').fontSize,
-                  fontFamily: getHeaderStyle('time').fontFamily,
-                }}
-              >
-                সময়:{' '}
-                <HeaderEditable
-                  value={settings.time}
-                  onChange={(v) => updateSetting('time', v)}
-                  field="time"
-                  className="inline-block font-medium"
-                  placeholder="সময়"
-                />
-              </span>
-            ) : <span />}
-            {settings.showTotalMarks ? (
-              <span 
-                className="flex items-center"
-                style={{
-                  fontSize: getHeaderStyle('totalMarks').fontSize,
-                  fontFamily: getHeaderStyle('totalMarks').fontFamily,
-                }}
-              >
-                পূর্ণমান:{' '}
-                {isEditing ? (
-                  <input
-                    type="number"
-                    value={settings.totalMarks}
-                    onChange={(e) => updateSetting('totalMarks', parseInt(e.target.value) || 0)}
-                    onFocus={(e) => handleHeaderFocus(e, 'totalMarks')}
-                    onBlur={handleBlur}
-                    className={cn(
-                      'bg-transparent border-0 w-10 font-medium',
-                      editableBaseClass,
-                      editableHoverClass,
-                      editableFocusClass
-                    )}
-                  />
-                ) : (
-                  <span className="font-medium">{settings.totalMarks}</span>
-                )}
-              </span>
-            ) : <span />}
-          </div>
-        )}
-
-        {/* Instructions */}
-        {settings.showInstructions && (
-          <div className="text-muted-foreground py-1 text-sm">
-            <HeaderEditable
-              value={settings.instructions}
-              onChange={(v) => updateSetting('instructions', v)}
-              field="instructions"
-              as="textarea"
-              className="w-full"
-              placeholder="নির্দেশনা লিখুন..."
-            />
-          </div>
-        )}
-
-        {settings.showNoMarkingNote && (
-          <p className="text-center text-sm py-1 font-medium border-t">
-            প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
-          </p>
-        )}
-
-        {/* Questions with DnD */}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -517,40 +581,42 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
             items={questions.map((q) => q.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div
-              style={{
-                columnCount: settings.columns,
-                columnGap: '1.5rem',
-                columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
-              }}
-            >
-              {questions.map((question) => (
-                <div key={question.id} style={{ breakInside: 'avoid' }}>
-                  <EditableQuestion
-                    question={question}
-                    settings={settings}
-                    onUpdate={onUpdateQuestion}
-                    onDelete={onDeleteQuestion}
-                    onDuplicate={onDuplicateQuestion}
-                    isEditing={isEditing}
-                    isDraggable={isEditing && !!onReorderQuestions && settings.columns === 1}
-                    onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
-                    onBlur={handleBlur}
-                  />
+            {pages.map((pageQuestions, pageIndex) => (
+              <div
+                key={pageIndex}
+                className="origin-top transition-transform duration-200 shrink-0"
+                style={{ transform: `scale(${effectiveScale})` }}
+              >
+                <div
+                  className="bg-white shadow-lg print:shadow-none relative overflow-hidden flex flex-col"
+                  style={{
+                    ...getPaperStyle(),
+                    padding: `${settings.margins.top}mm ${settings.margins.right}mm ${settings.margins.bottom}mm ${settings.margins.left}mm`,
+                  }}
+                  id={`paper-preview-page-${pageIndex + 1}`}
+                >
+                  {/* Page number indicator */}
+                  <div className="absolute top-2 right-3 text-xs text-muted-foreground/50">
+                    পৃষ্ঠা {pageIndex + 1}/{pages.length}
+                  </div>
+
+                  {/* Header only on first page */}
+                  {pageIndex === 0 && renderHeader()}
+
+                  {/* Questions */}
+                  {renderQuestions(pageQuestions)}
+
+                  {/* Watermark */}
+                  {settings.showWatermark && settings.watermark && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
+                      {settings.watermark}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </SortableContext>
         </DndContext>
-
-        {/* Watermark */}
-        {settings.showWatermark && settings.watermark && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
-            {settings.watermark}
-          </div>
-        )}
-        </div>
-        </div>
       </div>
     </div>
   );
