@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, RotateCcw, Edit, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, RotateCcw, Edit, Eye, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Toggle } from '@/components/ui/toggle';
@@ -22,6 +22,7 @@ const QuestionPaperBuilder: React.FC = () => {
   const [settings, setSettings] = useState<PaperSettings>(defaultPaperSettings);
   const [isEditing, setIsEditing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [zoom, setZoom] = useState<number | 'auto'>('auto');
 
   const handleUpdateQuestion = useCallback((updatedQuestion: PaperQuestion) => {
     setQuestions((prev) =>
@@ -169,17 +170,53 @@ const QuestionPaperBuilder: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Paper Preview */}
-        <div className="flex-1 bg-muted/50 p-4">
-          <PaperPreview
-            questions={questions}
-            settings={settings}
-            onUpdateQuestion={handleUpdateQuestion}
-            onDeleteQuestion={handleDeleteQuestion}
-            onDuplicateQuestion={handleDuplicateQuestion}
-            onSettingsChange={setSettings}
-            isEditing={isEditing}
-          />
+        {/* Paper Preview Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Zoom Controls */}
+          <div className="flex items-center justify-center gap-2 p-2 bg-background border-b">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setZoom(prev => typeof prev === 'number' ? Math.max(0.25, prev - 0.1) : 0.5)}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-medium w-16 text-center">
+              {zoom === 'auto' ? 'Auto' : `${Math.round(zoom * 100)}%`}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setZoom(prev => typeof prev === 'number' ? Math.min(2, prev + 0.1) : 0.7)}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1"
+              onClick={() => setZoom('auto')}
+            >
+              <Maximize2 className="w-3 h-3" />
+              Fit
+            </Button>
+          </div>
+          
+          {/* Paper Preview */}
+          <div className="flex-1 bg-muted/50 overflow-auto">
+            <PaperPreview
+              questions={questions}
+              settings={settings}
+              onUpdateQuestion={handleUpdateQuestion}
+              onDeleteQuestion={handleDeleteQuestion}
+              onDuplicateQuestion={handleDuplicateQuestion}
+              onSettingsChange={setSettings}
+              isEditing={isEditing}
+              zoom={zoom}
+            />
+          </div>
         </div>
 
         {/* Settings Sidebar */}
