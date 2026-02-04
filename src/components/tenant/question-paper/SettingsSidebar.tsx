@@ -277,13 +277,45 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   একই প্রশ্ন একাধিকবার নির্বাচিত হলে সহজে শনাক্ত ও পরিবর্তন করা যাবে।
                 </p>
               </div>
+              <Separator className="my-2" />
+              
+              {/* Shuffle Questions */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">প্রশ্ন শাফল করুন</Label>
+                  <Switch
+                    checked={settings.shuffleQuestions}
+                    onCheckedChange={(v) => updateSetting('shuffleQuestions', v)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  প্রশ্নের ক্রম এলোমেলো করে দেবে।
+                </p>
+              </div>
+
+              {/* Shuffle Options */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">অপশন শাফল করুন</Label>
+                  <Switch
+                    checked={settings.shuffleOptions}
+                    onCheckedChange={(v) => updateSetting('shuffleOptions', v)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  প্রতিটি প্রশ্নের অপশনগুলো এলোমেলো করে দেবে।
+                </p>
+              </div>
+
+              <Separator className="my-2" />
+              
               <div className="flex items-center justify-between">
                 <Label className="text-sm">শীট</Label>
                 <Switch checked={false} />
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm">শাফল (সেট কোড তৈরী)</Label>
+                  <Label className="text-sm">সেট কোড তৈরী</Label>
                   <Shuffle className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <Switch

@@ -66,6 +66,8 @@ export interface PaperSettings {
   // Additional tools
   detectDuplicates: boolean;
   enableShuffle: boolean;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
   showAddress: boolean;
   address: string;
   showWatermark: boolean;

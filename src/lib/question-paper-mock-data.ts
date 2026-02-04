@@ -44,6 +44,8 @@ export const defaultPaperSettings: PaperSettings = {
   
   detectDuplicates: false,
   enableShuffle: false,
+  shuffleQuestions: false,
+  shuffleOptions: false,
   showAddress: false,
   address: '',
   showWatermark: false,
