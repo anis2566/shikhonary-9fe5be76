@@ -6,12 +6,6 @@ import {
   Type,
   Shuffle,
   MapPin,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Minus,
-  Plus,
   Circle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -191,32 +185,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               ডকুমেন্ট কাস্টমাইজেশন
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-3 space-y-4">
-              {/* Text Alignment */}
-              <div className="space-y-2">
-                <Label className="text-sm">টেক্সট এলাইনমেন্ট</Label>
-                <ToggleGroup
-                  type="single"
-                  value={settings.textAlign}
-                  onValueChange={(v) =>
-                    v && updateSetting('textAlign', v as PaperSettings['textAlign'])
-                  }
-                  className="justify-start"
-                >
-                  <ToggleGroupItem value="left" size="sm">
-                    <AlignLeft className="w-4 h-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="center" size="sm">
-                    <AlignCenter className="w-4 h-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="right" size="sm">
-                    <AlignRight className="w-4 h-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="justify" size="sm">
-                    <AlignJustify className="w-4 h-4" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
               {/* Paper Size */}
               <div className="space-y-2">
                 <Label className="text-sm">পেপার সাইজ</Label>
@@ -237,6 +205,28 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Paper Orientation */}
+              <div className="space-y-2">
+                <Label className="text-sm">অরিয়েন্টেশন</Label>
+                <ToggleGroup
+                  type="single"
+                  value={settings.paperOrientation}
+                  onValueChange={(v) =>
+                    v && updateSetting('paperOrientation', v as 'portrait' | 'landscape')
+                  }
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="portrait" size="sm" className="px-3 gap-2">
+                    <div className="w-4 h-6 border" />
+                    পোর্ট্রেট
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="landscape" size="sm" className="px-3 gap-2">
+                    <div className="w-6 h-4 border" />
+                    ল্যান্ডস্কেপ
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               {/* Option Style */}
@@ -264,58 +254,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                     ক
                   </ToggleGroupItem>
                 </ToggleGroup>
-              </div>
-
-              {/* Font Selection */}
-              <div className="space-y-2">
-                <Label className="text-sm">ফন্ট পরিবর্তন</Label>
-                <Select
-                  value={settings.fontFamily}
-                  onValueChange={(v) => updateSetting('fontFamily', v)}
-                >
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border shadow-md z-50">
-                    <SelectItem value="Bangla">বাংলা</SelectItem>
-                    <SelectItem value="SolaimanLipi">SolaimanLipi</SelectItem>
-                    <SelectItem value="Nikosh">Nikosh</SelectItem>
-                    <SelectItem value="Kalpurush">Kalpurush</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Font Size */}
-              <div className="space-y-2">
-                <Label className="text-sm">ফন্ট সাইজ</Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      updateSetting('fontSize', Math.max(10, settings.fontSize - 1))
-                    }
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    value={settings.fontSize}
-                    onChange={(e) =>
-                      updateSetting('fontSize', parseInt(e.target.value) || 14)
-                    }
-                    className="text-center w-16"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      updateSetting('fontSize', Math.min(24, settings.fontSize + 1))
-                    }
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
 
               {/* Columns */}

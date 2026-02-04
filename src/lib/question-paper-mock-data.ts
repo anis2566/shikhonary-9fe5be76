@@ -34,6 +34,7 @@ export const defaultPaperSettings: PaperSettings = {
   headerStyles: defaultHeaderStyles,
   
   paperSize: 'A4',
+  paperOrientation: 'portrait',
   optionStyle: 'parentheses',
   fontFamily: 'Bangla',
   fontSize: 14,
