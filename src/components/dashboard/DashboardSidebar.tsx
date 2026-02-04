@@ -15,6 +15,8 @@ import {
   FileText,
   HelpCircle,
   ListTree,
+  CreditCard,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
+
 interface NavItem {
   title: string;
   url: string;
@@ -37,9 +40,17 @@ interface NavGroup {
 const navItems: NavItem[] = [
   { title: 'Overview', url: '/admin', icon: LayoutDashboard },
   { title: 'Users', url: '/admin/users', icon: Users },
-  { title: 'Tenants', url: '/admin/tenants', icon: Building2 },
   { title: 'Sessions', url: '/admin/sessions', icon: Shield },
 ];
+
+const tenantsGroup: NavGroup = {
+  title: 'Tenants',
+  icon: Building2,
+  items: [
+    { title: 'All Tenants', url: '/admin/tenants', icon: Building2 },
+    { title: 'Subscription Plans', url: '/admin/subscription-plans', icon: CreditCard },
+  ],
+};
 
 const academicGroup: NavGroup = {
   title: 'Academic',
@@ -76,6 +87,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const [tenantsOpen, setTenantsOpen] = useState(true);
   const [academicOpen, setAcademicOpen] = useState(true);
   const [questionBankOpen, setQuestionBankOpen] = useState(true);
 
@@ -154,6 +166,10 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ collapsed, onToggle }) 
         {navItems.map(renderNavItem)}
         
         <div className="pt-2">
+          {renderNavGroup(tenantsGroup, tenantsOpen, setTenantsOpen)}
+        </div>
+        
+        <div className="pt-1">
           {renderNavGroup(academicGroup, academicOpen, setAcademicOpen)}
         </div>
         

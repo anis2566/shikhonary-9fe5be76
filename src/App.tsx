@@ -50,6 +50,11 @@ import McqForm from "./pages/admin/academic/McqForm";
 import McqDetails from "./pages/admin/academic/McqDetails";
 import CqList from "./pages/admin/academic/CqList";
 import CqForm from "./pages/admin/academic/CqForm";
+
+// Subscription Plans
+import SubscriptionPlanList from "./pages/admin/subscription/SubscriptionPlanList";
+import SubscriptionPlanDetails from "./pages/admin/subscription/SubscriptionPlanDetails";
+import SubscriptionPlanForm from "./pages/admin/subscription/SubscriptionPlanForm";
 import CqDetails from "./pages/admin/academic/CqDetails";
 
 // Tenant Dashboard
@@ -105,6 +110,12 @@ const App = () => (
               <Route path="tenants/create" element={<CreateTenant />} />
               <Route path="sessions" element={<Sessions />} />
               <Route path="settings" element={<Settings />} />
+              
+              {/* Subscription Plans */}
+              <Route path="subscription-plans" element={<SubscriptionPlanList />} />
+              <Route path="subscription-plans/create" element={<SubscriptionPlanForm />} />
+              <Route path="subscription-plans/:id" element={<SubscriptionPlanDetails />} />
+              <Route path="subscription-plans/:id/edit" element={<SubscriptionPlanForm />} />
               
               {/* Academic Management - Tree View */}
               <Route path="academic-tree" element={<AcademicTree />} />

@@ -354,6 +354,69 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          exam_limit: number
+          features: Json
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          monthly_price_bdt: number
+          monthly_price_usd: number
+          name: string
+          position: number
+          storage_limit: number
+          student_limit: number
+          teacher_limit: number
+          updated_at: string
+          yearly_price_bdt: number
+          yearly_price_usd: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          exam_limit?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          monthly_price_bdt?: number
+          monthly_price_usd?: number
+          name: string
+          position?: number
+          storage_limit?: number
+          student_limit?: number
+          teacher_limit?: number
+          updated_at?: string
+          yearly_price_bdt?: number
+          yearly_price_usd?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          exam_limit?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          monthly_price_bdt?: number
+          monthly_price_usd?: number
+          name?: string
+          position?: number
+          storage_limit?: number
+          student_limit?: number
+          teacher_limit?: number
+          updated_at?: string
+          yearly_price_bdt?: number
+          yearly_price_usd?: number
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           chapter_id: string
