@@ -1,12 +1,33 @@
+export interface ElementStyle {
+  fontSize?: number;
+  fontFamily?: string;
+  textAlign?: 'left' | 'center' | 'right';
+}
+
 export interface PaperQuestion {
   id: string;
   number: number;
   question: string;
-  options: { label: string; text: string }[];
+  questionStyle?: ElementStyle;
+  options: { label: string; text: string; style?: ElementStyle }[];
   correctAnswer?: string;
   context?: string;
+  contextStyle?: ElementStyle;
   statements?: string[];
+  statementStyles?: ElementStyle[];
   type: 'single' | 'multiple' | 'assertion' | 'statement';
+}
+
+export interface HeaderStyles {
+  institutionName?: ElementStyle;
+  className?: ElementStyle;
+  subjectName?: ElementStyle;
+  chapterName?: ElementStyle;
+  setCode?: ElementStyle;
+  examName?: ElementStyle;
+  time?: ElementStyle;
+  totalMarks?: ElementStyle;
+  instructions?: ElementStyle;
 }
 
 export interface PaperSettings {
@@ -29,7 +50,10 @@ export interface PaperSettings {
   subjectName: string;
   chapterName: string;
   
-  // Document customization
+  // Per-element styles for header
+  headerStyles: HeaderStyles;
+  
+  // Document customization (defaults)
   paperSize: 'A4' | 'Letter' | 'Legal' | 'A5';
   optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
   fontFamily: string;
@@ -51,4 +75,14 @@ export interface PaperMetadata {
   className: string;
   subjectName: string;
   chapterName: string;
+}
+
+// Active element context for toolbar
+export interface ActiveElementContext {
+  type: 'header' | 'question' | 'option' | 'statement' | 'context';
+  field?: keyof HeaderStyles;
+  questionId?: string;
+  optionIndex?: number;
+  statementIndex?: number;
+  currentStyle: ElementStyle;
 }
