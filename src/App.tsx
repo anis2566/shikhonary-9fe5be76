@@ -83,6 +83,7 @@ import ReportsPage from "./pages/tenant/ReportsPage";
 import QuestionBankPage from "./pages/tenant/QuestionBankPage";
 import TenantMcqDetailsPage from "./pages/tenant/McqDetailsPage";
 import TenantCqDetailsPage from "./pages/tenant/CqDetailsPage";
+import QuestionPaperBuilder from "./pages/tenant/QuestionPaperBuilder";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -196,6 +197,7 @@ const App = () => (
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<TenantSettings />} />
               <Route path="calendar" element={<CalendarPage />} />
+              <Route path="question-paper-builder" element={<QuestionPaperBuilder />} />
             </Route>
 
             {/* 404 */}

@@ -19,6 +19,7 @@ import {
   TrendingUp,
   BookOpen,
   FileSpreadsheet,
+  FileEdit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,7 @@ const navSections: NavSection[] = [
       { title: 'All Exams', url: '/tenant/exams', icon: ClipboardList },
       { title: 'Create Exam', url: '/tenant/exams/create', icon: FileText },
       { title: 'Question Bank', url: '/tenant/question-bank', icon: BookOpen },
+      { title: 'Paper Builder', url: '/tenant/question-paper-builder', icon: FileEdit },
       { title: 'Results', url: '/tenant/results', icon: TrendingUp },
     ],
   },
