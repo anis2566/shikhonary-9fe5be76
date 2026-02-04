@@ -354,6 +354,74 @@ export type Database = {
           },
         ]
       }
+      subscription_history: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_type: Database["public"]["Enums"]["subscription_event_type"]
+          id: string
+          metadata: Json
+          new_billing_cycle: string | null
+          new_period_end: string | null
+          new_status: string | null
+          new_tier: string | null
+          previous_billing_cycle: string | null
+          previous_period_end: string | null
+          previous_status: string | null
+          previous_tier: string | null
+          subscription_id: string
+          tenant_id: string
+          triggered_by: string | null
+          triggered_by_ip: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_type: Database["public"]["Enums"]["subscription_event_type"]
+          id?: string
+          metadata?: Json
+          new_billing_cycle?: string | null
+          new_period_end?: string | null
+          new_status?: string | null
+          new_tier?: string | null
+          previous_billing_cycle?: string | null
+          previous_period_end?: string | null
+          previous_status?: string | null
+          previous_tier?: string | null
+          subscription_id: string
+          tenant_id: string
+          triggered_by?: string | null
+          triggered_by_ip?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_type?: Database["public"]["Enums"]["subscription_event_type"]
+          id?: string
+          metadata?: Json
+          new_billing_cycle?: string | null
+          new_period_end?: string | null
+          new_status?: string | null
+          new_tier?: string | null
+          previous_billing_cycle?: string | null
+          previous_period_end?: string | null
+          previous_status?: string | null
+          previous_tier?: string | null
+          subscription_id?: string
+          tenant_id?: string
+          triggered_by?: string | null
+          triggered_by_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string
@@ -414,6 +482,66 @@ export type Database = {
           updated_at?: string
           yearly_price_bdt?: number
           yearly_price_usd?: number
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          cancel_at_period_end: boolean
+          cancel_reason: string | null
+          canceled_at: string | null
+          created_at: string
+          currency: string
+          current_period_end: string
+          current_period_start: string
+          external_id: string | null
+          id: string
+          payment_provider: string | null
+          price_per_month: number
+          price_per_year: number | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          tenant_id: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          cancel_at_period_end?: boolean
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end: string
+          current_period_start?: string
+          external_id?: string | null
+          id?: string
+          payment_provider?: string | null
+          price_per_month?: number
+          price_per_year?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tenant_id: string
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          cancel_at_period_end?: boolean
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string
+          current_period_start?: string
+          external_id?: string | null
+          id?: string
+          payment_provider?: string | null
+          price_per_month?: number
+          price_per_year?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tenant_id?: string
+          tier?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -504,6 +632,21 @@ export type Database = {
         | "student"
         | "parent"
       difficulty_level: "easy" | "medium" | "hard"
+      subscription_event_type:
+        | "created"
+        | "upgraded"
+        | "downgraded"
+        | "renewed"
+        | "canceled"
+        | "expired"
+        | "payment_failed"
+        | "payment_succeeded"
+      subscription_status:
+        | "trial"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -633,6 +776,23 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "tenant_admin", "teacher", "student", "parent"],
       difficulty_level: ["easy", "medium", "hard"],
+      subscription_event_type: [
+        "created",
+        "upgraded",
+        "downgraded",
+        "renewed",
+        "canceled",
+        "expired",
+        "payment_failed",
+        "payment_succeeded",
+      ],
+      subscription_status: [
+        "trial",
+        "active",
+        "past_due",
+        "canceled",
+        "expired",
+      ],
     },
   },
 } as const
