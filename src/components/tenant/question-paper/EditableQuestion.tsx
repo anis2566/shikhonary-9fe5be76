@@ -94,7 +94,7 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
         return <span className="shrink-0 text-muted-foreground">{label})</span>;
       case 'round':
         return (
-          <span className="shrink-0 w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs font-medium">
+          <span className="shrink-0 w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-medium">
             {label}
           </span>
         );
