@@ -116,29 +116,42 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
     const totalHeight = mmToPx(paper.height);
     const marginHeight = mmToPx(margins.top + margins.bottom);
     
-    // Header takes approximately 120px on first page
-    const headerHeight = isFirstPage ? 120 : 0;
+    // Header takes approximately 180px on first page (institution, class, subject, time/marks, instructions)
+    const headerHeight = isFirstPage ? 180 : 0;
     
-    return totalHeight - marginHeight - headerHeight - 32; // 32px for padding
+    return totalHeight - marginHeight - headerHeight;
   };
 
   // Paginate questions based on estimated heights
   useEffect(() => {
-    // Simple pagination: estimate each question takes about 60-80px depending on content
+    // Estimate question height based on content
     const estimateQuestionHeight = (q: PaperQuestion) => {
-      const baseHeight = 50;
-      const optionHeight = 20 * (q.options?.length || 4);
-      const statementHeight = q.statements ? q.statements.length * 18 : 0;
-      const contextHeight = q.context ? 30 : 0;
+      // Base height for question number and text (considering line wrapping)
+      const questionTextLength = q.question?.length || 0;
+      const estimatedLines = Math.ceil(questionTextLength / 60); // ~60 chars per line
+      const baseHeight = 20 + (estimatedLines * 16); // 16px per line
       
-      // Multi-column reduces effective height per question
-      const columnFactor = settings.columns > 1 ? 0.6 : 1;
+      // Option heights - each option is roughly 18-20px
+      const optionHeight = 18 * (q.options?.length || 4);
       
-      return (baseHeight + optionHeight + statementHeight + contextHeight) * columnFactor;
+      // Statement heights for statement-type questions
+      const statementHeight = q.statements ? q.statements.length * 16 : 0;
+      
+      // Context adds extra height
+      const contextHeight = q.context ? 24 : 0;
+      
+      // Add some spacing between questions
+      const spacing = 8;
+      
+      return baseHeight + optionHeight + statementHeight + contextHeight + spacing;
     };
 
-    const firstPageHeight = getPageContentHeight(true);
-    const subsequentPageHeight = getPageContentHeight(false);
+    // For multi-column layout, questions are distributed across columns
+    // so effective page capacity is multiplied by column count
+    const columnMultiplier = settings.columns;
+
+    const firstPageHeight = getPageContentHeight(true) * columnMultiplier;
+    const subsequentPageHeight = getPageContentHeight(false) * columnMultiplier;
     
     const newPages: PaperQuestion[][] = [[]];
     let currentPageIndex = 0;
