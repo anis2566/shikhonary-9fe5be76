@@ -698,7 +698,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       </div>
 
       <div 
-        className="flex flex-col items-center gap-8"
+        className="flex flex-col items-center gap-3"
         style={{ minHeight: zoom === 'auto' ? '100%' : 'auto' }}
       >
         <DndContext
