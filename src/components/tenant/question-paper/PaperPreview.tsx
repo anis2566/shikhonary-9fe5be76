@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { PaperQuestion, PaperSettings, ElementStyle, ActiveElementContext, HeaderStyles } from './types';
 import EditableQuestion from './EditableQuestion';
@@ -30,7 +30,59 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 }) => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeContext, setActiveContext] = useState<ActiveElementContext | null>(null);
+  const [scale, setScale] = useState(1);
   const activeRef = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const paperRef = useRef<HTMLDivElement>(null);
+
+  // Paper dimensions in mm
+  const getPaperDimensions = () => {
+    const isLandscape = settings.paperOrientation === 'landscape';
+    
+    const dimensions = {
+      A4: { width: 210, height: 297 },
+      Letter: { width: 216, height: 279 },
+      Legal: { width: 216, height: 356 },
+      A5: { width: 148, height: 210 },
+    };
+    
+    const size = dimensions[settings.paperSize] || dimensions.A4;
+    return isLandscape 
+      ? { width: size.height, height: size.width }
+      : size;
+  };
+
+  // Calculate scale to fit paper in container
+  useEffect(() => {
+    const calculateScale = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const containerWidth = container.clientWidth - 48; // padding
+      const containerHeight = container.clientHeight - 48;
+      
+      const paper = getPaperDimensions();
+      // Convert mm to px (1mm ≈ 3.78px at 96dpi)
+      const paperWidthPx = paper.width * 3.78;
+      const paperHeightPx = paper.height * 3.78;
+      
+      const scaleX = containerWidth / paperWidthPx;
+      const scaleY = containerHeight / paperHeightPx;
+      
+      // Use the smaller scale to ensure full page fits
+      const newScale = Math.min(scaleX, scaleY, 1); // Max scale is 1
+      setScale(Math.max(0.3, newScale)); // Min scale is 0.3
+    };
+
+    calculateScale();
+    
+    const resizeObserver = new ResizeObserver(calculateScale);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => resizeObserver.disconnect();
+  }, [settings.paperSize, settings.paperOrientation]);
 
   const getPaperSizeClass = () => {
     const isLandscape = settings.paperOrientation === 'landscape';
@@ -210,7 +262,10 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   };
 
   return (
-    <>
+    <div 
+      ref={containerRef}
+      className="w-full h-full flex items-center justify-center overflow-hidden"
+    >
       {/* Floating Toolbar */}
       <FloatingToolbar
         targetRef={activeRef}
@@ -221,13 +276,18 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       />
 
       <div
-        className={cn(
-          'bg-white shadow-lg mx-auto p-8 print:shadow-none print:p-0',
-          getPaperSizeClass()
-        )}
-        style={{ fontFamily: 'SolaimanLipi, sans-serif' }}
-        id="paper-preview"
+        className="origin-center transition-transform duration-200"
+        style={{ transform: `scale(${scale})` }}
       >
+        <div
+          ref={paperRef}
+          className={cn(
+            'bg-white shadow-lg p-8 print:shadow-none print:p-0',
+            getPaperSizeClass()
+          )}
+          style={{ fontFamily: 'SolaimanLipi, sans-serif' }}
+          id="paper-preview"
+        >
         {/* Header */}
         <div className="text-center mb-4 border-b pb-4">
           <HeaderEditable
@@ -400,12 +460,13 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
         {/* Watermark */}
         {settings.showWatermark && settings.watermark && (
-          <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-6xl font-bold rotate-[-30deg]">
             {settings.watermark}
           </div>
         )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

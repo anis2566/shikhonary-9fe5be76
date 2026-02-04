@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, RotateCcw, Edit, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toggle } from '@/components/ui/toggle';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
@@ -171,18 +170,16 @@ const QuestionPaperBuilder: React.FC = () => {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Paper Preview */}
-        <div className="flex-1 overflow-auto bg-muted/50 p-6">
-          <ScrollArea className="h-full">
-            <PaperPreview
-              questions={questions}
-              settings={settings}
-              onUpdateQuestion={handleUpdateQuestion}
-              onDeleteQuestion={handleDeleteQuestion}
-              onDuplicateQuestion={handleDuplicateQuestion}
-              onSettingsChange={setSettings}
-              isEditing={isEditing}
-            />
-          </ScrollArea>
+        <div className="flex-1 bg-muted/50 p-4">
+          <PaperPreview
+            questions={questions}
+            settings={settings}
+            onUpdateQuestion={handleUpdateQuestion}
+            onDeleteQuestion={handleDeleteQuestion}
+            onDuplicateQuestion={handleDuplicateQuestion}
+            onSettingsChange={setSettings}
+            isEditing={isEditing}
+          />
         </div>
 
         {/* Settings Sidebar */}
