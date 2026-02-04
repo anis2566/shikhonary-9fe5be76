@@ -1,10 +1,12 @@
 import React from 'react';
 import {
   Download,
-  Settings2,
+  FileText,
+  Layout,
   Type,
   Shuffle,
-  MapPin,
+  Stamp,
+  Eye,
   Circle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,18 +16,13 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Slider } from '@/components/ui/slider';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { PaperSettings } from './types';
 
@@ -49,33 +46,213 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     onSettingsChange({ ...settings, [key]: value });
   };
 
+  const updateMargin = (side: 'top' | 'bottom' | 'left' | 'right', value: number) => {
+    onSettingsChange({
+      ...settings,
+      margins: { ...settings.margins, [side]: value },
+    });
+  };
+
   return (
     <div className="w-80 border-l bg-background flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-2 mb-4">
-          <Settings2 className="w-5 h-5" />
-          <h2 className="font-semibold">সেটিংস</h2>
-        </div>
+      {/* Header with Export Button */}
+      <div className="p-4 border-b space-y-3">
+        <h2 className="font-semibold text-lg flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          ডকুমেন্ট সেটিংস
+        </h2>
         <Button
           onClick={onExportPdf}
           disabled={isExporting}
-          className="w-full bg-primary hover:bg-primary/90"
+          className="w-full"
         >
           <Download className="w-4 h-4 mr-2" />
-          {isExporting ? 'Exporting...' : 'ডাউনলোড'}
+          {isExporting ? 'Exporting...' : 'PDF ডাউনলোড করুন'}
         </Button>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
-          {/* Header Visibility Controls */}
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
-              <Type className="w-4 h-4" />
-              হেডার দৃশ্যমানতা
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 space-y-3">
+        <Accordion
+          type="multiple"
+          defaultValue={['page-setup', 'header-visibility']}
+          className="px-4 py-2"
+        >
+          {/* Page Setup - Like MS Word's Page Layout */}
+          <AccordionItem value="page-setup">
+            <AccordionTrigger className="hover:no-underline py-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Layout className="w-4 h-4" />
+                পেজ সেটআপ
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-4">
+              {/* Paper Size */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  পেপার সাইজ
+                </Label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(['A4', 'Letter', 'Legal', 'A5'] as const).map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => updateSetting('paperSize', size)}
+                      className={cn(
+                        'border rounded-md p-2 text-xs transition-all',
+                        settings.paperSize === size
+                          ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
+                          : 'hover:border-primary/50 hover:bg-muted/50'
+                      )}
+                    >
+                      <div className="w-5 h-7 border border-current mx-auto mb-1 rounded-sm" />
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Orientation */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  অরিয়েন্টেশন
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  value={settings.paperOrientation}
+                  onValueChange={(v) =>
+                    v && updateSetting('paperOrientation', v as 'portrait' | 'landscape')
+                  }
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="portrait" size="sm" className="flex-1 gap-2">
+                    <div className="w-3 h-5 border border-current rounded-sm" />
+                    পোর্ট্রেট
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="landscape" size="sm" className="flex-1 gap-2">
+                    <div className="w-5 h-3 border border-current rounded-sm" />
+                    ল্যান্ডস্কেপ
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <Separator />
+
+              {/* Margins */}
+              <div className="space-y-3">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  মার্জিন (mm)
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">উপর</Label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[settings.margins.top]}
+                        onValueChange={([v]) => updateMargin('top', v)}
+                        min={5}
+                        max={50}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-xs w-6 text-right">{settings.margins.top}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">নীচে</Label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[settings.margins.bottom]}
+                        onValueChange={([v]) => updateMargin('bottom', v)}
+                        min={5}
+                        max={50}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-xs w-6 text-right">{settings.margins.bottom}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">বাম</Label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[settings.margins.left]}
+                        onValueChange={([v]) => updateMargin('left', v)}
+                        min={5}
+                        max={50}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-xs w-6 text-right">{settings.margins.left}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">ডান</Label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[settings.margins.right]}
+                        onValueChange={([v]) => updateMargin('right', v)}
+                        min={5}
+                        max={50}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-xs w-6 text-right">{settings.margins.right}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Columns */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  কলাম লেআউট
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  value={String(settings.columns)}
+                  onValueChange={(v) =>
+                    v && updateSetting('columns', parseInt(v) as 1 | 2 | 3)
+                  }
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="1" size="sm" className="flex-1">
+                    <div className="w-4 h-6 border border-current rounded-sm" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="2" size="sm" className="flex-1">
+                    <div className="flex gap-0.5">
+                      <div className="w-2 h-6 border border-current rounded-sm" />
+                      <div className="w-2 h-6 border border-current rounded-sm" />
+                    </div>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="3" size="sm" className="flex-1">
+                    <div className="flex gap-0.5">
+                      <div className="w-1.5 h-6 border border-current rounded-sm" />
+                      <div className="w-1.5 h-6 border border-current rounded-sm" />
+                      <div className="w-1.5 h-6 border border-current rounded-sm" />
+                    </div>
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                <div className="flex items-center justify-between pt-2">
+                  <Label className="text-xs">কলাম ডিভাইডার দেখান</Label>
+                  <Switch
+                    checked={settings.showColumnDivider}
+                    onCheckedChange={(v) => updateSetting('showColumnDivider', v)}
+                  />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Header Visibility */}
+          <AccordionItem value="header-visibility">
+            <AccordionTrigger className="hover:no-underline py-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Eye className="w-4 h-4" />
+                হেডার দৃশ্যমানতা
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2.5 pb-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm">শ্রেণির নাম</Label>
                 <Switch
@@ -132,72 +309,30 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                   onCheckedChange={(v) => updateSetting('showInstructions', v)}
                 />
               </div>
-            </CollapsibleContent>
-          </Collapsible>
+            </AccordionContent>
+          </AccordionItem>
 
-          <Separator />
-
-          {/* Document Customization */}
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
-              <Settings2 className="w-4 h-4" />
-              ডকুমেন্ট কাস্টমাইজেশন
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 space-y-4">
-              {/* Paper Size */}
-              <div className="space-y-2">
-                <Label className="text-sm">পেপার সাইজ</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(['A4', 'Letter', 'Legal', 'A5'] as const).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => updateSetting('paperSize', size)}
-                      className={cn(
-                        'border rounded-md p-2 text-xs transition-colors',
-                        settings.paperSize === size
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'hover:border-primary/50'
-                      )}
-                    >
-                      <div className="w-6 h-8 border mx-auto mb-1" />
-                      {size}
-                    </button>
-                  ))}
-                </div>
+          {/* Typography / Option Style */}
+          <AccordionItem value="typography">
+            <AccordionTrigger className="hover:no-underline py-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Type className="w-4 h-4" />
+                টাইপোগ্রাফি
               </div>
-
-              {/* Paper Orientation */}
-              <div className="space-y-2">
-                <Label className="text-sm">অরিয়েন্টেশন</Label>
-                <ToggleGroup
-                  type="single"
-                  value={settings.paperOrientation}
-                  onValueChange={(v) =>
-                    v && updateSetting('paperOrientation', v as 'portrait' | 'landscape')
-                  }
-                  className="justify-start"
-                >
-                  <ToggleGroupItem value="portrait" size="sm" className="px-3 gap-2">
-                    <div className="w-4 h-6 border" />
-                    পোর্ট্রেট
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="landscape" size="sm" className="px-3 gap-2">
-                    <div className="w-6 h-4 border" />
-                    ল্যান্ডস্কেপ
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-4">
               {/* Option Style */}
               <div className="space-y-2">
-                <Label className="text-sm">অপশন স্টাইল</Label>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                  অপশন স্টাইল
+                </Label>
                 <ToggleGroup
                   type="single"
                   value={settings.optionStyle}
                   onValueChange={(v) =>
                     v && updateSetting('optionStyle', v as PaperSettings['optionStyle'])
                   }
-                  className="justify-start flex-wrap"
+                  className="justify-start w-full flex-wrap"
                 >
                   <ToggleGroupItem value="parentheses" size="sm" className="px-3">
                     (ক)
@@ -209,77 +344,23 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                     ক)
                   </ToggleGroupItem>
                   <ToggleGroupItem value="round" size="sm" className="px-3 gap-1">
-                    <Circle className="w-4 h-4" />
+                    <Circle className="w-3.5 h-3.5" />
                     ক
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
+            </AccordionContent>
+          </AccordionItem>
 
-              {/* Columns */}
-              <div className="space-y-2">
-                <Label className="text-sm">কলাম</Label>
-                <ToggleGroup
-                  type="single"
-                  value={String(settings.columns)}
-                  onValueChange={(v) =>
-                    v && updateSetting('columns', parseInt(v) as 1 | 2 | 3)
-                  }
-                  className="justify-start"
-                >
-                  <ToggleGroupItem value="1" size="sm" className="px-4">
-                    <div className="w-4 h-6 border" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="2" size="sm" className="px-4">
-                    <div className="flex gap-0.5">
-                      <div className="w-2 h-6 border" />
-                      <div className="w-2 h-6 border" />
-                    </div>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="3" size="sm" className="px-4">
-                    <div className="flex gap-0.5">
-                      <div className="w-1.5 h-6 border" />
-                      <div className="w-1.5 h-6 border" />
-                      <div className="w-1.5 h-6 border" />
-                    </div>
-                  </ToggleGroupItem>
-                </ToggleGroup>
+          {/* Shuffle & Tools */}
+          <AccordionItem value="tools">
+            <AccordionTrigger className="hover:no-underline py-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Shuffle className="w-4 h-4" />
+                শাফল ও টুলস
               </div>
-
-              {/* Column Divider */}
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">কলাম ডিভাইডার</Label>
-                <Switch
-                  checked={settings.showColumnDivider}
-                  onCheckedChange={(v) => updateSetting('showColumnDivider', v)}
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Separator />
-
-          {/* Additional Tools */}
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
-              <Shuffle className="w-4 h-4" />
-              সহায়ক টুলস
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 space-y-3">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">পুনরাবৃত্ত প্রশ্ন শনাক্ত</Label>
-                  <Switch
-                    checked={settings.detectDuplicates}
-                    onCheckedChange={(v) => updateSetting('detectDuplicates', v)}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  একই প্রশ্ন একাধিকবার নির্বাচিত হলে সহজে শনাক্ত ও পরিবর্তন করা যাবে।
-                </p>
-              </div>
-              <Separator className="my-2" />
-              
-              {/* Shuffle Questions */}
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 pb-4">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">প্রশ্ন শাফল করুন</Label>
@@ -293,7 +374,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                 </p>
               </div>
 
-              {/* Shuffle Options */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">অপশন শাফল করুন</Label>
@@ -308,42 +388,58 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               </div>
 
               <Separator className="my-2" />
-              
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">শীট</Label>
-                <Switch checked={false} />
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">পুনরাবৃত্ত প্রশ্ন শনাক্ত</Label>
+                  <Switch
+                    checked={settings.detectDuplicates}
+                    onCheckedChange={(v) => updateSetting('detectDuplicates', v)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  একই প্রশ্ন একাধিকবার নির্বাচিত হলে হাইলাইট করবে।
+                </p>
               </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">সেট কোড তৈরী</Label>
-                  <Shuffle className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <Switch
                   checked={settings.enableShuffle}
                   onCheckedChange={(v) => updateSetting('enableShuffle', v)}
                 />
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Separator />
+            </AccordionContent>
+          </AccordionItem>
 
           {/* Branding */}
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 font-medium text-sm w-full hover:text-primary">
-              <MapPin className="w-4 h-4" />
-              ব্রান্ডিং
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 space-y-3">
+          <AccordionItem value="branding">
+            <AccordionTrigger className="hover:no-underline py-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Stamp className="w-4 h-4" />
+                ব্র্যান্ডিং
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3 pb-4">
               <div className="flex items-center justify-between">
-                <Label className="text-sm">ঠিকানা</Label>
+                <Label className="text-sm">ঠিকানা দেখান</Label>
                 <Switch
                   checked={settings.showAddress}
                   onCheckedChange={(v) => updateSetting('showAddress', v)}
                 />
               </div>
+              {settings.showAddress && (
+                <Input
+                  placeholder="প্রতিষ্ঠানের ঠিকানা লিখুন"
+                  value={settings.address}
+                  onChange={(e) => updateSetting('address', e.target.value)}
+                />
+              )}
+
               <div className="flex items-center justify-between">
-                <Label className="text-sm">জলছাপ</Label>
+                <Label className="text-sm">জলছাপ দেখান</Label>
                 <Switch
                   checked={settings.showWatermark}
                   onCheckedChange={(v) => updateSetting('showWatermark', v)}
@@ -351,14 +447,14 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
               </div>
               {settings.showWatermark && (
                 <Input
-                  placeholder="Watermark text"
+                  placeholder="জলছাপ টেক্সট লিখুন"
                   value={settings.watermark}
                   onChange={(e) => updateSetting('watermark', e.target.value)}
                 />
               )}
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </ScrollArea>
     </div>
   );

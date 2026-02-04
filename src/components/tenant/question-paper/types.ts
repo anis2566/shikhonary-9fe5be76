@@ -30,6 +30,13 @@ export interface HeaderStyles {
   instructions?: ElementStyle;
 }
 
+export interface MarginSettings {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 export interface PaperSettings {
   // Header settings
   institutionName: string;
@@ -53,21 +60,26 @@ export interface PaperSettings {
   // Per-element styles for header
   headerStyles: HeaderStyles;
   
-  // Document customization (defaults)
+  // Page layout
   paperSize: 'A4' | 'Letter' | 'Legal' | 'A5';
   paperOrientation: 'portrait' | 'landscape';
+  margins: MarginSettings;
+  columns: 1 | 2 | 3;
+  showColumnDivider: boolean;
+  
+  // Typography
   optionStyle: 'parentheses' | 'dot' | 'bracket' | 'round';
   fontFamily: string;
   fontSize: number;
-  columns: 1 | 2 | 3;
-  showColumnDivider: boolean;
   textAlign: 'left' | 'center' | 'right' | 'justify';
   
-  // Additional tools
+  // Tools
   detectDuplicates: boolean;
   enableShuffle: boolean;
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
+  
+  // Branding
   showAddress: boolean;
   address: string;
   showWatermark: boolean;

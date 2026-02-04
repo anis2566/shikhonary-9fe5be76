@@ -1,4 +1,4 @@
-import { PaperQuestion, PaperSettings, HeaderStyles } from '@/components/tenant/question-paper/types';
+import { PaperQuestion, PaperSettings, HeaderStyles, MarginSettings } from '@/components/tenant/question-paper/types';
 
 const defaultHeaderStyles: HeaderStyles = {
   institutionName: { fontSize: 20, fontFamily: 'SolaimanLipi', textAlign: 'center' },
@@ -10,6 +10,13 @@ const defaultHeaderStyles: HeaderStyles = {
   time: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'left' },
   totalMarks: { fontSize: 14, fontFamily: 'SolaimanLipi', textAlign: 'right' },
   instructions: { fontSize: 12, fontFamily: 'SolaimanLipi', textAlign: 'left' },
+};
+
+const defaultMargins: MarginSettings = {
+  top: 20,
+  bottom: 20,
+  left: 15,
+  right: 15,
 };
 
 export const defaultPaperSettings: PaperSettings = {
@@ -33,19 +40,26 @@ export const defaultPaperSettings: PaperSettings = {
   
   headerStyles: defaultHeaderStyles,
   
+  // Page layout
   paperSize: 'A4',
   paperOrientation: 'portrait',
+  margins: defaultMargins,
+  columns: 2,
+  showColumnDivider: true,
+  
+  // Typography
   optionStyle: 'parentheses',
   fontFamily: 'Bangla',
   fontSize: 14,
-  columns: 2,
-  showColumnDivider: true,
   textAlign: 'left',
   
+  // Tools
   detectDuplicates: false,
   enableShuffle: false,
   shuffleQuestions: false,
   shuffleOptions: false,
+  
+  // Branding
   showAddress: false,
   address: '',
   showWatermark: false,
