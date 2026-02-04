@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2, Copy, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PaperQuestion, PaperSettings, ElementStyle } from './types';
@@ -17,6 +19,7 @@ interface EditableQuestionProps {
   onDelete: (id: string) => void;
   onDuplicate: (question: PaperQuestion) => void;
   isEditing: boolean;
+  isDraggable?: boolean;
   onFocus?: (
     e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
     type: 'question' | 'option' | 'statement',
@@ -38,10 +41,27 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
   onDelete,
   onDuplicate,
   isEditing,
+  isDraggable = false,
   onFocus,
   onBlur,
 }) => {
   const [localQuestion, setLocalQuestion] = useState(question);
+
+  // Sortable hook
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.id, disabled: !isDraggable });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   // Sync local state when question prop changes
   React.useEffect(() => {
@@ -117,14 +137,21 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
 
   return (
     <div
+      ref={setNodeRef}
+      style={sortableStyle}
       className={cn(
         'group relative py-1 transition-all',
-        isEditing && 'hover:bg-muted/30 rounded-lg px-2'
+        isEditing && 'hover:bg-muted/30 rounded-lg px-2',
+        isDragging && 'z-50'
       )}
     >
-      {isEditing && (
-        <div className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+      {isEditing && isDraggable && (
+        <div 
+          className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
       )}
 
