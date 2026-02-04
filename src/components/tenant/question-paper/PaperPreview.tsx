@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -52,9 +52,12 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   const [autoScale, setAutoScale] = useState(1);
   const [isToolbarInteracting, setIsToolbarInteracting] = useState(false);
   const [pages, setPages] = useState<PaperQuestion[][]>([[]]);
+  const [firstPageEndIndex, setFirstPageEndIndex] = useState(0);
   const activeRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
+  const measureHeaderRef = useRef<HTMLDivElement>(null);
+  const measureFirstQuestionsRef = useRef<HTMLDivElement>(null);
+  const measureRestQuestionsRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // DnD sensors
@@ -109,71 +112,102 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
   // Convert mm to px (approximately 3.78 px per mm at 96 DPI)
   const mmToPx = (mm: number) => mm * 3.78;
 
-  // Calculate available content height per page (excluding header on subsequent pages)
-  const getPageContentHeight = (isFirstPage: boolean) => {
-    const paper = getPaperDimensions();
-    const margins = settings.margins;
-    const totalHeight = mmToPx(paper.height);
-    const marginHeight = mmToPx(margins.top + margins.bottom);
-    
-    // Header takes approximately 180px on first page (institution, class, subject, time/marks, instructions)
-    const headerHeight = isFirstPage ? 180 : 0;
-    
-    return totalHeight - marginHeight - headerHeight;
-  };
+  // DOM-measured pagination:
+  // 1) First page uses (pageHeight - padding - actual header height)
+  // 2) Subsequent pages use (pageHeight - padding)
+  // We leverage CSS columns: when content overflows a fixed-height column container,
+  // the browser generates additional columns to the right. We map every group of
+  // `settings.columns` columns to one page.
+  const computePageIndicesFromColumnOverflow = useCallback((columnContainer: HTMLDivElement) => {
+    const cols = settings.columns;
+    if (!cols || cols < 1) return [] as number[];
 
-  // Paginate questions based on estimated heights
-  useEffect(() => {
-    // Estimate question height based on content
-    const estimateQuestionHeight = (q: PaperQuestion) => {
-      // Base height for question number and text (considering line wrapping)
-      const questionTextLength = q.question?.length || 0;
-      const estimatedLines = Math.ceil(questionTextLength / 60); // ~60 chars per line
-      const baseHeight = 20 + (estimatedLines * 16); // 16px per line
-      
-      // Option heights - each option is roughly 18-20px
-      const optionHeight = 18 * (q.options?.length || 4);
-      
-      // Statement heights for statement-type questions
-      const statementHeight = q.statements ? q.statements.length * 16 : 0;
-      
-      // Context adds extra height
-      const contextHeight = q.context ? 24 : 0;
-      
-      // Add some spacing between questions
-      const spacing = 8;
-      
-      return baseHeight + optionHeight + statementHeight + contextHeight + spacing;
-    };
+    const items = Array.from(
+      columnContainer.querySelectorAll<HTMLElement>('[data-question-index]')
+    );
+    if (items.length === 0) return [] as number[];
 
-    // For multi-column layout, questions are distributed across columns
-    // so effective page capacity is multiplied by column count
-    const columnMultiplier = settings.columns;
+    const containerRect = columnContainer.getBoundingClientRect();
+    const styles = getComputedStyle(columnContainer);
+    const gapPxRaw = parseFloat(styles.columnGap || '0');
+    const gapPx = Number.isFinite(gapPxRaw) && gapPxRaw > 0 ? gapPxRaw : 24; // 1.5rem fallback
+    const colWidth = (containerRect.width - gapPx * (cols - 1)) / cols;
+    const stride = colWidth + gapPx;
 
-    const firstPageHeight = getPageContentHeight(true) * columnMultiplier;
-    const subsequentPageHeight = getPageContentHeight(false) * columnMultiplier;
-    
-    const newPages: PaperQuestion[][] = [[]];
-    let currentPageIndex = 0;
-    let currentHeight = 0;
-    
-    questions.forEach((question) => {
-      const questionHeight = estimateQuestionHeight(question);
-      const maxHeight = currentPageIndex === 0 ? firstPageHeight : subsequentPageHeight;
-      
-      if (currentHeight + questionHeight > maxHeight && newPages[currentPageIndex].length > 0) {
-        // Start a new page
-        currentPageIndex++;
-        newPages.push([]);
-        currentHeight = 0;
-      }
-      
-      newPages[currentPageIndex].push(question);
-      currentHeight += questionHeight;
+    return items.map((el) => {
+      const rect = el.getBoundingClientRect();
+      const left = rect.left - containerRect.left;
+      const colIndex = Math.floor((left + 1) / stride);
+      return Math.floor(colIndex / cols);
     });
-    
-    setPages(newPages);
-  }, [questions, settings.paperSize, settings.paperOrientation, settings.margins, settings.columns]);
+  }, [settings.columns]);
+
+  useLayoutEffect(() => {
+    if (!measureFirstQuestionsRef.current || !measureRestQuestionsRef.current) return;
+
+    const paper = getPaperDimensions();
+    const pageHeightPx = mmToPx(paper.height);
+    const paddingTopPx = mmToPx(settings.margins.top);
+    const paddingBottomPx = mmToPx(settings.margins.bottom);
+
+    const headerHeightPx = measureHeaderRef.current?.offsetHeight ?? 180;
+    const firstPageQuestionsHeight = Math.max(
+      80,
+      pageHeightPx - paddingTopPx - paddingBottomPx - headerHeightPx
+    );
+    const restPageQuestionsHeight = Math.max(80, pageHeightPx - paddingTopPx - paddingBottomPx);
+
+    // Apply heights to the hidden measuring containers (must be done in layout effect)
+    measureFirstQuestionsRef.current.style.height = `${firstPageQuestionsHeight}px`;
+    measureRestQuestionsRef.current.style.height = `${restPageQuestionsHeight}px`;
+
+    // Determine where page 1 ends
+    const firstIndices = computePageIndicesFromColumnOverflow(measureFirstQuestionsRef.current);
+    const overflowAt = firstIndices.findIndex((p) => p >= 1);
+    const computedFirstEnd = overflowAt === -1 ? questions.length : overflowAt;
+
+    // Ensure the rest-measure container is rendered with the right slice before computing final pages
+    if (computedFirstEnd !== firstPageEndIndex) {
+      setFirstPageEndIndex(computedFirstEnd);
+      return;
+    }
+
+    const firstPageQuestions = questions.slice(0, computedFirstEnd);
+    const remainingQuestions = questions.slice(computedFirstEnd);
+
+    if (remainingQuestions.length === 0) {
+      setPages([firstPageQuestions]);
+      return;
+    }
+
+    const restIndices = computePageIndicesFromColumnOverflow(measureRestQuestionsRef.current);
+    const restPages: PaperQuestion[][] = [];
+
+    remainingQuestions.forEach((q, idx) => {
+      const pageIndex = restIndices[idx] ?? 0;
+      if (!restPages[pageIndex]) restPages[pageIndex] = [];
+      restPages[pageIndex].push(q);
+    });
+
+    const merged = [firstPageQuestions, ...restPages.filter((p) => p && p.length > 0)];
+    setPages(merged.length ? merged : [[]]);
+  }, [
+    questions,
+    settings.paperSize,
+    settings.paperOrientation,
+    settings.margins,
+    settings.columns,
+    settings.showInstructions,
+    settings.showNoMarkingNote,
+    settings.showTime,
+    settings.showTotalMarks,
+    settings.showClassName,
+    settings.showSubjectName,
+    settings.showChapterName,
+    settings.showSetCode,
+    firstPageEndIndex,
+    computePageIndicesFromColumnOverflow,
+  ]);
 
   // Calculate auto-scale to fit paper in container
   useEffect(() => {
@@ -543,7 +577,9 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       style={{
         columnCount: settings.columns,
         columnGap: '1.5rem',
+        columnFill: 'auto',
         columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
+        overflow: 'hidden',
         flex: 1,
       }}
     >
@@ -580,6 +616,86 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         onInteractionStart={handleToolbarInteractionStart}
         onInteractionEnd={handleToolbarInteractionEnd}
       />
+
+      {/* Hidden measuring layout (offscreen, but rendered for accurate pagination) */}
+      <div
+        aria-hidden
+        className="absolute left-[-99999px] top-0 pointer-events-none opacity-0"
+        style={{ width: `${getPaperDimensions().width}mm` }}
+      >
+        {/* First-page measurement: header + fixed-height questions area */}
+        <div
+          className="bg-white"
+          style={{
+            ...getPaperStyle(),
+            padding: `${settings.margins.top}mm ${settings.margins.right}mm ${settings.margins.bottom}mm ${settings.margins.left}mm`,
+          }}
+        >
+          <div ref={measureHeaderRef}>{renderHeader()}</div>
+          <div
+            ref={measureFirstQuestionsRef}
+            style={{
+              columnCount: settings.columns,
+              columnGap: '1.5rem',
+              columnFill: 'auto',
+              width: '100%',
+              overflow: 'visible',
+            }}
+          >
+            {questions.map((question, idx) => (
+              <div key={question.id} data-question-index={idx} style={{ breakInside: 'avoid' }}>
+                <EditableQuestion
+                  question={question}
+                  settings={settings}
+                  onUpdate={onUpdateQuestion}
+                  onDelete={onDeleteQuestion}
+                  onDuplicate={onDuplicateQuestion}
+                  isEditing={isEditing}
+                  isDraggable={false}
+                  onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+                  onBlur={handleBlur}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Subsequent-page measurement: fixed-height questions area (no header) */}
+        <div
+          className="bg-white"
+          style={{
+            ...getPaperStyle(),
+            padding: `${settings.margins.top}mm ${settings.margins.right}mm ${settings.margins.bottom}mm ${settings.margins.left}mm`,
+          }}
+        >
+          <div
+            ref={measureRestQuestionsRef}
+            style={{
+              columnCount: settings.columns,
+              columnGap: '1.5rem',
+              columnFill: 'auto',
+              width: '100%',
+              overflow: 'visible',
+            }}
+          >
+            {questions.slice(firstPageEndIndex).map((question, idx) => (
+              <div key={question.id} data-question-index={idx} style={{ breakInside: 'avoid' }}>
+                <EditableQuestion
+                  question={question}
+                  settings={settings}
+                  onUpdate={onUpdateQuestion}
+                  onDelete={onDeleteQuestion}
+                  onDuplicate={onDuplicateQuestion}
+                  isEditing={isEditing}
+                  isDraggable={false}
+                  onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+                  onBlur={handleBlur}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div 
         className="flex flex-col items-center gap-8"
