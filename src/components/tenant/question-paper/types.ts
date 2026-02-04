@@ -72,6 +72,7 @@ export interface PaperSettings {
   fontFamily: string;
   fontSize: number;
   fontWeight: 'normal' | 'medium' | 'semibold' | 'bold';
+  lineHeight: number;
   textAlign: 'left' | 'center' | 'right' | 'justify';
   
   // Tools

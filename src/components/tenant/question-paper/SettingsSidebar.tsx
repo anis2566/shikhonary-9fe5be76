@@ -644,6 +644,56 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                 </div>
               </div>
 
+              {/* Line Height */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                  লাইন হাইট
+                </Label>
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => updateSetting('lineHeight', Math.max(0.8, (settings.lineHeight || 1.1) - 0.1))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <div className="flex-1 text-center">
+                    <span className="text-2xl font-bold">{(settings.lineHeight || 1.1).toFixed(1)}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => updateSetting('lineHeight', Math.min(2, (settings.lineHeight || 1.1) + 0.1))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* Quick presets */}
+                <div className="flex gap-1">
+                  {[
+                    { value: 1.0, label: 'Tight' },
+                    { value: 1.2, label: 'Normal' },
+                    { value: 1.5, label: 'Relaxed' },
+                    { value: 1.8, label: 'Loose' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.value}
+                      onClick={() => updateSetting('lineHeight', preset.value)}
+                      className={cn(
+                        'flex-1 py-1.5 rounded-md text-xs font-medium transition-colors',
+                        Math.abs((settings.lineHeight || 1.1) - preset.value) < 0.05
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/50 hover:bg-muted'
+                      )}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Font Weight */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">

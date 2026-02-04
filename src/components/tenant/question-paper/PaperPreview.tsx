@@ -317,11 +317,11 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
             'bg-white shadow-lg p-8 print:shadow-none print:p-0',
             getPaperSizeClass()
           )}
-          style={{ fontFamily: 'SolaimanLipi, sans-serif', lineHeight: 1 }}
+          style={{ fontFamily: 'SolaimanLipi, sans-serif', lineHeight: settings.lineHeight || 1.1 }}
           id="paper-preview"
         >
-        {/* Header - compact line height */}
-        <div className="text-center border-b pb-2" style={{ lineHeight: 1.1 }}>
+        {/* Header */}
+        <div className="text-center border-b pb-2">
           <HeaderEditable
             value={settings.institutionName}
             onChange={(v) => updateSetting('institutionName', v)}
@@ -401,7 +401,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
         </div>
 
         {/* Time & Marks */}
-        <div className="flex justify-between text-sm mt-2 mb-1" style={{ lineHeight: 1 }}>
+        <div className="flex justify-between text-sm mt-2 mb-1">
           {settings.showTime && (
             <span className="flex items-center gap-1">
               সময়—{' '}
@@ -446,7 +446,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
         {/* Instructions */}
         {settings.showInstructions && (
-          <div className="text-muted-foreground mb-1 p-1.5 bg-muted/30 rounded text-sm" style={{ lineHeight: 1.1 }}>
+          <div className="text-muted-foreground mb-1 p-1.5 bg-muted/30 rounded text-sm">
             <HeaderEditable
               value={settings.instructions}
               onChange={(v) => updateSetting('instructions', v)}
@@ -458,7 +458,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           </div>
         )}
 
-        <p className="text-center text-sm mb-1.5 font-medium" style={{ lineHeight: 1 }}>
+        <p className="text-center text-sm mb-1.5 font-medium">
           প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
         </p>
 
