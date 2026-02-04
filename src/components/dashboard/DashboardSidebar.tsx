@@ -48,6 +48,7 @@ const tenantsGroup: NavGroup = {
   icon: Building2,
   items: [
     { title: 'All Tenants', url: '/admin/tenants', icon: Building2 },
+    { title: 'Subscriptions', url: '/admin/subscriptions', icon: Sparkles },
     { title: 'Subscription Plans', url: '/admin/subscription-plans', icon: CreditCard },
   ],
 };
