@@ -545,6 +545,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                 { key: 'showTime', label: 'সময়' },
                 { key: 'showTotalMarks', label: 'পূর্ণমান' },
                 { key: 'showInstructions', label: 'নির্দেশনা' },
+                { key: 'showNoMarkingNote', label: 'দাগ/চিহ্ন নোট' },
               ].map((item) => (
                 <div 
                   key={item.key}

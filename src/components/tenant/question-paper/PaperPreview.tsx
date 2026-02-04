@@ -462,9 +462,11 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           </div>
         )}
 
-        <p className="text-center text-sm py-1 font-medium border-t">
-          প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
-        </p>
+        {settings.showNoMarkingNote && (
+          <p className="text-center text-sm py-1 font-medium border-t">
+            প্রশ্নপত্রে কোনো প্রকার দাগ/চিহ্ন দেয়া যাবেনা।
+          </p>
+        )}
 
         {/* Questions */}
         <div

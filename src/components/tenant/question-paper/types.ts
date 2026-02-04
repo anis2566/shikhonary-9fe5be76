@@ -49,6 +49,7 @@ export interface PaperSettings {
   examName: string;
   showInstructions: boolean;
   instructions: string;
+  showNoMarkingNote: boolean;
   showTime: boolean;
   time: string;
   showTotalMarks: boolean;

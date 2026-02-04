@@ -30,6 +30,7 @@ export const defaultPaperSettings: PaperSettings = {
   examName: 'Model Test',
   showInstructions: true,
   instructions: 'প্রতিটি প্রশ্নের সঠিক উত্তর শুধু একটি। উত্তরপত্রে প্রশ্নের ক্রমিক নম্বরের বিপরীতে প্রদত্ত বর্ণসমূহলিত বৃত্ত সমূহ হতে সঠিক উত্তরের বৃত্তটি বল পয়েন্ট কলম দ্বারা সম্পূর্ণ ভরাট করো। প্রতিটি প্রশ্নের মান ১।',
+  showNoMarkingNote: true,
   showTime: true,
   time: '৩০ মিনিট',
   showTotalMarks: true,
