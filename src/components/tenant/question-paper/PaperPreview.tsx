@@ -520,57 +520,34 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div
-            className={cn(
-              'gap-8',
-              settings.columns === 2 ? 'grid grid-cols-2' : '',
-              settings.columns === 3 ? 'grid grid-cols-3' : '',
-              settings.showColumnDivider && settings.columns > 1 && 'divide-x'
-            )}
+          <SortableContext
+            items={questions.map((q) => q.id)}
+            strategy={verticalListSortingStrategy}
           >
-            {settings.columns === 1 ? (
-              <SortableContext
-                items={questions.map((q) => q.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div>
-                  {questions.map((question) => (
-                    <EditableQuestion
-                      key={question.id}
-                      question={question}
-                      settings={settings}
-                      onUpdate={onUpdateQuestion}
-                      onDelete={onDeleteQuestion}
-                      onDuplicate={onDuplicateQuestion}
-                      isEditing={isEditing}
-                      isDraggable={isEditing && !!onReorderQuestions}
-                      onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
-                      onBlur={handleBlur}
-                    />
-                  ))}
+            <div
+              style={{
+                columnCount: settings.columns,
+                columnGap: '1.5rem',
+                columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
+              }}
+            >
+              {questions.map((question) => (
+                <div key={question.id} style={{ breakInside: 'avoid' }}>
+                  <EditableQuestion
+                    question={question}
+                    settings={settings}
+                    onUpdate={onUpdateQuestion}
+                    onDelete={onDeleteQuestion}
+                    onDuplicate={onDuplicateQuestion}
+                    isEditing={isEditing}
+                    isDraggable={isEditing && !!onReorderQuestions && settings.columns === 1}
+                    onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
+                    onBlur={handleBlur}
+                  />
                 </div>
-              </SortableContext>
-            ) : (
-              columnedQuestions.map((columnQuestions, colIdx) => (
-                <div key={colIdx} className={cn(colIdx > 0 && 'pl-4')}>
-                  {columnQuestions.map((question) => (
-                    <EditableQuestion
-                      key={question.id}
-                      question={question}
-                      settings={settings}
-                      onUpdate={onUpdateQuestion}
-                      onDelete={onDeleteQuestion}
-                      onDuplicate={onDuplicateQuestion}
-                      isEditing={isEditing}
-                      isDraggable={false}
-                      onFocus={(e, type, index, style) => handleQuestionFocus(e, question.id, type, index, style)}
-                      onBlur={handleBlur}
-                    />
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          </SortableContext>
         </DndContext>
 
         {/* Watermark */}
