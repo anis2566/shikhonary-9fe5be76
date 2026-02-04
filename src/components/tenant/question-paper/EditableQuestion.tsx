@@ -121,7 +121,6 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
         'group relative py-1 transition-all',
         isEditing && 'hover:bg-muted/30 rounded-lg px-2'
       )}
-      style={{ lineHeight: 1.1 }}
     >
       {isEditing && (
         <div className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">

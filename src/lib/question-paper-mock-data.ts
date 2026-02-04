@@ -52,6 +52,7 @@ export const defaultPaperSettings: PaperSettings = {
   fontFamily: 'SolaimanLipi',
   fontSize: 14,
   fontWeight: 'normal',
+  lineHeight: 1.1,
   textAlign: 'left',
   
   // Tools
