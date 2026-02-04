@@ -139,7 +139,6 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
 
   // Get paper dimensions for styling
   const getPaperStyle = (): React.CSSProperties => {
-    const isLandscape = settings.paperOrientation === 'landscape';
     const paper = getPaperDimensions();
     
     return {
@@ -148,17 +147,6 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
       fontFamily: 'SolaimanLipi, sans-serif',
       lineHeight: settings.lineHeight || 1.1,
     };
-  };
-
-  // Get height for the questions container in multi-column mode
-  const getQuestionsContainerHeight = (): string | undefined => {
-    if (settings.columns === 1) return undefined;
-    
-    const paper = getPaperDimensions();
-    // Subtract approximate header height (around 60mm for headers, time/marks, instructions)
-    const headerHeight = 55;
-    const contentHeight = paper.height - headerHeight;
-    return `${contentHeight}mm`;
   };
 
   const getHeaderStyle = (field: keyof HeaderStyles): ElementStyle => {
@@ -533,8 +521,6 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
               style={{
                 columnCount: settings.columns,
                 columnGap: '1.5rem',
-                columnFill: settings.columns > 1 ? 'auto' : undefined,
-                height: getQuestionsContainerHeight(),
                 columnRule: settings.showColumnDivider ? '1px solid hsl(var(--border))' : 'none',
               }}
             >
