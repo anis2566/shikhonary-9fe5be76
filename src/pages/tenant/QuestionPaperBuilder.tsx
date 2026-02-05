@@ -202,6 +202,45 @@ const QuestionPaperBuilder: React.FC = () => {
               wrapper.style.transform = 'none';
               wrapper.style.transition = 'none';
             }
+
+            // html2canvas is unreliable at painting form controls (inputs/textareas).
+            // Replace them with plain text nodes in the cloned DOM so values export correctly.
+            const replaceInputLike = (el: HTMLInputElement | HTMLTextAreaElement) => {
+              const value =
+                (el instanceof HTMLTextAreaElement ? el.value : el.value) ||
+                el.getAttribute('value') ||
+                el.textContent ||
+                '';
+
+              const repl = clonedDoc.createElement(el instanceof HTMLTextAreaElement ? 'div' : 'span');
+              repl.className = el.className;
+              const inlineStyle = el.getAttribute('style');
+              if (inlineStyle) repl.setAttribute('style', inlineStyle);
+
+              repl.textContent = value;
+              (repl as HTMLElement).style.whiteSpace = 'pre-wrap';
+              (repl as HTMLElement).style.background = 'transparent';
+
+              // Ensure layout remains close to the original controls
+              if (el instanceof HTMLTextAreaElement) {
+                (repl as HTMLElement).style.display = 'block';
+              } else {
+                (repl as HTMLElement).style.display = 'inline-block';
+              }
+
+              el.replaceWith(repl);
+            };
+
+            clonedPage.querySelectorAll('input').forEach((node) => {
+              const input = node as HTMLInputElement;
+              // Only replace text-like inputs used in the paper preview
+              if (input.type === 'text' || input.type === '' || input.type === 'search') {
+                replaceInputLike(input);
+              }
+            });
+            clonedPage.querySelectorAll('textarea').forEach((node) => {
+              replaceInputLike(node as HTMLTextAreaElement);
+            });
           },
         });
 
