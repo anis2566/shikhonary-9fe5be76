@@ -85,6 +85,7 @@ import TenantMcqDetailsPage from "./pages/tenant/McqDetailsPage";
 import TenantCqDetailsPage from "./pages/tenant/CqDetailsPage";
 import QuestionPaperBuilder from "./pages/tenant/QuestionPaperBuilder";
 import UnauthorizedPage from "./pages/tenant/UnauthorizedPage";
+import EmailTemplatePreview from "./pages/admin/EmailTemplatePreview";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -118,7 +119,7 @@ const App = () => (
               <Route path="tenants/create" element={<CreateTenant />} />
               <Route path="sessions" element={<Sessions />} />
               <Route path="settings" element={<Settings />} />
-              
+              <Route path="email-template-preview" element={<EmailTemplatePreview />} />
               {/* Subscription Plans */}
               <Route path="subscription-plans" element={<SubscriptionPlanList />} />
               <Route path="subscription-plans/create" element={<SubscriptionPlanForm />} />
