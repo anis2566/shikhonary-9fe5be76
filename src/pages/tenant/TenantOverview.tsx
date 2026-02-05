@@ -8,18 +8,14 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  ArrowUpRight,
-  ArrowDownRight,
   MoreHorizontal,
   Plus,
-  Eye,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   AreaChart,
   Area,
@@ -47,17 +43,33 @@ import { cn } from '@/lib/utils';
 import {
   TodayHighlightsWidget,
   AttendanceSummaryWidget,
-  UpcomingEventsWidget,
-  QuickMetricsWidget,
 } from '@/components/tenant/DashboardWidgets';
 import OnboardingTour from '@/components/tenant/OnboardingTour';
 import StatsComparisonCard from '@/components/tenant/StatsComparisonCard';
+import { EnhancedStatCard, MobileEnhancedStatCard } from '@/components/tenant/stats';
+import { WidgetCustomizer } from '@/components/tenant/dashboard';
+import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 
 const ONBOARDING_KEY = 'tenant_onboarding_completed';
+
+// Sparkline data for stats
+const statsSparklineData = {
+  students: [420, 435, 445, 460, 475, 485, 485],
+  teachers: [22, 22, 23, 24, 24, 24, 24],
+  exams: [38, 42, 45, 48, 52, 56, 56],
+  avgScore: [72, 74, 73, 75, 76, 74, 74],
+};
 
 const TenantOverview: React.FC = () => {
   const stats = mockDashboardStats;
   const [showTour, setShowTour] = useState(false);
+  const {
+    widgets,
+    isVisible,
+    toggleWidgetVisibility,
+    reorderWidgets,
+    resetToDefaults,
+  } = useDashboardWidgets();
 
   useEffect(() => {
     const completed = localStorage.getItem(ONBOARDING_KEY);
@@ -100,6 +112,12 @@ const TenantOverview: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <WidgetCustomizer
+            widgets={widgets}
+            onToggleVisibility={toggleWidgetVisibility}
+            onReorder={reorderWidgets}
+            onReset={resetToDefaults}
+          />
           <Button variant="outline" size="sm">
             <Calendar className="w-4 h-4 mr-2" />
             Today
@@ -125,74 +143,92 @@ const TenantOverview: React.FC = () => {
       {/* Stats - Horizontal Scroll on Mobile */}
       <div className="lg:hidden -mx-4 px-4">
         <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
-          <MobileStatCard
+          <MobileEnhancedStatCard
             title="Students"
             value={stats.totalStudents}
             subtitle={`${stats.activeStudents} active`}
             icon={GraduationCap}
             trend={{ value: 8, isPositive: true }}
             color="primary"
+            sparklineData={statsSparklineData.students}
+            href="/tenant/students"
           />
-          <MobileStatCard
+          <MobileEnhancedStatCard
             title="Teachers"
             value={stats.totalTeachers}
             subtitle={`${stats.totalBatches} batches`}
             icon={Users}
             trend={{ value: 2, isPositive: true }}
             color="secondary"
+            sparklineData={statsSparklineData.teachers}
+            href="/tenant/teachers"
           />
-          <MobileStatCard
+          <MobileEnhancedStatCard
             title="Exams"
             value={stats.totalExams}
             subtitle={`${stats.ongoingExams} ongoing`}
             icon={FileText}
             trend={{ value: 12, isPositive: true }}
             color="accent"
+            sparklineData={statsSparklineData.exams}
+            href="/tenant/exams"
           />
-          <MobileStatCard
+          <MobileEnhancedStatCard
             title="Avg. Score"
-            value={`${stats.averageExamScore}%`}
+            value={stats.averageExamScore}
+            suffix="%"
             subtitle={`${stats.totalAttempts} attempts`}
             icon={TrendingUp}
             trend={{ value: 3.5, isPositive: true }}
             color="success"
+            sparklineData={statsSparklineData.avgScore}
+            href="/tenant/results"
           />
         </div>
       </div>
 
       {/* Desktop Stats Grid */}
       <div className="hidden lg:grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        <EnhancedStatCard
           title="Total Students"
           value={stats.totalStudents}
           subtitle={`${stats.activeStudents} active`}
           icon={GraduationCap}
           trend={{ value: 8, isPositive: true }}
           color="primary"
+          sparklineData={statsSparklineData.students}
+          href="/tenant/students"
         />
-        <StatCard
+        <EnhancedStatCard
           title="Total Teachers"
           value={stats.totalTeachers}
           subtitle={`${stats.totalBatches} batches`}
           icon={Users}
           trend={{ value: 2, isPositive: true }}
           color="secondary"
+          sparklineData={statsSparklineData.teachers}
+          href="/tenant/teachers"
         />
-        <StatCard
+        <EnhancedStatCard
           title="Total Exams"
           value={stats.totalExams}
           subtitle={`${stats.ongoingExams} ongoing`}
           icon={FileText}
           trend={{ value: 12, isPositive: true }}
           color="accent"
+          sparklineData={statsSparklineData.exams}
+          href="/tenant/exams"
         />
-        <StatCard
+        <EnhancedStatCard
           title="Avg. Score"
-          value={`${stats.averageExamScore}%`}
+          value={stats.averageExamScore}
+          suffix="%"
           subtitle={`${stats.totalAttempts} attempts`}
           icon={TrendingUp}
           trend={{ value: 3.5, isPositive: true }}
           color="success"
+          sparklineData={statsSparklineData.avgScore}
+          href="/tenant/results"
         />
       </div>
 
@@ -681,118 +717,6 @@ const TenantOverview: React.FC = () => {
       </div>
     </div>
     </>
-  );
-};
-
-// Stat Card Component
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ComponentType<{ className?: string }>;
-  trend?: { value: number; isPositive: boolean };
-  color: 'primary' | 'secondary' | 'accent' | 'success';
-}
-
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  trend,
-  color,
-}) => {
-  const colorClasses = {
-    primary: 'bg-primary/10 text-primary',
-    secondary: 'bg-secondary text-secondary-foreground',
-    accent: 'bg-accent/10 text-accent',
-    success: 'bg-green-500/10 text-green-600',
-  };
-
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          </div>
-          <div className={cn('p-2.5 rounded-lg', colorClasses[color])}>
-            <Icon className="w-5 h-5" />
-          </div>
-        </div>
-        {trend && (
-          <div className="flex items-center gap-1 mt-2">
-            {trend.isPositive ? (
-              <ArrowUpRight className="w-3.5 h-3.5 text-green-600" />
-            ) : (
-              <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />
-            )}
-            <span
-              className={cn(
-                'text-xs font-medium',
-                trend.isPositive ? 'text-green-600' : 'text-destructive'
-              )}
-            >
-              {trend.value}%
-            </span>
-            <span className="text-xs text-muted-foreground">vs last month</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Mobile Stat Card - Compact horizontal scroll version
-const MobileStatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  trend,
-  color,
-}) => {
-  const colorClasses = {
-    primary: 'bg-primary/10 text-primary',
-    secondary: 'bg-secondary text-secondary-foreground',
-    accent: 'bg-accent/10 text-accent',
-    success: 'bg-green-500/10 text-green-600',
-  };
-
-  return (
-    <Card className="min-w-[140px] snap-start shrink-0">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <div className={cn('p-1.5 rounded-lg', colorClasses[color])}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
-        </div>
-        <p className="text-xl font-bold">{value}</p>
-        <div className="flex items-center justify-between mt-1">
-          <p className="text-[10px] text-muted-foreground">{subtitle}</p>
-          {trend && (
-            <div className="flex items-center gap-0.5">
-              {trend.isPositive ? (
-                <ArrowUpRight className="w-3 h-3 text-green-600" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-destructive" />
-              )}
-              <span
-                className={cn(
-                  'text-[10px] font-medium',
-                  trend.isPositive ? 'text-green-600' : 'text-destructive'
-                )}
-              >
-                {trend.value}%
-              </span>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
