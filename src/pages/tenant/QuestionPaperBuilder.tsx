@@ -168,49 +168,51 @@ const QuestionPaperBuilder: React.FC = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      const restore: Array<() => void> = [];
+      for (let i = 0; i < pageElements.length; i++) {
+        const element = pageElements[i] as HTMLElement;
 
-      try {
-        for (let i = 0; i < pageElements.length; i++) {
-          const element = pageElements[i] as HTMLElement;
+        // Ensure form controls render with their current values.
+        // (html2canvas clones DOM and may miss live values unless they exist as attributes/text)
+        element.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+          input.setAttribute('value', input.value);
+        });
+        element.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((ta) => {
+          ta.textContent = ta.value;
+        });
 
-          // Hide page indicator in export without cloning (cloning loses input/textarea values)
-          const indicator = element.querySelector<HTMLElement>('[data-page-indicator]');
-          if (indicator) {
-            const prevDisplay = indicator.style.display;
-            indicator.style.display = 'none';
-            restore.push(() => {
-              indicator.style.display = prevDisplay;
-            });
-          }
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          // More reliable with transformed/zoomed parents than foreignObjectRendering in many browsers
+          foreignObjectRendering: false,
+          onclone: (clonedDoc) => {
+            const clonedPage = clonedDoc.getElementById(element.id) as HTMLElement | null;
+            if (!clonedPage) return;
 
-          // Ensure form controls render with their current values
-          element.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
-            input.setAttribute('value', input.value);
-          });
-          element.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((ta) => {
-            ta.textContent = ta.value;
-          });
+            // Hide page indicator in the cloned DOM (avoid touching live UI)
+            const indicator = clonedPage.querySelector<HTMLElement>('[data-page-indicator]');
+            if (indicator) indicator.style.display = 'none';
 
-          const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            foreignObjectRendering: true,
-          });
+            // Remove zoom/transform wrappers in the cloned DOM to prevent blank captures
+            const wrapper = clonedPage.closest<HTMLElement>('[data-paper-page-wrapper]');
+            if (wrapper) {
+              wrapper.style.transform = 'none';
+              wrapper.style.transition = 'none';
+            }
+          },
+        });
 
-          const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/png');
 
-          if (i > 0) {
-            pdf.addPage();
-          }
-
-          // Since we capture exactly one page container, render it as a full PDF page.
-          pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+        if (i > 0) {
+          pdf.addPage();
         }
-      } finally {
-        restore.reverse().forEach((fn) => fn());
+
+        // Since we capture exactly one page container, render it as a full PDF page.
+        pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
       }
 
       pdf.save(`question-paper-${Date.now()}.pdf`);
