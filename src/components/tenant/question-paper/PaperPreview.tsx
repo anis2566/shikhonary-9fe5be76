@@ -713,6 +713,7 @@ const PaperPreview: React.FC<PaperPreviewProps> = ({
             {pages.map((pageQuestions, pageIndex) => (
               <div
                 key={pageIndex}
+                data-paper-page-wrapper
                 className="origin-top transition-transform duration-200 shrink-0"
                 style={{ transform: `scale(${effectiveScale})` }}
               >
