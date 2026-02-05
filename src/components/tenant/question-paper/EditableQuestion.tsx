@@ -115,12 +115,14 @@ const EditableQuestion: React.FC<EditableQuestionProps> = ({
       case 'round':
         return (
           <span 
-            className="shrink-0 rounded-full border border-current text-[10px] font-medium inline-block text-center"
+            className="shrink-0 rounded-full border border-current font-medium inline-block text-center"
             style={{ 
-              width: '1rem', 
-              height: '1rem', 
-              lineHeight: '0.875rem',
-              verticalAlign: 'middle',
+              width: '1.125rem', 
+              height: '1.125rem', 
+              fontSize: '0.65rem',
+              lineHeight: '1rem',
+              verticalAlign: 'text-bottom',
+              paddingTop: '1px',
             }}
           >
             {label}
