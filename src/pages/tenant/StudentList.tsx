@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -70,6 +70,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import StudentCard from '@/components/tenant/StudentCard';
 import { StudentCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
+import Pagination from '@/components/academic/Pagination';
 import { toast } from 'sonner';
 
 type ViewMode = 'grid' | 'table';
@@ -88,6 +89,8 @@ const StudentList: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
   const isMobile = useIsMobile();
 
   // Get unique classes and groups
@@ -114,7 +117,13 @@ const StudentList: React.FC = () => {
     setSelectedClass('all');
     setSelectedGroup('all');
     setSearchQuery('');
+    setCurrentPage(1);
   };
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedBatch, selectedStatus, selectedClass, selectedGroup]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -166,6 +175,25 @@ const StudentList: React.FC = () => {
 
     return result;
   }, [searchQuery, selectedBatch, selectedStatus, selectedClass, selectedGroup, sortField, sortOrder]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredStudents.slice(start, end);
+  }, [filteredStudents, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleItemsPerPageChange = useCallback((items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  }, []);
 
   const stats = useMemo(() => ({
     total: mockStudents.length,
@@ -738,13 +766,13 @@ const StudentList: React.FC = () => {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="space-y-3 pb-20"
+            className="space-y-3 pb-4"
           >
             {isRefreshing ? (
               [...Array(4)].map((_, i) => <StudentCardSkeleton key={i} />)
             ) : (
               <>
-                {filteredStudents.map((student) => (
+                {paginatedStudents.map((student) => (
                   <motion.div key={student.id} variants={itemVariants}>
                     <StudentCard
                       student={student}
@@ -773,11 +801,27 @@ const StudentList: React.FC = () => {
               </>
             )}
           </motion.div>
+
+          {/* Mobile Pagination */}
+          {filteredStudents.length > 0 && (
+            <div className="pb-20">
+              <Card>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredStudents.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                />
+              </Card>
+            </div>
+          )}
         </PullToRefresh>
       )}
 
       {/* Desktop View - Grid or Table */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block space-y-4">
         {viewMode === 'grid' ? (
           <motion.div
             variants={containerVariants}
@@ -785,7 +829,7 @@ const StudentList: React.FC = () => {
             animate="show"
             className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4"
           >
-            {filteredStudents.map((student) => (
+            {paginatedStudents.map((student) => (
               <motion.div key={student.id} variants={itemVariants}>
                 <StudentCard
                   student={student}
@@ -821,7 +865,7 @@ const StudentList: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.map((student, index) => (
+                  {paginatedStudents.map((student, index) => (
                     <motion.tr
                       key={student.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -966,6 +1010,32 @@ const StudentList: React.FC = () => {
                 </div>
               )}
             </CardContent>
+            
+            {/* Table Pagination */}
+            {filteredStudents.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredStudents.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+              />
+            )}
+          </Card>
+        )}
+
+        {/* Grid Pagination */}
+        {viewMode === 'grid' && filteredStudents.length > 0 && (
+          <Card>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredStudents.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
           </Card>
         )}
       </div>
