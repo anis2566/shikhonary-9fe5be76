@@ -68,6 +68,7 @@ import TenantLayout from "./layouts/TenantLayout";
 import TenantOverview from "./pages/tenant/TenantOverview";
 import StudentList from "./pages/tenant/StudentList";
 import StudentCreate from "./pages/tenant/StudentCreate";
+import StudentDetails from "./pages/tenant/StudentDetails";
 import TeacherList from "./pages/tenant/TeacherList";
 import BatchList from "./pages/tenant/BatchList";
 import ExamList from "./pages/tenant/ExamList";
@@ -185,6 +186,7 @@ const App = () => (
               <Route index element={<TenantOverview />} />
               <Route path="students" element={<StudentList />} />
               <Route path="students/create" element={<StudentCreate />} />
+              <Route path="students/:id" element={<StudentDetails />} />
               <Route path="teachers" element={<TeacherList />} />
               <Route path="batches" element={<BatchList />} />
               <Route path="exams" element={<ExamList />} />
