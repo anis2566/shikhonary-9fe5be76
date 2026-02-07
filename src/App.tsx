@@ -71,6 +71,8 @@ import StudentCreate from "./pages/tenant/StudentCreate";
 import StudentDetails from "./pages/tenant/StudentDetails";
 import TeacherList from "./pages/tenant/TeacherList";
 import BatchList from "./pages/tenant/BatchList";
+import BatchCreate from "./pages/tenant/BatchCreate";
+import BatchDetails from "./pages/tenant/BatchDetails";
 import ExamList from "./pages/tenant/ExamList";
 import ExamCreate from "./pages/tenant/ExamCreate";
 import ExamQuestionsPage from "./pages/tenant/ExamQuestionsPage";
@@ -189,6 +191,9 @@ const App = () => (
               <Route path="students/:id" element={<StudentDetails />} />
               <Route path="teachers" element={<TeacherList />} />
               <Route path="batches" element={<BatchList />} />
+              <Route path="batches/create" element={<BatchCreate />} />
+              <Route path="batches/:id" element={<BatchDetails />} />
+              <Route path="batches/:id/edit" element={<BatchCreate />} />
               <Route path="exams" element={<ExamList />} />
               <Route path="exams/create" element={<ExamCreate />} />
               <Route path="exams/:id/questions" element={<ExamQuestionsPage />} />
