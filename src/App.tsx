@@ -67,6 +67,7 @@ import CqDetails from "./pages/admin/academic/CqDetails";
 import TenantLayout from "./layouts/TenantLayout";
 import TenantOverview from "./pages/tenant/TenantOverview";
 import StudentList from "./pages/tenant/StudentList";
+import StudentCreate from "./pages/tenant/StudentCreate";
 import TeacherList from "./pages/tenant/TeacherList";
 import BatchList from "./pages/tenant/BatchList";
 import ExamList from "./pages/tenant/ExamList";
@@ -183,6 +184,7 @@ const App = () => (
             <Route path="/tenant" element={<TenantLayout />}>
               <Route index element={<TenantOverview />} />
               <Route path="students" element={<StudentList />} />
+              <Route path="students/create" element={<StudentCreate />} />
               <Route path="teachers" element={<TeacherList />} />
               <Route path="batches" element={<BatchList />} />
               <Route path="exams" element={<ExamList />} />
