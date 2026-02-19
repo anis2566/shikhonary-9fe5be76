@@ -323,3 +323,193 @@ export const mockSessions: Session[] = [
 export const getTenantById = (id: string): Tenant | undefined => {
   return mockTenants.find(t => t.id === id);
 };
+
+// ── Mock Subscriptions ─────────────────────────────────────────────────────
+
+export interface MockSubscription {
+  id: string;
+  tenant_id: string;
+  tenant_name: string;
+  tier: string;
+  status: 'trial' | 'active' | 'past_due' | 'canceled' | 'expired';
+  current_period_start: string;
+  current_period_end: string;
+  price_per_month: number;
+  price_per_year: number | null;
+  currency: string;
+  billing_cycle: string;
+  payment_provider: string | null;
+  cancel_at_period_end: boolean;
+  cancel_reason: string | null;
+  canceled_at: string | null;
+  external_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const mockSubscriptions: MockSubscription[] = [
+  {
+    id: 'sub_001',
+    tenant_id: '4',
+    tenant_name: 'National University',
+    tier: 'ENTERPRISE',
+    status: 'active',
+    current_period_start: '2025-01-01',
+    current_period_end: '2025-12-31',
+    price_per_month: 25000,
+    price_per_year: 250000,
+    currency: 'BDT',
+    billing_cycle: 'yearly',
+    payment_provider: 'stripe',
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: 'sub_stripe_enterprise_001',
+    created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
+  },
+  {
+    id: 'sub_002',
+    tenant_id: '1',
+    tenant_name: 'ABC High School',
+    tier: 'PRO',
+    status: 'active',
+    current_period_start: '2025-02-01',
+    current_period_end: '2025-03-01',
+    price_per_month: 5000,
+    price_per_year: 50000,
+    currency: 'BDT',
+    billing_cycle: 'monthly',
+    payment_provider: 'bkash',
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: 'bkash_pro_abc_001',
+    created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2025-02-01T00:00:00Z',
+  },
+  {
+    id: 'sub_003',
+    tenant_id: '2',
+    tenant_name: 'XYZ Coaching Center',
+    tier: 'STARTER',
+    status: 'trial',
+    current_period_start: '2025-02-01',
+    current_period_end: '2025-03-01',
+    price_per_month: 2000,
+    price_per_year: 20000,
+    currency: 'BDT',
+    billing_cycle: 'monthly',
+    payment_provider: null,
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: null,
+    created_at: '2025-02-01T00:00:00Z',
+    updated_at: '2025-02-01T00:00:00Z',
+  },
+  {
+    id: 'sub_004',
+    tenant_id: '3',
+    tenant_name: "John's Math Academy",
+    tier: 'FREE',
+    status: 'trial',
+    current_period_start: '2025-02-10',
+    current_period_end: '2025-03-10',
+    price_per_month: 0,
+    price_per_year: 0,
+    currency: 'BDT',
+    billing_cycle: 'monthly',
+    payment_provider: null,
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: null,
+    created_at: '2025-02-10T00:00:00Z',
+    updated_at: '2025-02-10T00:00:00Z',
+  },
+  {
+    id: 'sub_005',
+    tenant_id: '5',
+    tenant_name: 'Dhaka Training Institute',
+    tier: 'PRO',
+    status: 'past_due',
+    current_period_start: '2025-01-15',
+    current_period_end: '2025-02-15',
+    price_per_month: 5000,
+    price_per_year: null,
+    currency: 'BDT',
+    billing_cycle: 'monthly',
+    payment_provider: 'nagad',
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: 'nagad_pro_dti_001',
+    created_at: '2024-06-15T00:00:00Z',
+    updated_at: '2025-02-15T00:00:00Z',
+  },
+  {
+    id: 'sub_006',
+    tenant_id: '6',
+    tenant_name: 'Sylhet International School',
+    tier: 'STARTER',
+    status: 'canceled',
+    current_period_start: '2024-11-01',
+    current_period_end: '2025-02-01',
+    price_per_month: 2000,
+    price_per_year: null,
+    currency: 'BDT',
+    billing_cycle: 'monthly',
+    payment_provider: 'bkash',
+    cancel_at_period_end: true,
+    cancel_reason: 'Switching to a different platform',
+    canceled_at: '2025-01-20T00:00:00Z',
+    external_id: 'bkash_starter_sis_001',
+    created_at: '2024-11-01T00:00:00Z',
+    updated_at: '2025-01-20T00:00:00Z',
+  },
+  {
+    id: 'sub_007',
+    tenant_id: '7',
+    tenant_name: 'Rajshahi Science College',
+    tier: 'PRO',
+    status: 'expired',
+    current_period_start: '2024-08-01',
+    current_period_end: '2025-01-01',
+    price_per_month: 5000,
+    price_per_year: 50000,
+    currency: 'BDT',
+    billing_cycle: 'yearly',
+    payment_provider: 'stripe',
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: 'sub_stripe_pro_rsc_001',
+    created_at: '2024-08-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
+  },
+  {
+    id: 'sub_008',
+    tenant_id: '8',
+    tenant_name: 'Khulna Medical College',
+    tier: 'ENTERPRISE',
+    status: 'active',
+    current_period_start: '2025-01-01',
+    current_period_end: '2026-01-01',
+    price_per_month: 25000,
+    price_per_year: 250000,
+    currency: 'BDT',
+    billing_cycle: 'yearly',
+    payment_provider: 'stripe',
+    cancel_at_period_end: false,
+    cancel_reason: null,
+    canceled_at: null,
+    external_id: 'sub_stripe_enterprise_002',
+    created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
+  },
+];
+
+export const getSubscriptionById = (id: string): MockSubscription | undefined => {
+  return mockSubscriptions.find(s => s.id === id);
+};

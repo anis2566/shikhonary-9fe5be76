@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import {
   Search,
   Plus,
@@ -13,13 +12,12 @@ import {
   XCircle,
   Pause,
   ArrowUpRight,
+  TrendingUp,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -28,73 +26,58 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { mockSubscriptions } from '@/lib/mock-data';
 
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'expired';
 
-interface Subscription {
-  id: string;
-  tenant_id: string;
-  tier: string;
-  status: SubscriptionStatus;
-  current_period_start: string;
-  current_period_end: string;
-  price_per_month: number;
-  price_per_year: number | null;
-  currency: string;
-  billing_cycle: string;
-  payment_provider: string | null;
-  cancel_at_period_end: boolean;
-  created_at: string;
-}
-
-const statusConfig: Record<SubscriptionStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }> = {
-  trial: { label: 'Trial', variant: 'secondary', icon: Clock },
-  active: { label: 'Active', variant: 'default', icon: CheckCircle2 },
-  past_due: { label: 'Past Due', variant: 'destructive', icon: AlertCircle },
-  canceled: { label: 'Canceled', variant: 'outline', icon: XCircle },
-  expired: { label: 'Expired', variant: 'outline', icon: Pause },
+const statusConfig: Record<
+  SubscriptionStatus,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType; color: string }
+> = {
+  trial:    { label: 'Trial',    variant: 'secondary',    icon: Clock,         color: 'text-blue-600' },
+  active:   { label: 'Active',   variant: 'default',      icon: CheckCircle2,  color: 'text-green-600' },
+  past_due: { label: 'Past Due', variant: 'destructive',  icon: AlertCircle,   color: 'text-destructive' },
+  canceled: { label: 'Canceled', variant: 'outline',      icon: XCircle,       color: 'text-muted-foreground' },
+  expired:  { label: 'Expired',  variant: 'outline',      icon: Pause,         color: 'text-muted-foreground' },
 };
 
 const tierColors: Record<string, string> = {
-  FREE: 'bg-muted text-muted-foreground',
-  STARTER: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  PRO: 'bg-primary/10 text-primary',
+  FREE:       'bg-muted text-muted-foreground',
+  STARTER:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  PRO:        'bg-primary/10 text-primary',
   ENTERPRISE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
+const tierOrder = ['FREE', 'STARTER', 'PRO', 'ENTERPRISE'];
+
 const SubscriptionList: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]   = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [tierFilter, setTierFilter]     = useState<string>('all');
 
-  const { data: subscriptions, isLoading } = useQuery({
-    queryKey: ['subscriptions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Subscription[];
-    },
-  });
+  const filteredSubscriptions = useMemo(() =>
+    mockSubscriptions.filter((sub) => {
+      const matchesSearch =
+        sub.tenant_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sub.tier.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
+      const matchesTier   = tierFilter   === 'all' || sub.tier   === tierFilter;
+      return matchesSearch && matchesStatus && matchesTier;
+    }),
+  [searchQuery, statusFilter, tierFilter]);
 
-  const filteredSubscriptions = subscriptions?.filter((sub) => {
-    const matchesSearch = sub.tenant_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.tier.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const stats = useMemo(() => ({
+    total:   mockSubscriptions.length,
+    active:  mockSubscriptions.filter((s) => s.status === 'active').length,
+    trial:   mockSubscriptions.filter((s) => s.status === 'trial').length,
+    pastDue: mockSubscriptions.filter((s) => s.status === 'past_due').length,
+    mrr:     mockSubscriptions
+      .filter((s) => s.status === 'active')
+      .reduce((sum, s) => sum + s.price_per_month, 0),
+  }), []);
 
-  const stats = {
-    total: subscriptions?.length || 0,
-    active: subscriptions?.filter((s) => s.status === 'active').length || 0,
-    trial: subscriptions?.filter((s) => s.status === 'trial').length || 0,
-    pastDue: subscriptions?.filter((s) => s.status === 'past_due').length || 0,
-  };
-
-  const formatCurrency = (amount: number, currency: string) => {
-    return `${currency} ${amount.toLocaleString()}`;
-  };
+  const formatCurrency = (amount: number, currency: string) =>
+    `${currency} ${amount.toLocaleString()}`;
 
   return (
     <div className="space-y-6">
@@ -113,7 +96,7 @@ const SubscriptionList: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
@@ -146,10 +129,22 @@ const SubscriptionList: React.FC = () => {
             <div className="text-2xl font-bold text-destructive">{stats.pastDue}</div>
           </CardContent>
         </Card>
+        <Card className="md:col-span-1 col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> MRR
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">
+              {formatCurrency(stats.mrr, 'BDT')}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -172,22 +167,32 @@ const SubscriptionList: React.FC = () => {
             <SelectItem value="expired">Expired</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={tierFilter} onValueChange={setTierFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Filter by tier" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tiers</SelectItem>
+            {tierOrder.map((t) => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Result count */}
+      <div className="text-sm text-muted-foreground">
+        Showing {filteredSubscriptions.length} of {mockSubscriptions.length} subscriptions
       </div>
 
       {/* Subscription List */}
-      {isLoading ? (
-        <div className="grid gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
-        </div>
-      ) : filteredSubscriptions?.length === 0 ? (
+      {filteredSubscriptions.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
             <CreditCard className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No subscriptions found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery || statusFilter !== 'all'
+              {searchQuery || statusFilter !== 'all' || tierFilter !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Create a subscription to get started'}
             </p>
@@ -200,11 +205,11 @@ const SubscriptionList: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {filteredSubscriptions?.map((subscription) => {
+        <div className="grid gap-3">
+          {filteredSubscriptions.map((subscription) => {
             const statusInfo = statusConfig[subscription.status];
             const StatusIcon = statusInfo.icon;
-            
+
             return (
               <Link
                 key={subscription.id}
@@ -212,44 +217,62 @@ const SubscriptionList: React.FC = () => {
                 className="block group"
               >
                 <Card className="hover:border-primary/50 hover:shadow-md transition-all">
-                  <CardContent className="p-6">
+                  <CardContent className="p-5">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      {/* Left: tenant + tier info */}
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-6 h-6 text-primary" />
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-foreground">
-                              Tenant: {subscription.tenant_id.slice(0, 8)}...
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span className="font-semibold text-foreground truncate">
+                              {subscription.tenant_name}
                             </span>
                             <Badge className={tierColors[subscription.tier] || 'bg-muted'}>
                               {subscription.tier}
                             </Badge>
+                            <span className={`flex items-center gap-1 text-xs ${statusInfo.color}`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              <Badge variant={statusInfo.variant} className="text-xs">
+                                {statusInfo.label}
+                              </Badge>
+                            </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <StatusIcon className="w-3.5 h-3.5" />
-                              <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                            </span>
-                            <span className="flex items-center gap-1">
                               <CreditCard className="w-3.5 h-3.5" />
                               {formatCurrency(subscription.price_per_month, subscription.currency)}/mo
+                              {subscription.billing_cycle === 'yearly' && (
+                                <span className="text-xs text-primary ml-1">(yearly billing)</span>
+                              )}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
                               Ends {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}
                             </span>
+                            {subscription.payment_provider && (
+                              <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded-full">
+                                {subscription.payment_provider}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+
+                      {/* Right: badges + arrow */}
+                      <div className="flex items-center gap-3 ml-auto">
                         {subscription.cancel_at_period_end && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300">
+                          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
                             Cancels at period end
                           </Badge>
                         )}
-                        <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        {subscription.status === 'past_due' && (
+                          <Badge variant="destructive" className="text-xs animate-pulse">
+                            Action Required
+                          </Badge>
+                        )}
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                       </div>
                     </div>
                   </CardContent>
