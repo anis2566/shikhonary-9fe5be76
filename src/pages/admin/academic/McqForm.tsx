@@ -33,10 +33,10 @@ const mcqSchema = z.object({
   questionUrl: z.string().url('Invalid URL').or(z.literal('')).optional(),
   context: z.string().max(5000, 'Context must be less than 5000 characters').optional(),
   contextUrl: z.string().url('Invalid URL').or(z.literal('')).optional(),
-  subjectId: z.string().uuid('Subject is required'),
-  chapterId: z.string().uuid('Chapter is required'),
-  topicId: z.string().uuid().optional().or(z.literal('')),
-  subTopicId: z.string().uuid().optional().or(z.literal('')),
+  subjectId: z.string().min(1, 'Subject is required'),
+  chapterId: z.string().min(1, 'Chapter is required'),
+  topicId: z.string().optional().or(z.literal('')),
+  subTopicId: z.string().optional().or(z.literal('')),
 });
 
 type McqFormData = z.infer<typeof mcqSchema>;
