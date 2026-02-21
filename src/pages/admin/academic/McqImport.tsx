@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Save, Trash2, ChevronDown, ChevronUp, FileJson, Copy, AlertCircle, CheckCircle2, Plus, X, Edit3 } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -12,12 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { McqData, mockSubjects, mockChapters, mockTopics, mockSubTopics, getSubjectById, getChapterById, getTopicById, getSubTopicById, getChaptersBySubject, getTopicsByChapter, getSubTopicsByTopic } from '@/lib/academic-mock-data';
 import { cn } from '@/lib/utils';
 
-const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>[] = [
+const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive' | 'subjectId' | 'chapterId' | 'topicId' | 'subTopicId'>[] = [
   {
     question: "Which of the following is a fundamental force in nature?",
     options: ["Friction", "Gravitational force", "Tension", "Normal force"],
@@ -29,9 +28,6 @@ const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>[
     isMath: false,
     session: 2024,
     source: "Board Exam 2024",
-    subjectId: "subject-1",
-    chapterId: "chapter-2",
-    topicId: "topic-4",
   },
   {
     question: "Consider the following statements about Newton's laws:\nI. First law defines inertia\nII. Second law gives F=ma\nIII. Third law applies only to contact forces\n\nWhich statements are correct?",
@@ -45,9 +41,6 @@ const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>[
     session: 2024,
     source: "Competitive Exam",
     context: "Newton formulated three laws of motion that form the foundation of classical mechanics.",
-    subjectId: "subject-1",
-    chapterId: "chapter-2",
-    topicId: "topic-4",
   },
   {
     question: "Assertion (A): An object moving in a circle at constant speed has acceleration.\nReason (R): Acceleration is the rate of change of velocity, which is a vector.",
@@ -61,13 +54,9 @@ const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>[
     answer: "A",
     type: "assertion",
     reference: ["Circular Motion Guide"],
-    explanation: "In circular motion, the direction of velocity changes constantly, resulting in centripetal acceleration even at constant speed. R correctly explains why — velocity is a vector.",
+    explanation: "In circular motion, the direction of velocity changes constantly, resulting in centripetal acceleration even at constant speed.",
     isMath: false,
     session: 2023,
-    subjectId: "subject-1",
-    chapterId: "chapter-1",
-    topicId: "topic-2",
-    subTopicId: "subtopic-3",
   },
   {
     question: "The dimensional formula of momentum is:",
@@ -80,9 +69,6 @@ const SAMPLE_JSON: Omit<McqData, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>[
     isMath: true,
     session: 2024,
     source: "Practice Set",
-    subjectId: "subject-1",
-    chapterId: "chapter-2",
-    topicId: "topic-4",
   },
 ];
 
@@ -90,7 +76,6 @@ interface ImportedMcq extends Omit<McqData, 'id' | 'createdAt' | 'updatedAt'> {
   _tempId: string;
   _isValid: boolean;
   _errors: string[];
-  _isExpanded: boolean;
 }
 
 const MCQ_TYPES = [
@@ -106,8 +91,6 @@ const validateMcq = (mcq: any): string[] => {
   if (!mcq.options || !Array.isArray(mcq.options) || mcq.options.length < 2) errors.push('At least 2 options required');
   if (!mcq.answer || mcq.answer.trim().length === 0) errors.push('Answer is required');
   if (!mcq.type) errors.push('Question type is required');
-  if (!mcq.subjectId) errors.push('Subject is required');
-  if (!mcq.chapterId) errors.push('Chapter is required');
   if (typeof mcq.session !== 'number' || mcq.session < 1900) errors.push('Valid session year required');
   return errors;
 };
@@ -118,6 +101,16 @@ const McqImport: React.FC = () => {
   const [importedMcqs, setImportedMcqs] = useState<ImportedMcq[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
   const [hasImported, setHasImported] = useState(false);
+
+  // Global classification
+  const [globalSubjectId, setGlobalSubjectId] = useState('');
+  const [globalChapterId, setGlobalChapterId] = useState('');
+  const [globalTopicId, setGlobalTopicId] = useState('');
+  const [globalSubTopicId, setGlobalSubTopicId] = useState('');
+
+  const globalChapters = globalSubjectId ? getChaptersBySubject(globalSubjectId) : [];
+  const globalTopics = globalChapterId ? getTopicsByChapter(globalChapterId) : [];
+  const globalSubTopics = globalTopicId ? getSubTopicsByTopic(globalTopicId) : [];
 
   const handleLoadSample = () => {
     setJsonInput(JSON.stringify(SAMPLE_JSON, null, 2));
@@ -139,24 +132,23 @@ const McqImport: React.FC = () => {
       questionUrl: "string URL (optional)",
       context: "string (optional)",
       contextUrl: "string URL (optional)",
-      subjectId: "string UUID (required)",
-      chapterId: "string UUID (required)",
-      topicId: "string UUID (optional)",
-      subTopicId: "string UUID (optional)",
     };
     navigator.clipboard.writeText(JSON.stringify(schema, null, 2));
     toast.success('Schema copied to clipboard');
   };
 
   const handleImport = () => {
+    if (!globalSubjectId || !globalChapterId) {
+      toast.error('Please select Subject and Chapter before importing');
+      return;
+    }
     setParseError(null);
     try {
       const parsed = JSON.parse(jsonInput);
       const mcqArray = Array.isArray(parsed) ? parsed : [parsed];
 
       const processed: ImportedMcq[] = mcqArray.map((mcq, idx) => {
-        const errors = validateMcq(mcq);
-        return {
+        const entry = {
           question: mcq.question || '',
           options: mcq.options || ['', ''],
           statements: mcq.statements || [],
@@ -170,16 +162,17 @@ const McqImport: React.FC = () => {
           questionUrl: mcq.questionUrl || '',
           context: mcq.context || '',
           contextUrl: mcq.contextUrl || '',
-          subjectId: mcq.subjectId || '',
-          chapterId: mcq.chapterId || '',
-          topicId: mcq.topicId || '',
-          subTopicId: mcq.subTopicId || '',
+          subjectId: globalSubjectId,
+          chapterId: globalChapterId,
+          topicId: globalTopicId,
+          subTopicId: globalSubTopicId,
           isActive: true,
           _tempId: `import-${Date.now()}-${idx}`,
-          _isValid: errors.length === 0,
-          _errors: errors,
-          _isExpanded: false,
+          _isValid: true,
+          _errors: [] as string[],
         };
+        const errors = validateMcq(entry);
+        return { ...entry, _isValid: errors.length === 0, _errors: errors };
       });
 
       setImportedMcqs(processed);
@@ -207,28 +200,24 @@ const McqImport: React.FC = () => {
     toast.info('MCQ removed');
   };
 
-  const toggleExpand = (tempId: string) => {
-    setImportedMcqs(prev => prev.map(m =>
-      m._tempId === tempId ? { ...m, _isExpanded: !m._isExpanded } : m
-    ));
-  };
-
-  const expandAll = () => setImportedMcqs(prev => prev.map(m => ({ ...m, _isExpanded: true })));
-  const collapseAll = () => setImportedMcqs(prev => prev.map(m => ({ ...m, _isExpanded: false })));
-
   const handleSaveAll = () => {
     const valid = importedMcqs.filter(m => m._isValid);
     if (valid.length === 0) {
       toast.error('No valid MCQs to save');
       return;
     }
-    console.log('Saving MCQs:', valid.map(({ _tempId, _isValid, _errors, _isExpanded, ...rest }) => rest));
+    console.log('Saving MCQs:', valid.map(({ _tempId, _isValid, _errors, ...rest }) => rest));
     toast.success(`${valid.length} MCQs saved successfully!`);
     navigate('/admin/mcqs');
   };
 
   const validCount = importedMcqs.filter(m => m._isValid).length;
   const invalidCount = importedMcqs.length - validCount;
+
+  const globalSubject = globalSubjectId ? getSubjectById(globalSubjectId) : null;
+  const globalChapter = globalChapterId ? getChapterById(globalChapterId) : null;
+  const globalTopic = globalTopicId ? getTopicById(globalTopicId) : null;
+  const globalSubTopic = globalSubTopicId ? getSubTopicById(globalSubTopicId) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,6 +246,62 @@ const McqImport: React.FC = () => {
           )}
         </div>
 
+        {/* Global Classification */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Academic Classification</CardTitle>
+            <CardDescription className="text-xs">This applies to all imported MCQs</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Subject *</Label>
+                <Select value={globalSubjectId} onValueChange={(v) => { setGlobalSubjectId(v); setGlobalChapterId(''); setGlobalTopicId(''); setGlobalSubTopicId(''); }}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select Subject" /></SelectTrigger>
+                  <SelectContent>
+                    {mockSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.displayName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Chapter *</Label>
+                <Select value={globalChapterId} onValueChange={(v) => { setGlobalChapterId(v); setGlobalTopicId(''); setGlobalSubTopicId(''); }} disabled={!globalSubjectId}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select Chapter" /></SelectTrigger>
+                  <SelectContent>
+                    {globalChapters.map(c => <SelectItem key={c.id} value={c.id}>{c.displayName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Topic</Label>
+                <Select value={globalTopicId} onValueChange={(v) => { setGlobalTopicId(v); setGlobalSubTopicId(''); }} disabled={!globalChapterId}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select Topic" /></SelectTrigger>
+                  <SelectContent>
+                    {globalTopics.map(t => <SelectItem key={t.id} value={t.id}>{t.displayName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Sub-Topic</Label>
+                <Select value={globalSubTopicId} onValueChange={setGlobalSubTopicId} disabled={!globalTopicId}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select Sub-Topic" /></SelectTrigger>
+                  <SelectContent>
+                    {globalSubTopics.map(s => <SelectItem key={s.id} value={s.id}>{s.displayName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {hasImported && importedMcqs.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {globalSubject && <Badge variant="secondary" className="text-xs">{globalSubject.displayName}</Badge>}
+                {globalChapter && <Badge variant="outline" className="text-xs">{globalChapter.displayName}</Badge>}
+                {globalTopic && <Badge variant="outline" className="text-xs">{globalTopic.displayName}</Badge>}
+                {globalSubTopic && <Badge variant="outline" className="text-xs">{globalSubTopic.displayName}</Badge>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* JSON Input Section */}
         {!hasImported && (
           <Card>
@@ -266,7 +311,7 @@ const McqImport: React.FC = () => {
                 JSON Input
               </CardTitle>
               <CardDescription>
-                Paste your MCQ JSON data below. It should be an array of MCQ objects or a single MCQ object.
+                Paste your MCQ JSON data below. Classification fields (subject, chapter, etc.) are set above.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -284,7 +329,7 @@ const McqImport: React.FC = () => {
               <Textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                placeholder='[\n  {\n    "question": "Your question here",\n    "options": ["A", "B", "C", "D"],\n    "answer": "A",\n    "type": "single",\n    "session": 2024,\n    "subjectId": "subject-1",\n    "chapterId": "chapter-1"\n  }\n]'
+                placeholder='[\n  {\n    "question": "Your question here",\n    "options": ["A", "B", "C", "D"],\n    "answer": "A",\n    "type": "single",\n    "session": 2024\n  }\n]'
                 rows={16}
                 className="font-mono text-sm resize-y"
               />
@@ -306,35 +351,31 @@ const McqImport: React.FC = () => {
           </Card>
         )}
 
-        {/* Imported MCQs Preview & Edit */}
+        {/* Imported MCQs Preview */}
         {hasImported && importedMcqs.length > 0 && (
           <>
-            {/* Controls Bar */}
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setHasImported(false); setImportedMcqs([]); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back to JSON
-                </Button>
-                <Button variant="outline" size="sm" onClick={expandAll}>Expand All</Button>
-                <Button variant="outline" size="sm" onClick={collapseAll}>Collapse All</Button>
-              </div>
-              <Button onClick={handleSaveAll} disabled={validCount === 0} size="lg" className="gap-2">
-                <Save className="h-4 w-4" />
-                Save {validCount} MCQ{validCount !== 1 ? 's' : ''}
+              <Button variant="outline" size="sm" onClick={() => { setHasImported(false); setImportedMcqs([]); }}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to JSON
               </Button>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground hidden sm:block">Double-click any field to edit</p>
+                <Button onClick={handleSaveAll} disabled={validCount === 0} size="lg" className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Save {validCount} MCQ{validCount !== 1 ? 's' : ''}
+                </Button>
+              </div>
             </div>
 
-            {/* MCQ Cards */}
             <div className="space-y-4">
               {importedMcqs.map((mcq, index) => (
-                <McqEditCard
+                <McqDisplayCard
                   key={mcq._tempId}
                   mcq={mcq}
                   index={index}
                   onUpdate={updateMcq}
                   onRemove={removeMcq}
-                  onToggleExpand={toggleExpand}
                 />
               ))}
             </div>
@@ -365,45 +406,99 @@ const McqImport: React.FC = () => {
   );
 };
 
-// ─── Editable MCQ Card ──────────────────────────────────────────────────
+// ─── Double-click-to-edit field ─────────────────────────────────────────
 
-interface McqEditCardProps {
+interface EditableFieldProps {
+  value: string;
+  onSave: (value: string) => void;
+  multiline?: boolean;
+  className?: string;
+  placeholder?: string;
+  renderDisplay?: (value: string) => React.ReactNode;
+}
+
+const EditableField: React.FC<EditableFieldProps> = ({ value, onSave, multiline, className, placeholder, renderDisplay }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const startEditing = () => {
+    setDraft(value);
+    setEditing(true);
+  };
+
+  const commit = () => {
+    setEditing(false);
+    if (draft !== value) onSave(draft);
+  };
+
+  const cancel = () => {
+    setEditing(false);
+    setDraft(value);
+  };
+
+  if (editing) {
+    if (multiline) {
+      return (
+        <Textarea
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Escape') cancel(); }}
+          rows={3}
+          className={cn("text-sm resize-y", className)}
+        />
+      );
+    }
+    return (
+      <Input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') cancel();
+        }}
+        className={cn("h-8 text-sm", className)}
+      />
+    );
+  }
+
+  const isEmpty = !value || value.trim() === '';
+
+  return (
+    <div
+      onDoubleClick={startEditing}
+      className={cn(
+        "cursor-pointer rounded px-2 py-1 min-h-[28px] hover:bg-muted/50 transition-colors border border-transparent hover:border-border",
+        isEmpty && "text-muted-foreground italic",
+        className
+      )}
+      title="Double-click to edit"
+    >
+      {renderDisplay ? renderDisplay(value) : (isEmpty ? (placeholder || 'Double-click to edit') : value)}
+    </div>
+  );
+};
+
+// ─── MCQ Display Card (read-only with double-click edit) ───────────────
+
+interface McqDisplayCardProps {
   mcq: ImportedMcq;
   index: number;
   onUpdate: (tempId: string, updates: Partial<ImportedMcq>) => void;
   onRemove: (tempId: string) => void;
-  onToggleExpand: (tempId: string) => void;
 }
 
-const McqEditCard: React.FC<McqEditCardProps> = ({ mcq, index, onUpdate, onRemove, onToggleExpand }) => {
-  const subject = getSubjectById(mcq.subjectId);
-  const chapter = getChapterById(mcq.chapterId);
-  const topic = mcq.topicId ? getTopicById(mcq.topicId) : null;
-
+const McqDisplayCard: React.FC<McqDisplayCardProps> = ({ mcq, index, onUpdate, onRemove }) => {
   const typeLabel = MCQ_TYPES.find(t => t.value === mcq.type)?.label || mcq.type;
   const answerIndex = mcq.answer.charCodeAt(0) - 65;
-
-  const availableChapters = mcq.subjectId ? getChaptersBySubject(mcq.subjectId) : [];
-  const availableTopics = mcq.chapterId ? getTopicsByChapter(mcq.chapterId) : [];
-  const availableSubTopics = mcq.topicId ? getSubTopicsByTopic(mcq.topicId) : [];
 
   const updateOption = (idx: number, value: string) => {
     const newOpts = [...mcq.options];
     newOpts[idx] = value;
     onUpdate(mcq._tempId, { options: newOpts });
-  };
-
-  const addOption = () => {
-    if (mcq.options.length < 6) {
-      onUpdate(mcq._tempId, { options: [...mcq.options, ''] });
-    }
-  };
-
-  const removeOption = (idx: number) => {
-    if (mcq.options.length > 2) {
-      const newOpts = mcq.options.filter((_, i) => i !== idx);
-      onUpdate(mcq._tempId, { options: newOpts });
-    }
   };
 
   const updateStatement = (idx: number, value: string) => {
@@ -412,26 +507,10 @@ const McqEditCard: React.FC<McqEditCardProps> = ({ mcq, index, onUpdate, onRemov
     onUpdate(mcq._tempId, { statements: newStmts });
   };
 
-  const addStatement = () => {
-    onUpdate(mcq._tempId, { statements: [...mcq.statements, ''] });
-  };
-
-  const removeStatement = (idx: number) => {
-    onUpdate(mcq._tempId, { statements: mcq.statements.filter((_, i) => i !== idx) });
-  };
-
   const updateReference = (idx: number, value: string) => {
     const newRefs = [...mcq.reference];
     newRefs[idx] = value;
     onUpdate(mcq._tempId, { reference: newRefs });
-  };
-
-  const addReference = () => {
-    onUpdate(mcq._tempId, { reference: [...mcq.reference, ''] });
-  };
-
-  const removeReference = (idx: number) => {
-    onUpdate(mcq._tempId, { reference: mcq.reference.filter((_, i) => i !== idx) });
   };
 
   return (
@@ -439,286 +518,152 @@ const McqEditCard: React.FC<McqEditCardProps> = ({ mcq, index, onUpdate, onRemov
       "transition-all",
       !mcq._isValid && "border-destructive/50 bg-destructive/5"
     )}>
-      {/* Collapsed Header */}
-      <div
-        className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
-        onClick={() => onToggleExpand(mcq._tempId)}
-      >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-sm font-bold text-muted-foreground w-8 shrink-0">#{index + 1}</span>
-          {mcq._isValid ? (
-            <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-          )}
-          <p className="text-sm font-medium truncate flex-1">{mcq.question || 'Untitled question'}</p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="secondary" className="text-xs">{typeLabel}</Badge>
-          {subject && <Badge variant="outline" className="text-xs hidden sm:inline-flex">{subject.displayName}</Badge>}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); onRemove(mcq._tempId); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-          {mcq._isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-        </div>
-      </div>
-
-      {/* Expanded Edit Form */}
-      {mcq._isExpanded && (
-        <div className="px-4 pb-4 space-y-5 border-t pt-4">
-          {/* Errors */}
-          {mcq._errors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {mcq._errors.map((e, i) => <span key={i} className="block text-xs">{e}</span>)}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Classification */}
-          <div>
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Classification</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Subject *</Label>
-                <Select value={mcq.subjectId} onValueChange={(v) => onUpdate(mcq._tempId, { subjectId: v, chapterId: '', topicId: '', subTopicId: '' })}>
-                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Subject" /></SelectTrigger>
-                  <SelectContent>
-                    {mockSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.displayName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Chapter *</Label>
-                <Select value={mcq.chapterId} onValueChange={(v) => onUpdate(mcq._tempId, { chapterId: v, topicId: '', subTopicId: '' })} disabled={!mcq.subjectId}>
-                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Chapter" /></SelectTrigger>
-                  <SelectContent>
-                    {availableChapters.map(c => <SelectItem key={c.id} value={c.id}>{c.displayName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Topic</Label>
-                <Select value={mcq.topicId || ''} onValueChange={(v) => onUpdate(mcq._tempId, { topicId: v, subTopicId: '' })} disabled={!mcq.chapterId}>
-                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Topic" /></SelectTrigger>
-                  <SelectContent>
-                    {availableTopics.map(t => <SelectItem key={t.id} value={t.id}>{t.displayName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Sub-Topic</Label>
-                <Select value={mcq.subTopicId || ''} onValueChange={(v) => onUpdate(mcq._tempId, { subTopicId: v })} disabled={!mcq.topicId}>
-                  <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Sub-Topic" /></SelectTrigger>
-                  <SelectContent>
-                    {availableSubTopics.map(s => <SelectItem key={s.id} value={s.id}>{s.displayName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Type & Metadata Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Type *</Label>
-              <Select value={mcq.type} onValueChange={(v) => onUpdate(mcq._tempId, { type: v })}>
-                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MCQ_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Session *</Label>
-              <Input
-                type="number"
-                value={mcq.session}
-                onChange={(e) => onUpdate(mcq._tempId, { session: parseInt(e.target.value) || 0 })}
-                className="h-9 text-xs"
+      <div className="p-4 space-y-3">
+        {/* Header Row */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            <span className="text-sm font-bold text-muted-foreground mt-0.5 w-7 shrink-0">#{index + 1}</span>
+            {mcq._isValid ? (
+              <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-1" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-1" />
+            )}
+            <div className="flex-1 min-w-0">
+              <EditableField
+                value={mcq.question}
+                onSave={(v) => onUpdate(mcq._tempId, { question: v })}
+                multiline
+                className="font-medium"
+                renderDisplay={(v) => <p className="whitespace-pre-wrap text-sm font-medium">{v || 'Untitled question'}</p>}
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Source</Label>
-              <Input
-                value={mcq.source || ''}
-                onChange={(e) => onUpdate(mcq._tempId, { source: e.target.value })}
-                className="h-9 text-xs"
-                placeholder="e.g. Board Exam"
-              />
-            </div>
-            <div className="flex items-end gap-2 pb-0.5">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={mcq.isMath}
-                  onCheckedChange={(v) => onUpdate(mcq._tempId, { isMath: v })}
-                  className="scale-75"
-                />
-                <Label className="text-xs">Math</Label>
-              </div>
-            </div>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="secondary" className="text-xs">{typeLabel}</Badge>
+            <Badge variant="outline" className="text-xs">{mcq.session}</Badge>
+            {mcq.isMath && <Badge variant="outline" className="text-xs font-mono">Math</Badge>}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              onClick={() => onRemove(mcq._tempId)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
 
-          <Separator />
+        {/* Errors */}
+        {mcq._errors.length > 0 && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertDescription className="text-xs">
+              {mcq._errors.join(' • ')}
+            </AlertDescription>
+          </Alert>
+        )}
 
-          {/* Context */}
-          <div className="space-y-2">
-            <Label className="text-xs">Context / Passage</Label>
-            <Textarea
+        {/* Context */}
+        {(mcq.context || mcq.type === 'statement') && (
+          <div className="pl-9">
+            <Label className="text-xs text-muted-foreground">Context</Label>
+            <EditableField
               value={mcq.context || ''}
-              onChange={(e) => onUpdate(mcq._tempId, { context: e.target.value })}
-              placeholder="Optional context..."
-              rows={2}
-              className="text-sm resize-y"
+              onSave={(v) => onUpdate(mcq._tempId, { context: v })}
+              multiline
+              placeholder="No context"
+              renderDisplay={(v) => v ? <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded p-2">{v}</p> : null}
             />
           </div>
+        )}
 
-          {/* Question */}
-          <div className="space-y-2">
-            <Label className="text-xs">Question *</Label>
-            <Textarea
-              value={mcq.question}
-              onChange={(e) => onUpdate(mcq._tempId, { question: e.target.value })}
-              rows={3}
-              className="text-sm resize-y"
-            />
-          </div>
-
-          {/* Statements */}
-          {(mcq.type === 'statement' || mcq.statements.length > 0) && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Statements</Label>
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={addStatement}>
-                  <Plus className="h-3 w-3 mr-1" /> Add
-                </Button>
-              </div>
-              {mcq.statements.map((stmt, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <span className="text-xs font-mono text-muted-foreground w-5">{i + 1}.</span>
-                  <Input
-                    value={stmt}
-                    onChange={(e) => updateStatement(i, e.target.value)}
-                    className="h-8 text-xs flex-1"
-                  />
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeStatement(i)}>
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Options & Answer */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Options & Answer *</Label>
-              {mcq.options.length < 6 && (
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={addOption}>
-                  <Plus className="h-3 w-3 mr-1" /> Add Option
-                </Button>
-              )}
-            </div>
-            {mcq.options.map((opt, i) => {
-              const letter = String.fromCharCode(65 + i);
-              const isCorrect = mcq.answer === letter;
-              return (
-                <div key={i} className="flex gap-2 items-center">
-                  <button
-                    type="button"
-                    onClick={() => onUpdate(mcq._tempId, { answer: letter })}
-                    className={cn(
-                      "h-8 w-8 rounded-full text-xs font-bold flex items-center justify-center border-2 transition-colors shrink-0",
-                      isCorrect
-                        ? "bg-primary border-primary text-primary-foreground"
-                        : "border-muted-foreground/30 text-muted-foreground hover:border-primary"
-                    )}
-                  >
-                    {letter}
-                  </button>
-                  <Input
-                    value={opt}
-                    onChange={(e) => updateOption(i, e.target.value)}
-                    className={cn("h-8 text-xs flex-1", isCorrect && "ring-1 ring-primary/50")}
-                    placeholder={`Option ${letter}`}
-                  />
-                  {mcq.options.length > 2 && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeOption(i)}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
-            <p className="text-xs text-muted-foreground">Click the letter circle to set as correct answer</p>
-          </div>
-
-          {/* Explanation */}
-          <div className="space-y-2">
-            <Label className="text-xs">Explanation</Label>
-            <Textarea
-              value={mcq.explanation || ''}
-              onChange={(e) => onUpdate(mcq._tempId, { explanation: e.target.value })}
-              rows={2}
-              className="text-sm resize-y"
-              placeholder="Optional explanation..."
-            />
-          </div>
-
-          {/* References */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">References</Label>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={addReference}>
-                <Plus className="h-3 w-3 mr-1" /> Add
-              </Button>
-            </div>
-            {mcq.reference.map((ref, i) => (
-              <div key={i} className="flex gap-2 items-center">
-                <Input
-                  value={ref}
-                  onChange={(e) => updateReference(i, e.target.value)}
-                  className="h-8 text-xs flex-1"
-                  placeholder="Reference source"
+        {/* Statements */}
+        {mcq.statements.length > 0 && (
+          <div className="pl-9 space-y-1">
+            <Label className="text-xs text-muted-foreground">Statements</Label>
+            {mcq.statements.map((stmt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-xs font-mono text-muted-foreground w-5 shrink-0">{i + 1}.</span>
+                <EditableField
+                  value={stmt}
+                  onSave={(v) => updateStatement(i, v)}
+                  className="flex-1 text-sm"
                 />
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeReference(i)}>
-                  <X className="h-3 w-3" />
-                </Button>
               </div>
             ))}
           </div>
+        )}
 
-          {/* Image URLs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Question Image URL</Label>
-              <Input
-                value={mcq.questionUrl || ''}
-                onChange={(e) => onUpdate(mcq._tempId, { questionUrl: e.target.value })}
-                className="h-8 text-xs"
-                placeholder="https://..."
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Context Image URL</Label>
-              <Input
-                value={mcq.contextUrl || ''}
-                onChange={(e) => onUpdate(mcq._tempId, { contextUrl: e.target.value })}
-                className="h-8 text-xs"
-                placeholder="https://..."
-              />
-            </div>
-          </div>
+        {/* Options */}
+        <div className="pl-9 space-y-1">
+          {mcq.options.map((opt, i) => {
+            const letter = String.fromCharCode(65 + i);
+            const isCorrect = mcq.answer === letter;
+            return (
+              <div key={i} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onUpdate(mcq._tempId, { answer: letter })}
+                  className={cn(
+                    "h-6 w-6 rounded-full text-xs font-bold flex items-center justify-center border-2 transition-colors shrink-0",
+                    isCorrect
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-muted-foreground/30 text-muted-foreground hover:border-primary"
+                  )}
+                >
+                  {letter}
+                </button>
+                <EditableField
+                  value={opt}
+                  onSave={(v) => updateOption(i, v)}
+                  className={cn("flex-1 text-sm", isCorrect && "font-semibold text-primary")}
+                  renderDisplay={(v) => (
+                    <span className={cn("text-sm", isCorrect && "font-semibold text-primary")}>{v || `Option ${letter}`}</span>
+                  )}
+                />
+              </div>
+            );
+          })}
+          <p className="text-xs text-muted-foreground mt-1">Click letter to set answer • Double-click option to edit</p>
         </div>
-      )}
+
+        {/* Explanation */}
+        {mcq.explanation && (
+          <div className="pl-9">
+            <Label className="text-xs text-muted-foreground">Explanation</Label>
+            <EditableField
+              value={mcq.explanation || ''}
+              onSave={(v) => onUpdate(mcq._tempId, { explanation: v })}
+              multiline
+              placeholder="No explanation"
+              renderDisplay={(v) => v ? <p className="text-sm text-muted-foreground/80 whitespace-pre-wrap">{v}</p> : null}
+            />
+          </div>
+        )}
+
+        {/* Metadata Row */}
+        <div className="pl-9 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {mcq.source && (
+            <span>Source: <EditableField
+              value={mcq.source || ''}
+              onSave={(v) => onUpdate(mcq._tempId, { source: v })}
+              className="inline text-xs"
+              renderDisplay={(v) => <span className="font-medium text-foreground">{v}</span>}
+            /></span>
+          )}
+          {mcq.reference.length > 0 && (
+            <span>Refs: {mcq.reference.map((r, i) => (
+              <EditableField
+                key={i}
+                value={r}
+                onSave={(v) => updateReference(i, v)}
+                className="inline text-xs mx-0.5"
+                renderDisplay={(v) => <Badge variant="outline" className="text-[10px] h-5">{v}</Badge>}
+              />
+            ))}</span>
+          )}
+        </div>
+      </div>
     </Card>
   );
 };
