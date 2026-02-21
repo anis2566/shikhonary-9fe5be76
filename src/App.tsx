@@ -48,6 +48,7 @@ import SubTopicForm from "./pages/admin/academic/SubTopicForm";
 import McqList from "./pages/admin/academic/McqList";
 import McqForm from "./pages/admin/academic/McqForm";
 import McqDetails from "./pages/admin/academic/McqDetails";
+import McqImport from "./pages/admin/academic/McqImport";
 import CqList from "./pages/admin/academic/CqList";
 import CqForm from "./pages/admin/academic/CqForm";
 
@@ -173,6 +174,7 @@ const App = () => (
               {/* Question Bank - MCQs */}
               <Route path="mcqs" element={<McqList />} />
               <Route path="mcqs/create" element={<McqForm />} />
+              <Route path="mcqs/import" element={<McqImport />} />
               <Route path="mcqs/:id" element={<McqDetails />} />
               <Route path="mcqs/:id/edit" element={<McqForm />} />
               
