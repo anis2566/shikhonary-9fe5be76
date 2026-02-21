@@ -421,20 +421,22 @@ const EditableField: React.FC<EditableFieldProps> = ({ value, onSave, multiline,
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
 
-  const startEditing = () => {
+  const startEditing = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setDraft(value);
     setEditing(true);
-  };
+  }, [value]);
 
-  const commit = () => {
+  const commit = useCallback(() => {
     setEditing(false);
     if (draft !== value) onSave(draft);
-  };
+  }, [draft, value, onSave]);
 
-  const cancel = () => {
+  const cancel = useCallback(() => {
     setEditing(false);
     setDraft(value);
-  };
+  }, [value]);
 
   if (editing) {
     if (multiline) {
@@ -470,14 +472,18 @@ const EditableField: React.FC<EditableFieldProps> = ({ value, onSave, multiline,
   return (
     <div
       onDoubleClick={startEditing}
+      role="button"
+      tabIndex={0}
       className={cn(
-        "cursor-pointer rounded px-2 py-1 min-h-[28px] hover:bg-muted/50 transition-colors border border-transparent hover:border-border",
+        "cursor-pointer rounded px-2 py-1 min-h-[28px] hover:bg-muted/50 transition-colors border border-transparent hover:border-border select-none",
         isEmpty && "text-muted-foreground italic",
         className
       )}
       title="Double-click to edit"
     >
-      {renderDisplay ? renderDisplay(value) : (isEmpty ? (placeholder || 'Double-click to edit') : value)}
+      <div className="pointer-events-none">
+        {renderDisplay ? renderDisplay(value) : (isEmpty ? (placeholder || 'Double-click to edit') : value)}
+      </div>
     </div>
   );
 };
