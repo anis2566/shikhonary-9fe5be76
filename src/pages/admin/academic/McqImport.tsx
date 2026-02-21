@@ -545,9 +545,23 @@ const McqDisplayCard: React.FC<McqDisplayCardProps> = ({ mcq, index, onUpdate, o
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Badge variant="secondary" className="text-xs">{typeLabel}</Badge>
+            <Select value={mcq.type} onValueChange={(v) => onUpdate(mcq._tempId, { type: v })}>
+              <SelectTrigger className="h-7 w-auto text-xs gap-1 px-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MCQ_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Badge variant="outline" className="text-xs">{mcq.session}</Badge>
-            {mcq.isMath && <Badge variant="outline" className="text-xs font-mono">Math</Badge>}
+            <div className="flex items-center gap-1">
+              <Switch
+                checked={mcq.isMath}
+                onCheckedChange={(v) => onUpdate(mcq._tempId, { isMath: v })}
+                className="scale-75"
+              />
+              <Label className="text-xs text-muted-foreground">Math</Label>
+            </div>
             <Button
               variant="ghost"
               size="icon"
