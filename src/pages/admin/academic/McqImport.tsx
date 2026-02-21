@@ -644,7 +644,17 @@ const McqDisplayCard: React.FC<McqDisplayCardProps> = ({ mcq, index, onUpdate, o
               </div>
             );
           })}
-          <p className="text-xs text-muted-foreground mt-1">Click letter to set answer • Double-click option to edit</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-xs text-muted-foreground flex-1">Click letter to set answer • Double-click to edit</p>
+            {mcq.options.length < 6 && (
+              <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => onUpdate(mcq._tempId, { options: [...mcq.options, ''] })}>
+                <Plus className="h-3 w-3 mr-1" /> Option
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => onUpdate(mcq._tempId, { statements: [...mcq.statements, ''] })}>
+              <Plus className="h-3 w-3 mr-1" /> Statement
+            </Button>
+          </div>
         </div>
 
         {/* Explanation */}
