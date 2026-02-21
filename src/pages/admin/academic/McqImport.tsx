@@ -609,6 +609,14 @@ const McqDisplayCard: React.FC<McqDisplayCardProps> = ({ mcq, index, onUpdate, o
                   onSave={(v) => updateStatement(i, v)}
                   className="flex-1 text-sm"
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => onUpdate(mcq._tempId, { statements: mcq.statements.filter((_, si) => si !== i) })}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </div>
             ))}
           </div>
@@ -641,6 +649,21 @@ const McqDisplayCard: React.FC<McqDisplayCardProps> = ({ mcq, index, onUpdate, o
                     <span className={cn("text-sm", isCorrect && "font-semibold text-primary")}>{v || `Option ${letter}`}</span>
                   )}
                 />
+                {mcq.options.length > 2 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      const newOpts = mcq.options.filter((_, oi) => oi !== i);
+                      const removedLetter = String.fromCharCode(65 + i);
+                      const newAnswer = mcq.answer === removedLetter ? '' : mcq.answer;
+                      onUpdate(mcq._tempId, { options: newOpts, answer: newAnswer });
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             );
           })}
