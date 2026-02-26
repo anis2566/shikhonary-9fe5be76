@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import RecordPaymentDialog from '@/components/tenant/payments/RecordPaymentDialog';
 import ViewReceiptDialog from '@/components/tenant/payments/ViewReceiptDialog';
+import CollectPaymentDialog from '@/components/tenant/payments/CollectPaymentDialog';
 
 interface Payment {
   id: string;
@@ -65,6 +66,7 @@ const PaymentsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [collectDialogOpen, setCollectDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   const filtered = payments.filter((p) => {
@@ -136,7 +138,10 @@ const PaymentsPage: React.FC = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Payments</h1>
           <p className="text-muted-foreground mt-1">Track and manage student fee payments</p>
         </div>
-        <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Export</Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setCollectDialogOpen(true)}><CreditCard className="w-4 h-4 mr-2" />Collect Payment</Button>
+          <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Export</Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -248,6 +253,7 @@ const PaymentsPage: React.FC = () => {
       {/* Dialogs */}
       <RecordPaymentDialog open={recordDialogOpen} onOpenChange={setRecordDialogOpen} payment={selectedPayment} onPaymentRecorded={handleRecordPayment} />
       <ViewReceiptDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} payment={selectedPayment} />
+      <CollectPaymentDialog open={collectDialogOpen} onOpenChange={setCollectDialogOpen} payments={payments} onStudentSelect={(p) => { setSelectedPayment(p); setRecordDialogOpen(true); }} />
     </div>
   );
 };
