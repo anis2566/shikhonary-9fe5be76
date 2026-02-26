@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
 import {
-  DollarSign,
-  Search,
-  Download,
-  Filter,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  XCircle,
-  Eye,
-  MoreHorizontal,
-  TrendingUp,
-  CreditCard,
+  DollarSign, Search, Download, CheckCircle2, Clock, AlertTriangle, XCircle, Eye, MoreHorizontal, CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -32,6 +20,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import RecordPaymentDialog from '@/components/tenant/payments/RecordPaymentDialog';
+import ViewReceiptDialog from '@/components/tenant/payments/ViewReceiptDialog';
 
 interface Payment {
   id: string;
@@ -47,7 +37,7 @@ interface Payment {
   month: string;
 }
 
-const mockPayments: Payment[] = [
+const initialPayments: Payment[] = [
   { id: 'p-1', studentName: 'Rahim Ahmed', studentClass: 'Class 9-A', amount: 12000, paidAmount: 12000, dueAmount: 0, method: 'bkash', status: 'paid', date: '2024-01-15', receiptNo: 'RCP-001', month: 'January' },
   { id: 'p-2', studentName: 'Fatima Khan', studentClass: 'Class 10-B', amount: 14000, paidAmount: 7000, dueAmount: 7000, method: 'bank', status: 'partial', date: '2024-01-12', receiptNo: 'RCP-002', month: 'January' },
   { id: 'p-3', studentName: 'Karim Hossain', studentClass: 'Class 9-B', amount: 10800, paidAmount: 0, dueAmount: 10800, method: 'cash', status: 'pending', date: '-', receiptNo: '-', month: 'January' },
@@ -67,20 +57,56 @@ const monthlyCollection = [
   { month: 'Jan', collected: 420000, target: 520000 },
 ];
 
+let receiptCounter = 7;
+
 const PaymentsPage: React.FC = () => {
+  const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
-  const filtered = mockPayments.filter((p) => {
+  const filtered = payments.filter((p) => {
     const matchesSearch = p.studentName.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalCollected = mockPayments.reduce((a, p) => a + p.paidAmount, 0);
-  const totalDue = mockPayments.reduce((a, p) => a + p.dueAmount, 0);
-  const paidCount = mockPayments.filter((p) => p.status === 'paid').length;
-  const overdueCount = mockPayments.filter((p) => p.status === 'overdue').length;
+  const totalCollected = payments.reduce((a, p) => a + p.paidAmount, 0);
+  const totalDue = payments.reduce((a, p) => a + p.dueAmount, 0);
+  const paidCount = payments.filter((p) => p.status === 'paid').length;
+  const overdueCount = payments.filter((p) => p.status === 'overdue').length;
+
+  const handleRecordPayment = (paymentId: string, amount: number, method: string) => {
+    setPayments((prev) =>
+      prev.map((p) => {
+        if (p.id !== paymentId) return p;
+        const newPaid = p.paidAmount + amount;
+        const newDue = p.amount - newPaid;
+        receiptCounter++;
+        return {
+          ...p,
+          paidAmount: newPaid,
+          dueAmount: newDue,
+          method: method as Payment['method'],
+          status: newDue <= 0 ? 'paid' : 'partial',
+          date: new Date().toISOString().split('T')[0],
+          receiptNo: p.receiptNo === '-' ? `RCP-${String(receiptCounter).padStart(3, '0')}` : p.receiptNo,
+        };
+      })
+    );
+  };
+
+  const openRecordDialog = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setRecordDialogOpen(true);
+  };
+
+  const openReceiptDialog = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setReceiptDialogOpen(true);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -104,6 +130,7 @@ const PaymentsPage: React.FC = () => {
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Payments</h1>
@@ -112,6 +139,7 @@ const PaymentsPage: React.FC = () => {
         <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Export</Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-green-500/10 text-green-600"><DollarSign className="w-5 h-5" /></div><div><p className="text-2xl font-bold">৳{(totalCollected / 1000).toFixed(0)}K</p><p className="text-xs text-muted-foreground">Collected</p></div></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-destructive/10 text-destructive"><AlertTriangle className="w-5 h-5" /></div><div><p className="text-2xl font-bold">৳{(totalDue / 1000).toFixed(0)}K</p><p className="text-xs text-muted-foreground">Outstanding</p></div></div></CardContent></Card>
@@ -203,8 +231,10 @@ const PaymentsPage: React.FC = () => {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem><Eye className="w-4 h-4 mr-2" />View Receipt</DropdownMenuItem>
-                        <DropdownMenuItem><CreditCard className="w-4 h-4 mr-2" />Record Payment</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openReceiptDialog(p)}><Eye className="w-4 h-4 mr-2" />View Receipt</DropdownMenuItem>
+                        {p.dueAmount > 0 && (
+                          <DropdownMenuItem onClick={() => openRecordDialog(p)}><CreditCard className="w-4 h-4 mr-2" />Record Payment</DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -214,6 +244,10 @@ const PaymentsPage: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <RecordPaymentDialog open={recordDialogOpen} onOpenChange={setRecordDialogOpen} payment={selectedPayment} onPaymentRecorded={handleRecordPayment} />
+      <ViewReceiptDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} payment={selectedPayment} />
     </div>
   );
 };
