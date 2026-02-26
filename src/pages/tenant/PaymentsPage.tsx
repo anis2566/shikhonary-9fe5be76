@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import type { TransactionEntry } from '@/components/tenant/payments/ViewReceiptDialog';
 import {
   DollarSign, Search, Download, CheckCircle2, Clock, AlertTriangle, XCircle, Eye, MoreHorizontal, CreditCard,
 } from 'lucide-react';
@@ -68,6 +69,23 @@ const PaymentsPage: React.FC = () => {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [collectDialogOpen, setCollectDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [transactionLog, setTransactionLog] = useState<Record<string, TransactionEntry[]>>(() => {
+    // Seed initial history from mock data for students who already paid
+    const seed: Record<string, TransactionEntry[]> = {};
+    initialPayments.forEach((p) => {
+      if (p.paidAmount > 0 && p.date !== '-') {
+        seed[p.id] = [{
+          id: `tx-init-${p.id}`,
+          amount: p.paidAmount,
+          method: p.method,
+          date: p.date,
+          receiptNo: p.receiptNo,
+          note: 'Initial payment',
+        }];
+      }
+    });
+    return seed;
+  });
 
   const filtered = payments.filter((p) => {
     const matchesSearch = p.studentName.toLowerCase().includes(search.toLowerCase());
@@ -80,25 +98,37 @@ const PaymentsPage: React.FC = () => {
   const paidCount = payments.filter((p) => p.status === 'paid').length;
   const overdueCount = payments.filter((p) => p.status === 'overdue').length;
 
-  const handleRecordPayment = (paymentId: string, amount: number, method: string) => {
+  const handleRecordPayment = useCallback((paymentId: string, amount: number, method: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    receiptCounter++;
+    const newReceiptNo = `RCP-${String(receiptCounter).padStart(3, '0')}`;
+
+    // Add to transaction log
+    setTransactionLog((prev) => ({
+      ...prev,
+      [paymentId]: [
+        { id: `tx-${Date.now()}`, amount, method, date: today, receiptNo: newReceiptNo },
+        ...(prev[paymentId] || []),
+      ],
+    }));
+
     setPayments((prev) =>
       prev.map((p) => {
         if (p.id !== paymentId) return p;
         const newPaid = p.paidAmount + amount;
         const newDue = p.amount - newPaid;
-        receiptCounter++;
         return {
           ...p,
           paidAmount: newPaid,
           dueAmount: newDue,
           method: method as Payment['method'],
           status: newDue <= 0 ? 'paid' : 'partial',
-          date: new Date().toISOString().split('T')[0],
-          receiptNo: p.receiptNo === '-' ? `RCP-${String(receiptCounter).padStart(3, '0')}` : p.receiptNo,
+          date: today,
+          receiptNo: p.receiptNo === '-' ? newReceiptNo : p.receiptNo,
         };
       })
     );
-  };
+  }, []);
 
   const openRecordDialog = (payment: Payment) => {
     setSelectedPayment(payment);
@@ -252,7 +282,7 @@ const PaymentsPage: React.FC = () => {
 
       {/* Dialogs */}
       <RecordPaymentDialog open={recordDialogOpen} onOpenChange={setRecordDialogOpen} payment={selectedPayment} onPaymentRecorded={handleRecordPayment} />
-      <ViewReceiptDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} payment={selectedPayment} />
+      <ViewReceiptDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} payment={selectedPayment} transactionHistory={selectedPayment ? transactionLog[selectedPayment.id] || [] : []} />
       <CollectPaymentDialog open={collectDialogOpen} onOpenChange={setCollectDialogOpen} payments={payments} onStudentSelect={(p) => { setSelectedPayment(p); setRecordDialogOpen(true); }} />
     </div>
   );
