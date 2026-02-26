@@ -20,6 +20,8 @@ import {
   BookOpen,
   FileSpreadsheet,
   FileEdit,
+  Shield,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -57,6 +59,8 @@ const navSections: NavSection[] = [
     items: [
       { title: 'Students', url: '/tenant/students', icon: GraduationCap },
       { title: 'Teachers', url: '/tenant/teachers', icon: UserCheck },
+      { title: 'Guardians', url: '/tenant/guardians', icon: Shield },
+      { title: 'Staff', url: '/tenant/staff', icon: Briefcase },
       { title: 'Batches', url: '/tenant/batches', icon: Users },
     ],
   },

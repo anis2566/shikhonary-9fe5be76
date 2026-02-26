@@ -159,6 +159,45 @@ export interface Announcement {
   createdAt: string;
 }
 
+// Guardian
+export interface Guardian {
+  id: string;
+  name: string;
+  relationship: string;
+  email?: string;
+  phonePrimary: string;
+  phoneSecondary?: string;
+  occupation?: string;
+  address?: string;
+  nidNumber?: string;
+  imageUrl?: string;
+  studentIds: string[];
+  studentNames: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Staff (non-teaching)
+export interface Staff {
+  id: string;
+  name: string;
+  employeeId: string;
+  email?: string;
+  phone: string;
+  designation: string;
+  department: string;
+  dateOfBirth?: string;
+  gender?: string;
+  joiningDate: string;
+  salary?: number;
+  address?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 // Dashboard stats
 export interface TenantDashboardStats {
   totalStudents: number;
@@ -173,6 +212,8 @@ export interface TenantDashboardStats {
   averageExamScore: number;
   totalAttempts: number;
   pendingResults: number;
+  totalGuardians: number;
+  totalStaff: number;
 }
 
 // Mock data generators
@@ -484,6 +525,189 @@ export const mockTeachers: Teacher[] = [
     isActive: true,
     createdAt: '2019-03-10T10:00:00Z',
   },
+  {
+    id: 'tch-4',
+    name: 'Momena Khatun',
+    email: 'momena@example.com',
+    phone: '01611111111',
+    subjectIds: ['sub-6'],
+    subjectNames: ['Biology'],
+    designation: 'Lecturer',
+    department: 'Science',
+    joinDate: '2022-01-10',
+    isActive: true,
+    createdAt: '2022-01-10T10:00:00Z',
+  },
+  {
+    id: 'tch-5',
+    name: 'Jamal Hossain',
+    email: 'jamal@example.com',
+    phone: '01511111111',
+    subjectIds: ['sub-7'],
+    subjectNames: ['ICT'],
+    designation: 'Assistant Teacher',
+    department: 'Technology',
+    joinDate: '2023-07-01',
+    isActive: false,
+    createdAt: '2023-07-01T10:00:00Z',
+  },
+];
+
+export const mockGuardians: Guardian[] = [
+  {
+    id: 'grd-1',
+    name: 'Abdul Ahmed',
+    relationship: 'Father',
+    email: 'abdul.ahmed@example.com',
+    phonePrimary: '01712345000',
+    phoneSecondary: '01712345001',
+    occupation: 'Businessman',
+    address: '123 Main St, Dhaka',
+    nidNumber: '1234567890',
+    studentIds: ['std-1'],
+    studentNames: ['Rahim Ahmed'],
+    isActive: true,
+    createdAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'grd-2',
+    name: 'Karim Uddin',
+    relationship: 'Father',
+    email: 'karim.uddin@example.com',
+    phonePrimary: '01812345000',
+    occupation: 'Teacher',
+    address: '456 Park Ave, Dhaka',
+    studentIds: ['std-2'],
+    studentNames: ['Fatima Begum'],
+    isActive: true,
+    createdAt: '2024-01-16T10:00:00Z',
+  },
+  {
+    id: 'grd-3',
+    name: 'Hassan Ali',
+    relationship: 'Father',
+    phonePrimary: '01912345000',
+    occupation: 'Engineer',
+    address: '789 Lake Road, Chittagong',
+    nidNumber: '9876543210',
+    studentIds: ['std-3'],
+    studentNames: ['Karim Hassan'],
+    isActive: true,
+    createdAt: '2024-01-17T10:00:00Z',
+  },
+  {
+    id: 'grd-4',
+    name: 'Khan Mohammad',
+    relationship: 'Father',
+    email: 'khan.mohammad@example.com',
+    phonePrimary: '01612345000',
+    occupation: 'Doctor',
+    address: '321 Hill Street, Sylhet',
+    studentIds: ['std-4'],
+    studentNames: ['Ayesha Khan'],
+    isActive: true,
+    createdAt: '2024-01-18T10:00:00Z',
+  },
+  {
+    id: 'grd-5',
+    name: 'Roksana Begum',
+    relationship: 'Mother',
+    phonePrimary: '01712345100',
+    occupation: 'Homemaker',
+    address: '321 Hill Street, Sylhet',
+    studentIds: ['std-4'],
+    studentNames: ['Ayesha Khan'],
+    isActive: true,
+    createdAt: '2024-01-18T10:00:00Z',
+  },
+  {
+    id: 'grd-6',
+    name: 'Ali Rahman',
+    relationship: 'Father',
+    phonePrimary: '01512345000',
+    occupation: 'Government Officer',
+    address: '654 Green Road, Rajshahi',
+    studentIds: ['std-5'],
+    studentNames: ['Mohammad Ali'],
+    isActive: false,
+    createdAt: '2024-01-19T10:00:00Z',
+  },
+];
+
+export const mockStaff: Staff[] = [
+  {
+    id: 'stf-1',
+    name: 'Mizanur Rahman',
+    employeeId: 'EMP-001',
+    email: 'mizan@example.com',
+    phone: '01711100001',
+    designation: 'Accountant',
+    department: 'Administration',
+    dateOfBirth: '1985-03-15',
+    gender: 'Male',
+    joiningDate: '2018-01-01',
+    salary: 35000,
+    address: '12 Office Lane, Dhaka',
+    isActive: true,
+    createdAt: '2018-01-01T10:00:00Z',
+  },
+  {
+    id: 'stf-2',
+    name: 'Shirin Akter',
+    employeeId: 'EMP-002',
+    email: 'shirin@example.com',
+    phone: '01811100002',
+    designation: 'Librarian',
+    department: 'Library',
+    dateOfBirth: '1990-07-20',
+    gender: 'Female',
+    joiningDate: '2019-06-15',
+    salary: 28000,
+    address: '45 Book Street, Dhaka',
+    isActive: true,
+    createdAt: '2019-06-15T10:00:00Z',
+  },
+  {
+    id: 'stf-3',
+    name: 'Kamal Hasan',
+    employeeId: 'EMP-003',
+    phone: '01911100003',
+    designation: 'Lab Assistant',
+    department: 'Science Lab',
+    dateOfBirth: '1988-11-10',
+    gender: 'Male',
+    joiningDate: '2020-03-01',
+    salary: 22000,
+    address: '78 Lab Road, Dhaka',
+    isActive: true,
+    createdAt: '2020-03-01T10:00:00Z',
+  },
+  {
+    id: 'stf-4',
+    name: 'Rina Begum',
+    employeeId: 'EMP-004',
+    phone: '01611100004',
+    designation: 'Receptionist',
+    department: 'Administration',
+    gender: 'Female',
+    joiningDate: '2021-09-01',
+    salary: 20000,
+    isActive: true,
+    createdAt: '2021-09-01T10:00:00Z',
+  },
+  {
+    id: 'stf-5',
+    name: 'Babul Mia',
+    employeeId: 'EMP-005',
+    phone: '01511100005',
+    designation: 'Security Guard',
+    department: 'Security',
+    gender: 'Male',
+    joiningDate: '2017-04-15',
+    salary: 15000,
+    isActive: false,
+    createdAt: '2017-04-15T10:00:00Z',
+  },
 ];
 
 export const mockExams: Exam[] = [
@@ -697,6 +921,8 @@ export const mockDashboardStats: TenantDashboardStats = {
   averageExamScore: 68.2,
   totalAttempts: 892,
   pendingResults: 3,
+  totalGuardians: 42,
+  totalStaff: 8,
 };
 
 // Chart data
