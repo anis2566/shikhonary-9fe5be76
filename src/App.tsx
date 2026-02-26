@@ -103,6 +103,13 @@ import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
 import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
 import ExamDetailsPage from "./pages/tenant/ExamDetailsPage";
 import ReportCardPage from "./pages/tenant/ReportCardPage";
+import FeeStructurePage from "./pages/tenant/FeeStructurePage";
+import PaymentsPage from "./pages/tenant/PaymentsPage";
+import FeeRemindersPage from "./pages/tenant/FeeRemindersPage";
+import LibraryPage from "./pages/tenant/LibraryPage";
+import TransportPage from "./pages/tenant/TransportPage";
+import AuditLogPage from "./pages/tenant/AuditLogPage";
+import RolesPermissionsPage from "./pages/tenant/RolesPermissionsPage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -235,6 +242,13 @@ const App = () => (
               <Route path="timetable" element={<TimetablePage />} />
               <Route path="teacher-attendance" element={<TeacherAttendancePage />} />
               <Route path="mark-attendance" element={<MarkAttendancePage />} />
+              <Route path="fee-structure" element={<FeeStructurePage />} />
+              <Route path="payments" element={<PaymentsPage />} />
+              <Route path="fee-reminders" element={<FeeRemindersPage />} />
+              <Route path="library" element={<LibraryPage />} />
+              <Route path="transport" element={<TransportPage />} />
+              <Route path="audit-log" element={<AuditLogPage />} />
+              <Route path="roles" element={<RolesPermissionsPage />} />
               <Route path="unauthorized" element={<UnauthorizedPage />} />
             </Route>
 
