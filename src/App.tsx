@@ -99,6 +99,8 @@ import AcademicYearList from "./pages/tenant/AcademicYearList";
 import AcademicYearDetails from "./pages/tenant/AcademicYearDetails";
 import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
 import TimetablePage from "./pages/tenant/TimetablePage";
+import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
+import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -227,6 +229,8 @@ const App = () => (
               <Route path="academic-years/create" element={<AcademicYearCreate />} />
               <Route path="academic-years/:id" element={<AcademicYearDetails />} />
               <Route path="timetable" element={<TimetablePage />} />
+              <Route path="teacher-attendance" element={<TeacherAttendancePage />} />
+              <Route path="mark-attendance" element={<MarkAttendancePage />} />
               <Route path="unauthorized" element={<UnauthorizedPage />} />
             </Route>
 
