@@ -22,6 +22,13 @@ import {
   FileEdit,
   Shield,
   Briefcase,
+  DollarSign,
+  CreditCard,
+  SendHorizonal,
+  BookCopy,
+  Bus,
+  Activity,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -91,6 +98,14 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    label: 'Fees & Payments',
+    items: [
+      { title: 'Fee Structure', url: '/tenant/fee-structure', icon: DollarSign },
+      { title: 'Payments', url: '/tenant/payments', icon: CreditCard },
+      { title: 'Reminders', url: '/tenant/fee-reminders', icon: SendHorizonal },
+    ],
+  },
+  {
     label: 'Analytics',
     items: [
       { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
@@ -103,6 +118,15 @@ const navSections: NavSection[] = [
     items: [
       { title: 'Communications', url: '/tenant/communications', icon: Megaphone },
       { title: 'Announcements', url: '/tenant/announcements', icon: Bell },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { title: 'Library', url: '/tenant/library', icon: BookCopy },
+      { title: 'Transport', url: '/tenant/transport', icon: Bus },
+      { title: 'Audit Log', url: '/tenant/audit-log', icon: Activity },
+      { title: 'Roles', url: '/tenant/roles', icon: Lock },
     ],
   },
   {
