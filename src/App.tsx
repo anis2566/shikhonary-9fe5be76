@@ -71,6 +71,10 @@ import StudentList from "./pages/tenant/StudentList";
 import StudentCreate from "./pages/tenant/StudentCreate";
 import StudentDetails from "./pages/tenant/StudentDetails";
 import TeacherList from "./pages/tenant/TeacherList";
+import GuardianList from "./pages/tenant/GuardianList";
+import GuardianDetails from "./pages/tenant/GuardianDetails";
+import StaffList from "./pages/tenant/StaffList";
+import StaffDetails from "./pages/tenant/StaffDetails";
 import BatchList from "./pages/tenant/BatchList";
 import BatchCreate from "./pages/tenant/BatchCreate";
 import BatchDetails from "./pages/tenant/BatchDetails";
@@ -192,6 +196,10 @@ const App = () => (
               <Route path="students/create" element={<StudentCreate />} />
               <Route path="students/:id" element={<StudentDetails />} />
               <Route path="teachers" element={<TeacherList />} />
+              <Route path="guardians" element={<GuardianList />} />
+              <Route path="guardians/:id" element={<GuardianDetails />} />
+              <Route path="staff" element={<StaffList />} />
+              <Route path="staff/:id" element={<StaffDetails />} />
               <Route path="batches" element={<BatchList />} />
               <Route path="batches/create" element={<BatchCreate />} />
               <Route path="batches/:id" element={<BatchDetails />} />
