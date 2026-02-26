@@ -82,10 +82,17 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    label: 'Attendance',
+    items: [
+      { title: 'Student Attendance', url: '/tenant/attendance', icon: CalendarDays },
+      { title: 'Teacher Attendance', url: '/tenant/teacher-attendance', icon: UserCheck },
+      { title: 'Mark Attendance', url: '/tenant/mark-attendance', icon: ClipboardList },
+    ],
+  },
+  {
     label: 'Analytics',
     items: [
       { title: 'Overview', url: '/tenant/analytics', icon: BarChart3 },
-      { title: 'Attendance', url: '/tenant/attendance', icon: CalendarDays },
       { title: 'Reports', url: '/tenant/reports', icon: FileSpreadsheet },
       { title: 'Calendar', url: '/tenant/calendar', icon: Calendar },
     ],
