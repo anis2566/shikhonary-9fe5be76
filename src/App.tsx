@@ -95,6 +95,10 @@ import TenantCqDetailsPage from "./pages/tenant/CqDetailsPage";
 import QuestionPaperBuilder from "./pages/tenant/QuestionPaperBuilder";
 import UnauthorizedPage from "./pages/tenant/UnauthorizedPage";
 import EmailTemplatePreview from "./pages/admin/EmailTemplatePreview";
+import AcademicYearList from "./pages/tenant/AcademicYearList";
+import AcademicYearDetails from "./pages/tenant/AcademicYearDetails";
+import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
+import TimetablePage from "./pages/tenant/TimetablePage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -219,6 +223,10 @@ const App = () => (
               <Route path="settings" element={<TenantSettings />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="question-paper-builder" element={<QuestionPaperBuilder />} />
+              <Route path="academic-years" element={<AcademicYearList />} />
+              <Route path="academic-years/create" element={<AcademicYearCreate />} />
+              <Route path="academic-years/:id" element={<AcademicYearDetails />} />
+              <Route path="timetable" element={<TimetablePage />} />
               <Route path="unauthorized" element={<UnauthorizedPage />} />
             </Route>
 

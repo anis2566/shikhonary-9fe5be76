@@ -198,6 +198,50 @@ export interface Staff {
   updatedAt?: string;
 }
 
+// Academic Year
+export interface AcademicYear {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  isActive: boolean;
+  totalStudents: number;
+  totalBatches: number;
+  createdAt: string;
+}
+
+// Timetable
+export type DayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+
+export interface TimetableSlot {
+  id: string;
+  day: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  subjectName: string;
+  teacherName: string;
+  batchName: string;
+  className: string;
+  room?: string;
+  type: 'CLASS' | 'BREAK' | 'LAB' | 'ASSEMBLY';
+}
+
+export interface Timetable {
+  id: string;
+  name: string;
+  batchId: string;
+  batchName: string;
+  className: string;
+  academicYearId: string;
+  academicYear: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  isActive: boolean;
+  slots: TimetableSlot[];
+  createdAt: string;
+}
+
 // Dashboard stats
 export interface TenantDashboardStats {
   totalStudents: number;
@@ -924,6 +968,114 @@ export const mockDashboardStats: TenantDashboardStats = {
   totalGuardians: 42,
   totalStaff: 8,
 };
+
+// Academic Years
+export const mockAcademicYears: AcademicYear[] = [
+  {
+    id: 'ay-1',
+    name: '2025',
+    startDate: '2025-01-01',
+    endDate: '2025-12-31',
+    isCurrent: true,
+    isActive: true,
+    totalStudents: 156,
+    totalBatches: 8,
+    createdAt: '2024-12-15T10:00:00Z',
+  },
+  {
+    id: 'ay-2',
+    name: '2024',
+    startDate: '2024-01-01',
+    endDate: '2024-12-31',
+    isCurrent: false,
+    isActive: false,
+    totalStudents: 142,
+    totalBatches: 6,
+    createdAt: '2023-12-15T10:00:00Z',
+  },
+  {
+    id: 'ay-3',
+    name: '2023',
+    startDate: '2023-01-01',
+    endDate: '2023-12-31',
+    isCurrent: false,
+    isActive: false,
+    totalStudents: 128,
+    totalBatches: 5,
+    createdAt: '2022-12-15T10:00:00Z',
+  },
+];
+
+// Timetables
+const morningBatchSlots: TimetableSlot[] = [
+  { id: 'ts-1', day: 'Sunday', startTime: '08:00', endTime: '08:45', subjectName: 'Physics', teacherName: 'Dr. Salim Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-2', day: 'Sunday', startTime: '08:50', endTime: '09:35', subjectName: 'Mathematics', teacherName: 'Shahana Parveen', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-3', day: 'Sunday', startTime: '09:35', endTime: '09:50', subjectName: 'Break', teacherName: '', batchName: 'Morning Batch A', className: 'Class 10', type: 'BREAK' },
+  { id: 'ts-4', day: 'Sunday', startTime: '09:50', endTime: '10:35', subjectName: 'Chemistry', teacherName: 'Nasir Uddin', batchName: 'Morning Batch A', className: 'Class 10', room: 'Lab 1', type: 'LAB' },
+  { id: 'ts-5', day: 'Sunday', startTime: '10:40', endTime: '11:25', subjectName: 'English', teacherName: 'Rafiq Islam', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-6', day: 'Monday', startTime: '08:00', endTime: '08:45', subjectName: 'Mathematics', teacherName: 'Shahana Parveen', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-7', day: 'Monday', startTime: '08:50', endTime: '09:35', subjectName: 'Biology', teacherName: 'Taslima Khatun', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-8', day: 'Monday', startTime: '09:35', endTime: '09:50', subjectName: 'Break', teacherName: '', batchName: 'Morning Batch A', className: 'Class 10', type: 'BREAK' },
+  { id: 'ts-9', day: 'Monday', startTime: '09:50', endTime: '10:35', subjectName: 'Physics', teacherName: 'Dr. Salim Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Lab 2', type: 'LAB' },
+  { id: 'ts-10', day: 'Monday', startTime: '10:40', endTime: '11:25', subjectName: 'Bangla', teacherName: 'Nadia Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-11', day: 'Tuesday', startTime: '08:00', endTime: '08:45', subjectName: 'Chemistry', teacherName: 'Nasir Uddin', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-12', day: 'Tuesday', startTime: '08:50', endTime: '09:35', subjectName: 'Physics', teacherName: 'Dr. Salim Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-13', day: 'Tuesday', startTime: '09:35', endTime: '09:50', subjectName: 'Break', teacherName: '', batchName: 'Morning Batch A', className: 'Class 10', type: 'BREAK' },
+  { id: 'ts-14', day: 'Tuesday', startTime: '09:50', endTime: '10:35', subjectName: 'English', teacherName: 'Rafiq Islam', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-15', day: 'Tuesday', startTime: '10:40', endTime: '11:25', subjectName: 'Mathematics', teacherName: 'Shahana Parveen', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-16', day: 'Wednesday', startTime: '08:00', endTime: '08:45', subjectName: 'Biology', teacherName: 'Taslima Khatun', batchName: 'Morning Batch A', className: 'Class 10', room: 'Lab 1', type: 'LAB' },
+  { id: 'ts-17', day: 'Wednesday', startTime: '08:50', endTime: '09:35', subjectName: 'Bangla', teacherName: 'Nadia Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-18', day: 'Wednesday', startTime: '09:35', endTime: '09:50', subjectName: 'Break', teacherName: '', batchName: 'Morning Batch A', className: 'Class 10', type: 'BREAK' },
+  { id: 'ts-19', day: 'Wednesday', startTime: '09:50', endTime: '10:35', subjectName: 'Mathematics', teacherName: 'Shahana Parveen', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-20', day: 'Wednesday', startTime: '10:40', endTime: '11:25', subjectName: 'Physics', teacherName: 'Dr. Salim Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-21', day: 'Thursday', startTime: '08:00', endTime: '08:45', subjectName: 'English', teacherName: 'Rafiq Islam', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-22', day: 'Thursday', startTime: '08:50', endTime: '09:35', subjectName: 'Chemistry', teacherName: 'Nasir Uddin', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-23', day: 'Thursday', startTime: '09:35', endTime: '09:50', subjectName: 'Break', teacherName: '', batchName: 'Morning Batch A', className: 'Class 10', type: 'BREAK' },
+  { id: 'ts-24', day: 'Thursday', startTime: '09:50', endTime: '10:35', subjectName: 'Biology', teacherName: 'Taslima Khatun', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+  { id: 'ts-25', day: 'Thursday', startTime: '10:40', endTime: '11:25', subjectName: 'Bangla', teacherName: 'Nadia Rahman', batchName: 'Morning Batch A', className: 'Class 10', room: 'Room 101', type: 'CLASS' },
+];
+
+export const mockTimetables: Timetable[] = [
+  {
+    id: 'tt-1',
+    name: 'Class 10 - Morning Batch A Routine',
+    batchId: 'batch-1',
+    batchName: 'Morning Batch A',
+    className: 'Class 10',
+    academicYearId: 'ay-1',
+    academicYear: '2025',
+    effectiveFrom: '2025-01-01',
+    isActive: true,
+    slots: morningBatchSlots,
+    createdAt: '2025-01-01T10:00:00Z',
+  },
+  {
+    id: 'tt-2',
+    name: 'Class 10 - Evening Batch B Routine',
+    batchId: 'batch-2',
+    batchName: 'Evening Batch B',
+    className: 'Class 10',
+    academicYearId: 'ay-1',
+    academicYear: '2025',
+    effectiveFrom: '2025-01-01',
+    isActive: true,
+    slots: [],
+    createdAt: '2025-01-01T10:00:00Z',
+  },
+  {
+    id: 'tt-3',
+    name: 'Class 9 - Morning Batch A Routine',
+    batchId: 'batch-3',
+    batchName: 'Morning Batch A',
+    className: 'Class 9',
+    academicYearId: 'ay-1',
+    academicYear: '2025',
+    effectiveFrom: '2025-01-01',
+    isActive: true,
+    slots: [],
+    createdAt: '2025-01-01T10:00:00Z',
+  },
+];
 
 // Chart data
 export const examPerformanceData = [
