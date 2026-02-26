@@ -65,6 +65,13 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    label: 'Academics',
+    items: [
+      { title: 'Academic Years', url: '/tenant/academic-years', icon: Calendar },
+      { title: 'Timetable', url: '/tenant/timetable', icon: CalendarDays },
+    ],
+  },
+  {
     label: 'Examinations',
     items: [
       { title: 'All Exams', url: '/tenant/exams', icon: ClipboardList },
