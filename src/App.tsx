@@ -101,6 +101,8 @@ import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
 import TimetablePage from "./pages/tenant/TimetablePage";
 import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
 import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
+import ExamDetailsPage from "./pages/tenant/ExamDetailsPage";
+import ReportCardPage from "./pages/tenant/ReportCardPage";
 
 // Invitation
 import AcceptInvitation from "./pages/invitation/AcceptInvitation";
@@ -212,11 +214,13 @@ const App = () => (
               <Route path="batches/:id/edit" element={<BatchCreate />} />
               <Route path="exams" element={<ExamList />} />
               <Route path="exams/create" element={<ExamCreate />} />
+              <Route path="exams/:id" element={<ExamDetailsPage />} />
               <Route path="exams/:id/questions" element={<ExamQuestionsPage />} />
               <Route path="question-bank" element={<QuestionBankPage />} />
               <Route path="question-bank/mcqs/:id" element={<TenantMcqDetailsPage />} />
               <Route path="question-bank/cqs/:id" element={<TenantCqDetailsPage />} />
               <Route path="results" element={<ResultsPage />} />
+              <Route path="report-cards" element={<ReportCardPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="announcements" element={<AnnouncementsPage />} />

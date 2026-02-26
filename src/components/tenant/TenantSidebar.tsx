@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
       { title: 'Question Bank', url: '/tenant/question-bank', icon: BookOpen },
       { title: 'Paper Builder', url: '/tenant/question-paper-builder', icon: FileEdit },
       { title: 'Results', url: '/tenant/results', icon: TrendingUp },
+      { title: 'Report Cards', url: '/tenant/report-cards', icon: FileSpreadsheet },
     ],
   },
   {
