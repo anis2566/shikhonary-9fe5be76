@@ -372,6 +372,161 @@ export function generateMarksheetPDF(data: ExamMarksheet): jsPDF {
   return doc;
 }
 
+// Invoice data interface
+export interface InvoiceData {
+  studentName: string;
+  studentClass: string;
+  studentRoll: string;
+  month: string;
+  totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  status: string;
+  receiptNo: string;
+  date: string;
+  method: string;
+  transactions: { amount: number; method: string; date: string; receiptNo: string; note?: string }[];
+}
+
+// Generate Fee Invoice PDF
+export function generateInvoicePDF(data: InvoiceData): jsPDF {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let yPos = 20;
+
+  // Header
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(institutionDetails.name, pageWidth / 2, yPos, { align: 'center' });
+
+  yPos += 7;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(institutionDetails.address, pageWidth / 2, yPos, { align: 'center' });
+
+  yPos += 5;
+  doc.text(`Phone: ${institutionDetails.phone} | Email: ${institutionDetails.email}`, pageWidth / 2, yPos, { align: 'center' });
+
+  // Title
+  yPos += 12;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FEE INVOICE / RECEIPT', pageWidth / 2, yPos, { align: 'center' });
+
+  // Divider
+  yPos += 5;
+  doc.setLineWidth(0.5);
+  doc.line(15, yPos, pageWidth - 15, yPos);
+
+  // Invoice meta
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Receipt No: ${data.receiptNo}`, 15, yPos);
+  doc.text(`Date: ${data.date === '-' ? 'N/A' : data.date}`, pageWidth - 60, yPos);
+
+  yPos += 6;
+  doc.text(`Month: ${data.month}`, 15, yPos);
+
+  const statusLabel = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+  doc.text(`Status: ${statusLabel}`, pageWidth - 60, yPos);
+
+  // Student info section
+  yPos += 12;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Student Information', 15, yPos);
+
+  yPos += 7;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Name: ${data.studentName}`, 15, yPos);
+  doc.text(`Class: ${data.studentClass}`, pageWidth / 2, yPos);
+
+  yPos += 6;
+  doc.text(`Roll: ${data.studentRoll}`, 15, yPos);
+
+  // Fee breakdown table
+  yPos += 12;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fee Breakdown', 15, yPos);
+
+  yPos += 5;
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Description', 'Amount (৳)']],
+    body: [
+      ['Monthly Tuition Fee', data.totalAmount.toLocaleString()],
+      ['Amount Paid', data.paidAmount.toLocaleString()],
+      ['Balance Due', data.dueAmount.toLocaleString()],
+    ],
+    theme: 'grid',
+    styles: { fontSize: 10, cellPadding: 4 },
+    headStyles: { fillColor: [0, 128, 128], textColor: 255, fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 100 },
+      1: { cellWidth: 50, halign: 'right' },
+    },
+  });
+
+  // @ts-ignore
+  yPos = doc.lastAutoTable.finalY + 10;
+
+  // Transaction history
+  if (data.transactions.length > 0) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment History', 15, yPos);
+
+    yPos += 5;
+    const txRows = data.transactions.map((tx) => [
+      tx.date,
+      tx.method.charAt(0).toUpperCase() + tx.method.slice(1),
+      tx.receiptNo,
+      `৳${tx.amount.toLocaleString()}`,
+    ]);
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Date', 'Method', 'Receipt', 'Amount']],
+      body: txRows,
+      theme: 'striped',
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [0, 128, 128], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35, halign: 'right' },
+      },
+    });
+
+    // @ts-ignore
+    yPos = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Signature section
+  yPos = Math.max(yPos + 20, doc.internal.pageSize.getHeight() - 45);
+  doc.setLineWidth(0.3);
+
+  doc.line(15, yPos, 70, yPos);
+  doc.setFontSize(9);
+  doc.text('Accountant', 32, yPos + 5);
+
+  doc.line(pageWidth - 70, yPos, pageWidth - 15, yPos);
+  doc.text('Principal', pageWidth - 50, yPos + 5);
+
+  // Footer
+  yPos = doc.internal.pageSize.getHeight() - 15;
+  doc.setFontSize(8);
+  doc.setTextColor(128);
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, yPos);
+  doc.text('This is a computer-generated document', pageWidth - 15, yPos, { align: 'right' });
+
+  return doc;
+}
+
 // Helper to download PDF
 export function downloadPDF(doc: jsPDF, filename: string): void {
   doc.save(`${filename}.pdf`);

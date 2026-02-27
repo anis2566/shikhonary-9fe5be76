@@ -2,9 +2,10 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, DollarSign, CheckCircle2, Clock, AlertTriangle, XCircle,
-  CreditCard, ArrowDownCircle, Download, User, Calendar,
+  CreditCard, ArrowDownCircle, Download, User, Calendar, FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { generateInvoicePDF, downloadPDF } from '@/lib/pdf-generator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -126,6 +127,52 @@ const StudentPaymentDetails: React.FC = () => {
     toast({ title: 'Payment recorded', description: `৳${amount.toLocaleString()} received for ${monthEntry?.month}` });
   }, [months, toast]);
 
+  const handleDownloadInvoice = useCallback((m: Payment) => {
+    const monthTx = transactions.filter((tx) => tx.month === m.month);
+    const doc = generateInvoicePDF({
+      studentName: student.name,
+      studentClass: student.class,
+      studentRoll: student.roll,
+      month: m.month,
+      totalAmount: m.amount,
+      paidAmount: m.paidAmount,
+      dueAmount: m.dueAmount,
+      status: m.status,
+      receiptNo: m.receiptNo,
+      date: m.date,
+      method: m.method,
+      transactions: monthTx,
+    });
+    const safeName = student.name.replace(/\s+/g, '-').toLowerCase();
+    const safeMonth = m.month.replace(/\s+/g, '-').toLowerCase();
+    downloadPDF(doc, `invoice-${safeName}-${safeMonth}`);
+    toast({ title: 'Invoice downloaded', description: `PDF for ${m.month} saved.` });
+  }, [transactions, student, toast]);
+
+  const handleDownloadAll = useCallback(() => {
+    months.filter((m) => m.paidAmount > 0).forEach((m) => {
+      const monthTx = transactions.filter((tx) => tx.month === m.month);
+      const doc = generateInvoicePDF({
+        studentName: student.name,
+        studentClass: student.class,
+        studentRoll: student.roll,
+        month: m.month,
+        totalAmount: m.amount,
+        paidAmount: m.paidAmount,
+        dueAmount: m.dueAmount,
+        status: m.status,
+        receiptNo: m.receiptNo,
+        date: m.date,
+        method: m.method,
+        transactions: monthTx,
+      });
+      const safeName = student.name.replace(/\s+/g, '-').toLowerCase();
+      const safeMonth = m.month.replace(/\s+/g, '-').toLowerCase();
+      downloadPDF(doc, `invoice-${safeName}-${safeMonth}`);
+    });
+    toast({ title: 'All invoices downloaded', description: `${months.filter(m => m.paidAmount > 0).length} PDFs saved.` });
+  }, [months, transactions, student, toast]);
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* Header */}
@@ -137,8 +184,8 @@ const StudentPaymentDetails: React.FC = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Payment Details</h1>
           <p className="text-muted-foreground mt-0.5">Full fee history & balance</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => toast({ title: 'Export started', description: 'Generating payment report...' })}>
-          <Download className="w-4 h-4 mr-2" />Export
+        <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+          <Download className="w-4 h-4 mr-2" />Export All
         </Button>
       </div>
 
@@ -228,13 +275,23 @@ const StudentPaymentDetails: React.FC = () => {
                   </div>
                 </div>
                 {m.dueAmount > 0 ? (
-                  <Button size="sm" variant="outline" onClick={() => { setSelectedMonth(m); setRecordDialogOpen(true); }}>
-                    <CreditCard className="w-3.5 h-3.5 mr-1.5" />Pay ৳{m.dueAmount.toLocaleString()}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => handleDownloadInvoice(m)} title="Download Invoice">
+                      <FileText className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setSelectedMonth(m); setRecordDialogOpen(true); }}>
+                      <CreditCard className="w-3.5 h-3.5 mr-1.5" />Pay ৳{m.dueAmount.toLocaleString()}
+                    </Button>
+                  </div>
                 ) : (
-                  <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />Cleared
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => handleDownloadInvoice(m)} title="Download Invoice">
+                      <FileText className="w-3.5 h-3.5" />
+                    </Button>
+                    <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />Cleared
+                    </span>
+                  </div>
                 )}
               </div>
             );
