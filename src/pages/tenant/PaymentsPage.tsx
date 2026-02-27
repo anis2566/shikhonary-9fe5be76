@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { TransactionEntry } from '@/components/tenant/payments/ViewReceiptDialog';
 import {
-  DollarSign, Search, Download, CheckCircle2, Clock, AlertTriangle, XCircle, Eye, MoreHorizontal, CreditCard,
+  DollarSign, Search, Download, CheckCircle2, Clock, AlertTriangle, XCircle, Eye, MoreHorizontal, CreditCard, User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ const monthlyCollection = [
 let receiptCounter = 7;
 
 const PaymentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -267,6 +269,7 @@ const PaymentsPage: React.FC = () => {
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openReceiptDialog(p)}><Eye className="w-4 h-4 mr-2" />View Receipt</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/tenant/payments/${p.studentName.toLowerCase().replace(/\s+/g, '-')}`)}><User className="w-4 h-4 mr-2" />Payment History</DropdownMenuItem>
                         {p.dueAmount > 0 && (
                           <DropdownMenuItem onClick={() => openRecordDialog(p)}><CreditCard className="w-4 h-4 mr-2" />Record Payment</DropdownMenuItem>
                         )}

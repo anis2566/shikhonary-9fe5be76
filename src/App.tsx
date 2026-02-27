@@ -105,6 +105,7 @@ import ExamDetailsPage from "./pages/tenant/ExamDetailsPage";
 import ReportCardPage from "./pages/tenant/ReportCardPage";
 import FeeStructurePage from "./pages/tenant/FeeStructurePage";
 import PaymentsPage from "./pages/tenant/PaymentsPage";
+import StudentPaymentDetails from "./pages/tenant/StudentPaymentDetails";
 import FeeRemindersPage from "./pages/tenant/FeeRemindersPage";
 import LibraryPage from "./pages/tenant/LibraryPage";
 import TransportPage from "./pages/tenant/TransportPage";
@@ -244,6 +245,7 @@ const App = () => (
               <Route path="mark-attendance" element={<MarkAttendancePage />} />
               <Route path="fee-structure" element={<FeeStructurePage />} />
               <Route path="payments" element={<PaymentsPage />} />
+              <Route path="payments/:studentId" element={<StudentPaymentDetails />} />
               <Route path="fee-reminders" element={<FeeRemindersPage />} />
               <Route path="library" element={<LibraryPage />} />
               <Route path="transport" element={<TransportPage />} />
