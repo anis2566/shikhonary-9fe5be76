@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import {
-  Check, X, Clock, Save, ArrowLeft, Users, Search, CheckCheck,
+  Check, X, Clock, Save, ArrowLeft, Users, Search, CheckCheck, CalendarIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -29,6 +32,7 @@ const departments = ['All', 'Science', 'Mathematics', 'English', 'Social Studies
 
 const MarkTeacherAttendancePage: React.FC = () => {
   const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedDept, setSelectedDept] = useState('All');
   const [search, setSearch] = useState('');
   const [records, setRecords] = useState<TeacherAttendance[]>(
@@ -41,9 +45,8 @@ const MarkTeacherAttendancePage: React.FC = () => {
     }))
   );
 
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const formattedDate = format(selectedDate, 'EEEE, MMMM d, yyyy');
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   const filtered = useMemo(() => {
     return records.filter((r) => {
@@ -99,7 +102,27 @@ const MarkTeacherAttendancePage: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Mark Teacher Attendance</h1>
-            <p className="text-muted-foreground mt-1">{today}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn('gap-2 font-normal', !isToday && 'border-primary text-primary')}>
+                    <CalendarIcon className="w-4 h-4" />
+                    {formattedDate}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(d) => d && setSelectedDate(d)}
+                    disabled={(d) => d > new Date()}
+                    initialFocus
+                    className={cn('p-3 pointer-events-auto')}
+                  />
+                </PopoverContent>
+              </Popover>
+              {!isToday && <Badge variant="secondary" className="text-xs">Past Date</Badge>}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
