@@ -101,6 +101,7 @@ import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
 import TimetablePage from "./pages/tenant/TimetablePage";
 import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
 import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
+import MarkTeacherAttendancePage from "./pages/tenant/MarkTeacherAttendancePage";
 import ExamDetailsPage from "./pages/tenant/ExamDetailsPage";
 import ReportCardPage from "./pages/tenant/ReportCardPage";
 import FeeStructurePage from "./pages/tenant/FeeStructurePage";
@@ -243,6 +244,7 @@ const App = () => (
               <Route path="timetable" element={<TimetablePage />} />
               <Route path="teacher-attendance" element={<TeacherAttendancePage />} />
               <Route path="mark-attendance" element={<MarkAttendancePage />} />
+              <Route path="mark-teacher-attendance" element={<MarkTeacherAttendancePage />} />
               <Route path="fee-structure" element={<FeeStructurePage />} />
               <Route path="payments" element={<PaymentsPage />} />
               <Route path="payments/:studentId" element={<StudentPaymentDetails />} />

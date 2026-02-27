@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Check,
@@ -43,6 +44,7 @@ import { mockBatches, mockStudents, attendanceData } from '@/lib/tenant-mock-dat
 import { cn } from '@/lib/utils';
 
 const AttendancePage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedBatch, setSelectedBatch] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -112,7 +114,7 @@ const AttendancePage: React.FC = () => {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => navigate('/tenant/mark-attendance')}>
             <Calendar className="w-4 h-4 mr-2" />
             Mark Attendance
           </Button>

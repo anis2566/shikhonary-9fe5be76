@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Check,
   X,
@@ -39,6 +40,7 @@ const weeklyData = [
 const departments = ['All', 'Science', 'Mathematics', 'English', 'Social Studies', 'Languages'];
 
 const TeacherAttendancePage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedDept, setSelectedDept] = useState('All');
 
   const attendanceGrid = mockTeachers.map((t) => ({
@@ -89,10 +91,14 @@ const TeacherAttendancePage: React.FC = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Teacher Attendance</h1>
           <p className="text-muted-foreground mt-1">Track and manage teacher attendance records</p>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" />
-          Export
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />Export
+          </Button>
+          <Button size="sm" onClick={() => navigate('/tenant/mark-teacher-attendance')}>
+            <UserCheck className="w-4 h-4 mr-2" />Mark Attendance
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
