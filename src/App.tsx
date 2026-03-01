@@ -70,6 +70,9 @@ import TenantOverview from "./pages/tenant/TenantOverview";
 import StudentList from "./pages/tenant/StudentList";
 import StudentCreate from "./pages/tenant/StudentCreate";
 import StudentDetails from "./pages/tenant/StudentDetails";
+import StudentPromotionPage from "./pages/tenant/StudentPromotionPage";
+import StudentIdCardPage from "./pages/tenant/StudentIdCardPage";
+import StudentDocumentsPage from "./pages/tenant/StudentDocumentsPage";
 import TeacherList from "./pages/tenant/TeacherList";
 import GuardianList from "./pages/tenant/GuardianList";
 import GuardianDetails from "./pages/tenant/GuardianDetails";
@@ -212,6 +215,10 @@ const App = () => (
               <Route path="students" element={<StudentList />} />
               <Route path="students/create" element={<StudentCreate />} />
               <Route path="students/:id" element={<StudentDetails />} />
+              <Route path="students/:id/documents" element={<StudentDocumentsPage />} />
+              <Route path="students/:id/id-card" element={<StudentIdCardPage />} />
+              <Route path="students/promotion" element={<StudentPromotionPage />} />
+              <Route path="students/id-cards" element={<StudentIdCardPage />} />
               <Route path="teachers" element={<TeacherList />} />
               <Route path="guardians" element={<GuardianList />} />
               <Route path="guardians/:id" element={<GuardianDetails />} />
