@@ -33,6 +33,12 @@ import {
   Hash,
   BadgeCheck,
   FileText,
+  FolderOpen,
+  Activity,
+  CreditCard,
+  Bell,
+  IdCard,
+  ArrowUpRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -405,9 +411,13 @@ export default function StudentDetails() {
                         <Download className="w-4 h-4 mr-2" />
                         Export Profile
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Printer className="w-4 h-4 mr-2" />
+                      <DropdownMenuItem onClick={() => navigate(`/tenant/students/${id}/id-card`)}>
+                        <IdCard className="w-4 h-4 mr-2" />
                         Print ID Card
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/tenant/students/${id}/documents`)}>
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        Documents
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Share2 className="w-4 h-4 mr-2" />
@@ -503,6 +513,10 @@ export default function StudentDetails() {
             <TabsTrigger value="attendance" className="gap-2">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Attendance</span>
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="gap-2">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Timeline</span>
             </TabsTrigger>
           </TabsList>
 
@@ -807,6 +821,62 @@ export default function StudentDetails() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* Timeline Tab */}
+            <TabsContent value="timeline" className="space-y-6 mt-0">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-primary" />
+                        Activity Timeline
+                      </CardTitle>
+                      <CardDescription>Chronological record of all student events</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/tenant/students/${id}/documents`)}>
+                      <FolderOpen className="w-4 h-4 mr-2" />
+                      Documents
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative space-y-0">
+                    <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-border" />
+                    {[
+                      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-500/10', title: 'Attendance Marked — Present', date: '2024-02-06', time: '8:30 AM', desc: 'Marked present for Morning Batch A' },
+                      { icon: Trophy, color: 'text-yellow-500', bg: 'bg-yellow-500/10', title: 'Exam Result Published', date: '2024-02-05', time: '3:00 PM', desc: 'Scored 78% in Physics Weekly Test — Rank #3' },
+                      { icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-500/10', title: 'Fee Payment Recorded', date: '2024-02-01', time: '10:15 AM', desc: 'February 2024 tuition fee — ৳5,000 paid' },
+                      { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10', title: 'Attendance Marked — Absent', date: '2024-01-30', time: '9:00 AM', desc: 'Marked absent for Morning Batch A' },
+                      { icon: Bell, color: 'text-purple-500', bg: 'bg-purple-500/10', title: 'Notification Sent', date: '2024-01-28', time: '4:00 PM', desc: 'Exam reminder sent for Chemistry Monthly Test' },
+                      { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', title: 'Report Card Generated', date: '2024-01-25', time: '2:00 PM', desc: 'Term 1 report card generated and shared' },
+                      { icon: ArrowUpRight, color: 'text-green-600', bg: 'bg-green-600/10', title: 'Promoted to Class 10', date: '2024-01-15', time: '11:00 AM', desc: 'Promoted from Class 9 — Morning Batch A' },
+                      { icon: User, color: 'text-primary', bg: 'bg-primary/10', title: 'Student Enrolled', date: '2024-01-15', time: '10:00 AM', desc: 'Enrolled as a new student in the system' },
+                    ].map((event, i) => {
+                      const Icon = event.icon;
+                      return (
+                        <div key={i} className="relative pl-12 pb-6 last:pb-0">
+                          <div className={`absolute left-2 top-0.5 w-[22px] h-[22px] rounded-full ${event.bg} flex items-center justify-center z-10 border-2 border-background`}>
+                            <Icon className={`w-3 h-3 ${event.color}`} />
+                          </div>
+                          <div className="bg-card border rounded-lg p-3 hover:bg-accent/30 transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="text-sm font-medium">{event.title}</h4>
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{event.time}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{event.desc}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {format(new Date(event.date), 'EEEE, MMMM d, yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </AnimatePresence>
         </Tabs>

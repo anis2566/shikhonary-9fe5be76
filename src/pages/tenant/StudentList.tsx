@@ -403,6 +403,16 @@ const StudentList: React.FC = () => {
               <Upload className="w-4 h-4 mr-2" />
               Import
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/tenant/students/promotion">
+                Promote / Transfer
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/tenant/students/id-cards">
+                ID Cards
+              </Link>
+            </Button>
             <Button size="sm" asChild>
               <Link to="/tenant/students/create">
                 <Plus className="w-4 h-4 mr-2" />
