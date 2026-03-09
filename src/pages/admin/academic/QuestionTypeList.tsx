@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Search, Tag, Filter, Download, Upload, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { AcademicDataTable, StatusBadge } from '@/components/academic/AcademicDataTable';
+import AcademicDataTable, { StatusBadge } from '@/components/academic/AcademicDataTable';
 import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import StatsCard from '@/components/academic/StatsCard';
 import Pagination from '@/components/academic/Pagination';
