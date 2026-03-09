@@ -691,3 +691,84 @@ export function useCqMutations() {
 
   return { create, update, remove, reorder };
 }
+
+// Question Types
+export interface QuestionType {
+  id: string;
+  name: string;
+  display_name: string;
+  subject_id: string;
+  chapter_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export function useQuestionTypes(subjectId?: string) {
+  return useQuery({
+    queryKey: ['question_types', subjectId],
+    queryFn: async () => {
+      let query = supabase.from('question_types').select('*').order('display_name');
+      if (subjectId) query = query.eq('subject_id', subjectId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as QuestionType[];
+    },
+  });
+}
+
+export function useQuestionType(id: string) {
+  return useQuery({
+    queryKey: ['question_types', 'detail', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('question_types').select('*').eq('id', id).single();
+      if (error) throw error;
+      return data as QuestionType;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useQuestionTypeMutations() {
+  const queryClient = useQueryClient();
+
+  const create = useMutation({
+    mutationFn: async (data: Omit<QuestionType, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data: result, error } = await supabase.from('question_types').insert(data).select().single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question_types'] });
+      toast.success('Question type created successfully');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const update = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<QuestionType> }) => {
+      const { data: result, error } = await supabase.from('question_types').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question_types'] });
+      toast.success('Question type updated successfully');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('question_types').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question_types'] });
+      toast.success('Question type deleted successfully');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return { create, update, remove };
+}

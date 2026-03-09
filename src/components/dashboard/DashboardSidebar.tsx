@@ -73,6 +73,7 @@ const questionBankGroup: NavGroup = {
   items: [
     { title: 'MCQs', url: '/admin/mcqs', icon: HelpCircle },
     { title: 'CQs', url: '/admin/cqs', icon: FileText },
+    { title: 'Question Types', url: '/admin/question-types', icon: Tag },
   ],
 };
 

@@ -210,6 +210,12 @@ const App = () => (
               <Route path="cqs/create" element={<CqForm />} />
               <Route path="cqs/:id" element={<CqDetails />} />
               <Route path="cqs/:id/edit" element={<CqForm />} />
+              
+              {/* Question Types */}
+              <Route path="question-types" element={<QuestionTypeList />} />
+              <Route path="question-types/create" element={<QuestionTypeForm />} />
+              <Route path="question-types/:id" element={<QuestionTypeDetails />} />
+              <Route path="question-types/:id/edit" element={<QuestionTypeForm />} />
             </Route>
 
             {/* Tenant Dashboard */}
