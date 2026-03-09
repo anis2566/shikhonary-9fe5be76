@@ -266,6 +266,54 @@ export type Database = {
         }
         Relationships: []
       }
+      question_types: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          name: string
+          subject_id: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          subject_id: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_types_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_types_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sub_topics: {
         Row: {
           created_at: string
