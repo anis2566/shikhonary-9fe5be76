@@ -51,6 +51,9 @@ import McqDetails from "./pages/admin/academic/McqDetails";
 import McqImport from "./pages/admin/academic/McqImport";
 import CqList from "./pages/admin/academic/CqList";
 import CqForm from "./pages/admin/academic/CqForm";
+import QuestionTypeList from "./pages/admin/academic/QuestionTypeList";
+import QuestionTypeForm from "./pages/admin/academic/QuestionTypeForm";
+import QuestionTypeDetails from "./pages/admin/academic/QuestionTypeDetails";
 
 // Subscription Plans
 import SubscriptionPlanList from "./pages/admin/subscription/SubscriptionPlanList";
