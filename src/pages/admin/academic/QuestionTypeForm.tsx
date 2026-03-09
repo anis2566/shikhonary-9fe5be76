@@ -111,10 +111,10 @@ const QuestionTypeForm: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <Label>Chapter (optional)</Label>
-                <Select value={form.watch('chapter_id') || ''} onValueChange={(v) => form.setValue('chapter_id', v)} disabled={!selectedSubjectId}>
+                <Select value={form.watch('chapter_id') || 'none'} onValueChange={(v) => form.setValue('chapter_id', v === 'none' ? '' : v)} disabled={!selectedSubjectId}>
                   <SelectTrigger><SelectValue placeholder="Select a chapter" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No chapter</SelectItem>
+                    <SelectItem value="none">No chapter</SelectItem>
                     {chapters.map((c) => <SelectItem key={c.id} value={c.id}>{c.display_name}</SelectItem>)}
                   </SelectContent>
                 </Select>
