@@ -17,6 +17,7 @@ import {
   ListTree,
   CreditCard,
   Sparkles,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,7 @@ const questionBankGroup: NavGroup = {
   items: [
     { title: 'MCQs', url: '/admin/mcqs', icon: HelpCircle },
     { title: 'CQs', url: '/admin/cqs', icon: FileText },
+    { title: 'Question Types', url: '/admin/question-types', icon: Tag },
   ],
 };
 
