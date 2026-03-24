@@ -71,25 +71,7 @@ const TenantOverview: React.FC = () => {
     resetToDefaults,
   } = useDashboardWidgets();
 
-  useEffect(() => {
-    const completed = localStorage.getItem(ONBOARDING_KEY);
-    if (!completed) {
-      // Delay to let page render first
-      const timer = setTimeout(() => setShowTour(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleTourComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, 'true');
-    setShowTour(false);
-  };
-
   return (
-    <>
-      {/* Onboarding Tour */}
-      <OnboardingTour isOpen={showTour} onComplete={handleTourComplete} />
-      
       <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Mobile Welcome Banner */}
       <div className="lg:hidden">
