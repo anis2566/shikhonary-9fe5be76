@@ -189,25 +189,27 @@ const AcademicYearList: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {/* View Toggle */}
-          <div className="flex border rounded-md overflow-hidden">
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none h-9 px-3"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'cards' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none h-9 px-3"
-              onClick={() => setViewMode('cards')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* View Toggle - hidden on mobile (forced card view) */}
+          {!isMobile && (
+            <div className="flex border rounded-md overflow-hidden">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-none h-9 px-3"
+                onClick={() => setViewMode('table')}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-none h-9 px-3"
+                onClick={() => setViewMode('cards')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
