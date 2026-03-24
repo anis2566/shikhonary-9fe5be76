@@ -59,8 +59,10 @@ const AnimatedStatCard: React.FC<{
 
 const AcademicYearList: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const effectiveView = isMobile ? 'cards' : viewMode;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [deleteTarget, setDeleteTarget] = useState<AcademicYear | null>(null);
