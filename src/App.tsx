@@ -237,6 +237,7 @@ const App = () => (
               <Route path="guardians/:id/edit" element={<GuardianEdit />} />
               <Route path="staff" element={<StaffList />} />
               <Route path="staff/:id" element={<StaffDetails />} />
+              <Route path="staff/:id/edit" element={<StaffEdit />} />
               <Route path="batches" element={<BatchList />} />
               <Route path="batches/create" element={<BatchCreate />} />
               <Route path="batches/:id" element={<BatchDetails />} />
