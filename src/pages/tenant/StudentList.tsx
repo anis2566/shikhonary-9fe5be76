@@ -68,6 +68,7 @@ import { mockStudents, mockBatches } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import StudentCard from '@/components/tenant/StudentCard';
+import StudentAnimatedStatCards from '@/components/tenant/student/StudentAnimatedStatCards';
 import { StudentCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
 import Pagination from '@/components/academic/Pagination';
