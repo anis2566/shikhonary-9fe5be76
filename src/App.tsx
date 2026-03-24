@@ -83,6 +83,7 @@ import GuardianEdit from "./pages/tenant/GuardianEdit";
 import StaffList from "./pages/tenant/StaffList";
 import StaffDetails from "./pages/tenant/StaffDetails";
 import StaffEdit from "./pages/tenant/StaffEdit";
+import StaffCreate from "./pages/tenant/StaffCreate";
 import BatchList from "./pages/tenant/BatchList";
 import BatchCreate from "./pages/tenant/BatchCreate";
 import BatchDetails from "./pages/tenant/BatchDetails";
@@ -236,6 +237,7 @@ const App = () => (
               <Route path="guardians/:id" element={<GuardianDetails />} />
               <Route path="guardians/:id/edit" element={<GuardianEdit />} />
               <Route path="staff" element={<StaffList />} />
+              <Route path="staff/create" element={<StaffCreate />} />
               <Route path="staff/:id" element={<StaffDetails />} />
               <Route path="staff/:id/edit" element={<StaffEdit />} />
               <Route path="batches" element={<BatchList />} />
