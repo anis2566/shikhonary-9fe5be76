@@ -258,6 +258,7 @@ const App = () => (
               <Route path="academic-years" element={<AcademicYearList />} />
               <Route path="academic-years/create" element={<AcademicYearCreate />} />
               <Route path="academic-years/:id" element={<AcademicYearDetails />} />
+              <Route path="academic-years/:id/edit" element={<AcademicYearEdit />} />
               <Route path="timetable" element={<TimetablePage />} />
               <Route path="teacher-attendance" element={<TeacherAttendancePage />} />
               <Route path="mark-attendance" element={<MarkAttendancePage />} />
