@@ -93,10 +93,10 @@ const TenantOverview: React.FC = () => {
     resetToDefaults,
   } = useDashboardWidgets();
 
-  const activeStudents = mockStudents.filter(s => s.status === 'Active').length;
-  const activeTeachers = mockTeachers.filter(t => t.status === 'Active').length;
-  const activeStaff = mockStaff.filter(s => s.status === 'active').length;
-  const activeGuardians = mockGuardians.filter(g => g.status === 'active').length;
+  const activeStudents = mockStudents.filter(s => s.isActive).length;
+  const activeTeachers = mockTeachers.filter(t => t.isActive).length;
+  const activeStaff = mockStaff.filter(s => s.isActive).length;
+  const activeGuardians = mockGuardians.filter(g => g.isActive).length;
 
   return (
     <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
