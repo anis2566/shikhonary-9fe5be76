@@ -424,125 +424,44 @@ const StudentList: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Stats Cards */}
+      {/* Animated Stats Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        {/* Mobile Stats - Horizontal Scroll */}
-        <div className="lg:hidden -mx-4 px-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
-            <Card className="min-w-[110px] snap-start shrink-0 border-l-4 border-l-primary">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{stats.total}</p>
-                    <p className="text-[10px] text-muted-foreground">Total</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="min-w-[110px] snap-start shrink-0 border-l-4 border-l-green-500">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-green-500/10 text-green-600">
-                    <UserCheck className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{stats.active}</p>
-                    <p className="text-[10px] text-muted-foreground">Active</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="min-w-[110px] snap-start shrink-0 border-l-4 border-l-destructive">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-destructive/10 text-destructive">
-                    <UserX className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{stats.inactive}</p>
-                    <p className="text-[10px] text-muted-foreground">Inactive</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="min-w-[110px] snap-start shrink-0 border-l-4 border-l-blue-500">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{stats.thisMonth}</p>
-                    <p className="text-[10px] text-muted-foreground">This Month</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <StudentAnimatedStatCards students={mockStudents} />
+      </motion.div>
 
-        {/* Desktop Stats */}
-        <div className="hidden lg:grid grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-primary">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-primary/10 text-primary">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-l-4 border-l-green-500">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-green-500/10 text-green-600">
-                  <UserCheck className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.active}</p>
-                  <p className="text-sm text-muted-foreground">Active Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-l-4 border-l-destructive">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-destructive/10 text-destructive">
-                  <UserX className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.inactive}</p>
-                  <p className="text-sm text-muted-foreground">Inactive Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600">
-                  <Calendar className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.thisMonth}</p>
-                  <p className="text-sm text-muted-foreground">Added This Month</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Status Filter Chips */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide"
+      >
+        {([
+          { key: 'all', label: 'All', count: stats.total },
+          { key: 'active', label: 'Active', count: stats.active },
+          { key: 'inactive', label: 'Inactive', count: stats.inactive },
+        ] as const).map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => setSelectedStatus(chip.key)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+              selectedStatus === chip.key
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            {chip.label}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+              selectedStatus === chip.key ? 'bg-primary-foreground/20' : 'bg-background'
+            }`}>
+              {chip.count}
+            </span>
+          </button>
+        ))}
       </motion.div>
 
       {/* Search & Filters */}
