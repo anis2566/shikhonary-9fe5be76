@@ -79,6 +79,7 @@ import StudentDocumentsPage from "./pages/tenant/StudentDocumentsPage";
 import TeacherList from "./pages/tenant/TeacherList";
 import GuardianList from "./pages/tenant/GuardianList";
 import GuardianDetails from "./pages/tenant/GuardianDetails";
+import GuardianEdit from "./pages/tenant/GuardianEdit";
 import StaffList from "./pages/tenant/StaffList";
 import StaffDetails from "./pages/tenant/StaffDetails";
 import BatchList from "./pages/tenant/BatchList";
