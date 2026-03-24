@@ -82,6 +82,7 @@ import GuardianDetails from "./pages/tenant/GuardianDetails";
 import GuardianEdit from "./pages/tenant/GuardianEdit";
 import StaffList from "./pages/tenant/StaffList";
 import StaffDetails from "./pages/tenant/StaffDetails";
+import StaffEdit from "./pages/tenant/StaffEdit";
 import BatchList from "./pages/tenant/BatchList";
 import BatchCreate from "./pages/tenant/BatchCreate";
 import BatchDetails from "./pages/tenant/BatchDetails";
