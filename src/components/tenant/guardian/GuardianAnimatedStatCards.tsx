@@ -48,7 +48,7 @@ const GuardianAnimatedStatCards: React.FC<GuardianAnimatedStatCardsProps> = ({ g
       value: inactive,
       subtitle: `${total ? Math.round((inactive / total) * 100) : 0}% of total`,
       icon: UserX,
-      color: 'amber' as const,
+      color: 'secondary' as const,
       trend: inactive > 0 ? { value: 2, isPositive: false } : undefined,
       sparklineData: [1, 2, 1, 3, 2, 1, inactive],
     },
