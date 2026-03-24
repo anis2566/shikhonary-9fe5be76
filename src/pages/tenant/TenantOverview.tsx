@@ -44,7 +44,7 @@ import {
   TodayHighlightsWidget,
   AttendanceSummaryWidget,
 } from '@/components/tenant/DashboardWidgets';
-import OnboardingTour from '@/components/tenant/OnboardingTour';
+
 import StatsComparisonCard from '@/components/tenant/StatsComparisonCard';
 import { EnhancedStatCard, MobileEnhancedStatCard } from '@/components/tenant/stats';
 import { WidgetCustomizer } from '@/components/tenant/dashboard';
