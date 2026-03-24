@@ -62,7 +62,7 @@ const statsSparklineData = {
 
 const TenantOverview: React.FC = () => {
   const stats = mockDashboardStats;
-  const [showTour, setShowTour] = useState(false);
+  
   const {
     widgets,
     isVisible,
