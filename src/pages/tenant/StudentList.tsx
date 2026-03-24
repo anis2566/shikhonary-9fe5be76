@@ -634,7 +634,48 @@ const StudentList: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Bulk Actions */}
+      {/* Desktop Active Filter Tags */}
+      {activeFiltersCount > 0 && (
+        <div className="hidden lg:flex flex-wrap gap-2">
+          {selectedClass !== 'all' && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Class: {selectedClass}
+              <button onClick={() => setSelectedClass('all')} className="ml-1 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+            </Badge>
+          )}
+          {selectedBatch !== 'all' && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Batch: {mockBatches.find(b => b.id === selectedBatch)?.name}
+              <button onClick={() => setSelectedBatch('all')} className="ml-1 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+            </Badge>
+          )}
+          {selectedGroup !== 'all' && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Group: {selectedGroup}
+              <button onClick={() => setSelectedGroup('all')} className="ml-1 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+            </Badge>
+          )}
+          {selectedStatus !== 'all' && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Status: {selectedStatus}
+              <button onClick={() => setSelectedStatus('all')} className="ml-1 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+            </Badge>
+          )}
+          {searchQuery && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Search: "{searchQuery}"
+              <button onClick={() => setSearchQuery('')} className="ml-1 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+            </Badge>
+          )}
+          {activeFiltersCount > 1 && (
+            <button onClick={clearFilters} className="text-xs text-muted-foreground hover:text-foreground underline">
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
+
+
       <AnimatePresence>
         {selectedRows.length > 0 && (
           <motion.div
