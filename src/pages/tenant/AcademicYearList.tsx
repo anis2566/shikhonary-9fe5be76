@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -58,8 +59,10 @@ const AnimatedStatCard: React.FC<{
 
 const AcademicYearList: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const effectiveView = isMobile ? 'cards' : viewMode;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [deleteTarget, setDeleteTarget] = useState<AcademicYear | null>(null);
@@ -186,25 +189,27 @@ const AcademicYearList: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {/* View Toggle */}
-          <div className="flex border rounded-md overflow-hidden">
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none h-9 px-3"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'cards' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none h-9 px-3"
-              onClick={() => setViewMode('cards')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* View Toggle - hidden on mobile (forced card view) */}
+          {!isMobile && (
+            <div className="flex border rounded-md overflow-hidden">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-none h-9 px-3"
+                onClick={() => setViewMode('table')}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-none h-9 px-3"
+                onClick={() => setViewMode('cards')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -225,7 +230,7 @@ const AcademicYearList: React.FC = () => {
       )}
 
       {/* Content: Table or Cards */}
-      {viewMode === 'table' ? (
+      {effectiveView === 'table' ? (
         <Card>
           <CardContent className="p-0">
             <Table>
