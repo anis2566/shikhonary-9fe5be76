@@ -230,7 +230,7 @@ const AcademicYearList: React.FC = () => {
       )}
 
       {/* Content: Table or Cards */}
-      {viewMode === 'table' ? (
+      {effectiveView === 'table' ? (
         <Card>
           <CardContent className="p-0">
             <Table>
