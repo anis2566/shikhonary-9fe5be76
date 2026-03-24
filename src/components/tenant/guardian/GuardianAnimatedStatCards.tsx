@@ -40,7 +40,7 @@ const GuardianAnimatedStatCards: React.FC<GuardianAnimatedStatCardsProps> = ({ g
       value: linkedStudents,
       subtitle: 'Unique students',
       icon: Link2,
-      color: 'blue' as const,
+      color: 'accent' as const,
       sparklineData: [4, 6, 5, 8, 7, 9, linkedStudents],
     },
     {
