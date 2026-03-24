@@ -50,7 +50,6 @@ import { EnhancedStatCard, MobileEnhancedStatCard } from '@/components/tenant/st
 import { WidgetCustomizer } from '@/components/tenant/dashboard';
 import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 
-const ONBOARDING_KEY = 'tenant_onboarding_completed';
 
 // Sparkline data for stats
 const statsSparklineData = {
