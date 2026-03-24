@@ -11,9 +11,9 @@ import {
   Trash2,
   Filter,
   X,
-  GraduationCap,
-  TrendingUp,
-  TrendingDown,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import Pagination from '@/components/academic/Pagination';
 import { mockBatches } from '@/lib/tenant-mock-data';
 import { cn } from '@/lib/utils';
@@ -51,19 +57,27 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import BatchCard from '@/components/tenant/BatchCard';
 import { BatchCardSkeleton } from '@/components/tenant/skeletons';
 import PullToRefresh from '@/components/ui/pull-to-refresh';
+import BatchAnimatedStatCards from '@/components/tenant/batch/BatchAnimatedStatCards';
+import CapacityHeatmap from '@/components/tenant/batch/CapacityHeatmap';
 import { toast } from 'sonner';
+
+type SortOption = 'name-asc' | 'name-desc' | 'size-asc' | 'size-desc' | 'capacity-asc' | 'capacity-desc';
 
 const BatchList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const isMobile = useIsMobile();
+
+  // Force card view on mobile
+  const effectiveView = isMobile ? 'grid' : viewMode;
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -72,23 +86,44 @@ const BatchList: React.FC = () => {
     toast.success('Batches refreshed');
   }, []);
 
-  // Filter logic
+  // Filter & sort logic
   const filteredBatches = useMemo(() => {
-    return mockBatches.filter((batch) => {
+    let result = mockBatches.filter((batch) => {
       const matchesSearch =
         batch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         batch.className.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesYear = selectedYear === 'all' || batch.academicYear === selectedYear;
       const matchesStatus =
         selectedStatus === 'all' ||
         (selectedStatus === 'active' && batch.isActive) ||
         (selectedStatus === 'inactive' && !batch.isActive);
       const matchesClass = selectedClass === 'all' || batch.className === selectedClass;
-
       return matchesSearch && matchesYear && matchesStatus && matchesClass;
     });
-  }, [searchQuery, selectedYear, selectedStatus, selectedClass]);
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc': return a.name.localeCompare(b.name);
+        case 'name-desc': return b.name.localeCompare(a.name);
+        case 'size-asc': return a.currentSize - b.currentSize;
+        case 'size-desc': return b.currentSize - a.currentSize;
+        case 'capacity-asc': {
+          const pA = a.capacity ? (a.currentSize / a.capacity) : 0;
+          const pB = b.capacity ? (b.currentSize / b.capacity) : 0;
+          return pA - pB;
+        }
+        case 'capacity-desc': {
+          const pA = a.capacity ? (a.currentSize / a.capacity) : 0;
+          const pB = b.capacity ? (b.currentSize / b.capacity) : 0;
+          return pB - pA;
+        }
+        default: return 0;
+      }
+    });
+
+    return result;
+  }, [searchQuery, selectedYear, selectedStatus, selectedClass, sortBy]);
 
   // Pagination
   const paginatedBatches = useMemo(() => {
@@ -99,7 +134,7 @@ const BatchList: React.FC = () => {
   // Reset page on filter change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedYear, selectedStatus, selectedClass]);
+  }, [searchQuery, selectedYear, selectedStatus, selectedClass, sortBy]);
 
   // Stats calculations
   const stats = useMemo(() => {
@@ -161,22 +196,35 @@ const BatchList: React.FC = () => {
     setSelectedYear('all');
     setSelectedStatus('all');
     setSelectedClass('all');
+    setSortBy('name-asc');
   };
 
   const hasActiveFilters =
     searchQuery || selectedYear !== 'all' || selectedStatus !== 'all' || selectedClass !== 'all';
 
+  const sortLabel: Record<SortOption, string> = {
+    'name-asc': 'Name A-Z',
+    'name-desc': 'Name Z-A',
+    'size-asc': 'Students ↑',
+    'size-desc': 'Students ↓',
+    'capacity-asc': 'Capacity ↑',
+    'capacity-desc': 'Capacity ↓',
+  };
+
   // Filter Sheet for Mobile
   const FilterSheet = () => (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="shrink-0">
+        <Button variant="outline" size="icon" className="shrink-0 relative">
           <Filter className="w-4 h-4" />
+          {hasActiveFilters && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-auto max-h-[70vh]">
         <SheetHeader>
-          <SheetTitle>Filter Batches</SheetTitle>
+          <SheetTitle>Filter & Sort</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -188,9 +236,7 @@ const BatchList: React.FC = () => {
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
                 {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
-                  </SelectItem>
+                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -204,9 +250,7 @@ const BatchList: React.FC = () => {
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
                 {years.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -224,10 +268,23 @@ const BatchList: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Sort By</label>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(sortLabel).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {hasActiveFilters && (
             <Button variant="outline" className="w-full" onClick={clearFilters}>
               <X className="w-4 h-4 mr-2" />
-              Clear Filters
+              Clear All
             </Button>
           )}
         </div>
@@ -260,11 +317,7 @@ const BatchList: React.FC = () => {
                   Delete
                 </Button>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setSelectedBatches([])}
-              >
+              <Button size="sm" variant="ghost" onClick={() => setSelectedBatches([])}>
                 <X className="w-4 h-4" />
               </Button>
             </CardContent>
@@ -292,118 +345,16 @@ const BatchList: React.FC = () => {
         </Button>
       </div>
 
-      {/* Stats Dashboard */}
-      {isMobile ? (
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
-          {[
-            { value: stats.total, label: 'Total Batches', icon: Users, trend: null },
-            { value: stats.active, label: 'Active', icon: GraduationCap, trend: 'up' },
-            { value: stats.totalStudents, label: 'Students', icon: Users, trend: null },
-            { value: `${stats.capacityPercent}%`, label: 'Capacity', icon: TrendingUp, trend: null },
-          ].map((stat) => (
-            <Card key={stat.label} className="shrink-0 w-28 snap-start">
-              <CardContent className="p-3 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <p className="text-xl font-bold">{stat.value}</p>
-                  {stat.trend === 'up' && (
-                    <TrendingUp className="w-3 h-3 text-emerald-500" />
-                  )}
-                  {stat.trend === 'down' && (
-                    <TrendingDown className="w-3 h-3 text-destructive" />
-                  )}
-                </div>
-                <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total Batches</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <GraduationCap className="w-5 h-5 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-muted rounded-lg">
-                  <Users className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.inactive}</p>
-                  <p className="text-xs text-muted-foreground">Inactive</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalStudents}</p>
-                  <p className="text-xs text-muted-foreground">Total Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.capacityPercent}%</p>
-                  <p className="text-xs text-muted-foreground">Capacity Used</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-destructive/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-destructive" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.nearFull}</p>
-                  <p className="text-xs text-muted-foreground">Near Full</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Animated Stats Dashboard */}
+      <BatchAnimatedStatCards stats={stats} isMobile={isMobile} />
+
+      {/* Capacity Heatmap (desktop only) */}
+      {!isMobile && <CapacityHeatmap batches={mockBatches} />}
 
       {/* Filters & View Toggle */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 flex gap-2">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -419,6 +370,31 @@ const BatchList: React.FC = () => {
 
             {!isMobile && (
               <>
+                {/* Status chips */}
+                <div className="flex items-center gap-1.5">
+                  {(['all', 'active', 'inactive'] as const).map((status) => (
+                    <Button
+                      key={status}
+                      variant={selectedStatus === status ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 text-xs capitalize"
+                      onClick={() => setSelectedStatus(status)}
+                    >
+                      {status === 'all' ? 'All' : status}
+                      {status === 'active' && (
+                        <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                          {stats.active}
+                        </Badge>
+                      )}
+                      {status === 'inactive' && (
+                        <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                          {stats.inactive}
+                        </Badge>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
                   <SelectTrigger className="w-36">
                     <SelectValue placeholder="Class" />
@@ -426,12 +402,11 @@ const BatchList: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Classes</SelectItem>
                     {classes.map((cls) => (
-                      <SelectItem key={cls} value={cls}>
-                        {cls}
-                      </SelectItem>
+                      <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Year" />
@@ -439,86 +414,86 @@ const BatchList: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Years</SelectItem>
                     {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </>
-            )}
 
-            {/* View Toggle */}
-            {!isMobile && (
-              <div className="flex border rounded-md">
-                <Button
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="rounded-r-none"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="rounded-l-none"
-                  onClick={() => setViewMode('table')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
+                {/* Sort dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                      <ArrowUpDown className="w-3.5 h-3.5" />
+                      <span className="hidden lg:inline text-xs">{sortLabel[sortBy]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {Object.entries(sortLabel).map(([key, label]) => (
+                      <DropdownMenuItem
+                        key={key}
+                        onClick={() => setSortBy(key as SortOption)}
+                        className={cn(sortBy === key && 'bg-accent')}
+                      >
+                        {key.endsWith('-asc') ? (
+                          <SortAsc className="w-4 h-4 mr-2" />
+                        ) : (
+                          <SortDesc className="w-4 h-4 mr-2" />
+                        )}
+                        {label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* View Toggle */}
+                <div className="flex border rounded-md">
+                  <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="rounded-r-none"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="rounded-l-none"
+                    onClick={() => setViewMode('table')}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </>
             )}
           </div>
 
-          {/* Active Filters */}
+          {/* Active Filters - Dismissible Tags */}
           {hasActiveFilters && !isMobile && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t flex-wrap">
               <span className="text-sm text-muted-foreground">Filters:</span>
               {searchQuery && (
                 <Badge variant="secondary" className="gap-1">
                   Search: {searchQuery}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSearchQuery('')}
-                  />
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSearchQuery('')} />
                 </Badge>
               )}
               {selectedClass !== 'all' && (
                 <Badge variant="secondary" className="gap-1">
                   {selectedClass}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSelectedClass('all')}
-                  />
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedClass('all')} />
                 </Badge>
               )}
               {selectedYear !== 'all' && (
                 <Badge variant="secondary" className="gap-1">
                   {selectedYear}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSelectedYear('all')}
-                  />
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedYear('all')} />
                 </Badge>
               )}
-              {selectedStatus !== 'all' && (
+              {sortBy !== 'name-asc' && (
                 <Badge variant="secondary" className="gap-1">
-                  {selectedStatus}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSelectedStatus('all')}
-                  />
+                  Sort: {sortLabel[sortBy]}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSortBy('name-asc')} />
                 </Badge>
               )}
               <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -552,7 +527,7 @@ const BatchList: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile Card List */}
+      {/* Mobile Card List (forced) */}
       {isMobile ? (
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="space-y-3 pb-20">
@@ -573,7 +548,6 @@ const BatchList: React.FC = () => {
                 )}
               </>
             )}
-            {/* Mobile Pagination */}
             {filteredBatches.length > itemsPerPage && (
               <div className="pt-4">
                 <Pagination
@@ -588,15 +562,16 @@ const BatchList: React.FC = () => {
             )}
           </div>
         </PullToRefresh>
-      ) : viewMode === 'grid' ? (
+      ) : effectiveView === 'grid' ? (
         /* Desktop Grid View */
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedBatches.map((batch) => (
+            {paginatedBatches.map((batch, index) => (
               <motion.div
                 key={batch.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
               >
                 <BatchCard batch={batch} enableSwipe={false} />
               </motion.div>
@@ -612,7 +587,6 @@ const BatchList: React.FC = () => {
             </Card>
           )}
 
-          {/* Grid Pagination */}
           {filteredBatches.length > itemsPerPage && (
             <Card>
               <CardContent className="py-4">
@@ -734,7 +708,6 @@ const BatchList: React.FC = () => {
               </TableBody>
             </Table>
 
-            {/* Table Pagination */}
             {filteredBatches.length > itemsPerPage && (
               <div className="border-t p-4">
                 <Pagination
