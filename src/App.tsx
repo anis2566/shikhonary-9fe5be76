@@ -104,6 +104,7 @@ import EmailTemplatePreview from "./pages/admin/EmailTemplatePreview";
 import AcademicYearList from "./pages/tenant/AcademicYearList";
 import AcademicYearDetails from "./pages/tenant/AcademicYearDetails";
 import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
+import AcademicYearEdit from "./pages/tenant/AcademicYearEdit";
 import TimetablePage from "./pages/tenant/TimetablePage";
 import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
 import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
