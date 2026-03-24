@@ -233,6 +233,7 @@ const App = () => (
               <Route path="teachers" element={<TeacherList />} />
               <Route path="guardians" element={<GuardianList />} />
               <Route path="guardians/:id" element={<GuardianDetails />} />
+              <Route path="guardians/:id/edit" element={<GuardianEdit />} />
               <Route path="staff" element={<StaffList />} />
               <Route path="staff/:id" element={<StaffDetails />} />
               <Route path="batches" element={<BatchList />} />
