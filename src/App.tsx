@@ -104,6 +104,7 @@ import EmailTemplatePreview from "./pages/admin/EmailTemplatePreview";
 import AcademicYearList from "./pages/tenant/AcademicYearList";
 import AcademicYearDetails from "./pages/tenant/AcademicYearDetails";
 import AcademicYearCreate from "./pages/tenant/AcademicYearCreate";
+import AcademicYearEdit from "./pages/tenant/AcademicYearEdit";
 import TimetablePage from "./pages/tenant/TimetablePage";
 import TeacherAttendancePage from "./pages/tenant/TeacherAttendancePage";
 import MarkAttendancePage from "./pages/tenant/MarkAttendancePage";
@@ -257,6 +258,7 @@ const App = () => (
               <Route path="academic-years" element={<AcademicYearList />} />
               <Route path="academic-years/create" element={<AcademicYearCreate />} />
               <Route path="academic-years/:id" element={<AcademicYearDetails />} />
+              <Route path="academic-years/:id/edit" element={<AcademicYearEdit />} />
               <Route path="timetable" element={<TimetablePage />} />
               <Route path="teacher-attendance" element={<TeacherAttendancePage />} />
               <Route path="mark-attendance" element={<MarkAttendancePage />} />

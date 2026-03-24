@@ -13,14 +13,16 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import DeleteConfirmDialog from '@/components/academic/DeleteConfirmDialog';
 import { mockAcademicYears, type AcademicYear } from '@/lib/tenant-mock-data';
 
 const AcademicYearList: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<AcademicYear | null>(null);
 
   const filtered = useMemo(
     () => mockAcademicYears.filter((ay) => ay.name.toLowerCase().includes(search.toLowerCase())),
@@ -28,6 +30,13 @@ const AcademicYearList: React.FC = () => {
   );
 
   const currentYear = mockAcademicYears.find((ay) => ay.isCurrent);
+
+  const handleDelete = () => {
+    if (deleteTarget) {
+      toast.success(`Academic year "${deleteTarget.name}" deleted successfully`);
+      setDeleteTarget(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -139,10 +148,11 @@ const AcademicYearList: React.FC = () => {
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tenant/academic-years/${ay.id}`); }}>
                           <Eye className="w-4 h-4 mr-2" /> View
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toast.info('Edit coming soon'); }}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tenant/academic-years/${ay.id}/edit`); }}>
                           <Edit className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); toast.info('Delete coming soon'); }}>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ay); }}>
                           <Trash2 className="w-4 h-4 mr-2" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -161,6 +171,14 @@ const AcademicYearList: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Academic Year"
+        description={`Are you sure you want to delete academic year "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };
