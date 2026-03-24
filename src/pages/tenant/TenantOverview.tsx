@@ -698,7 +698,6 @@ const TenantOverview: React.FC = () => {
         </Card>
       </div>
     </div>
-    </>
   );
 };
 
