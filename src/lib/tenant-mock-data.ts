@@ -30,7 +30,9 @@ import type {
   Guardian,
   Staff,
   AcademicYear,
+  TimetableSlot,
   Timetable,
+  TenantDashboardStats,
 } from '@/types/tenant';
 
 // Mock data generators
